@@ -47,10 +47,13 @@ export const AuthProvider = ({ children }) => {
       setError(null)
     } catch (error) {
       setUser(null)
-      // Don't set error for 401 (not logged in)
+      // Don't set error for 401 (not logged in) - this is expected for unauthenticated users
+      // Suppress console errors for 401 to avoid noise in console
       if (error.response?.status !== 401) {
         setError(error.response?.data?.message || 'Failed to fetch user')
+        console.error('Auth error:', error.response?.data?.message || 'Failed to fetch user')
       }
+      // Silently handle 401 - user is just not logged in
     } finally {
       setLoading(false)
     }
@@ -162,6 +165,11 @@ export const AuthProvider = ({ children }) => {
         // If 401 and not already retried, try to refresh token
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true
+
+          // Don't try to refresh for /api/auth/profile endpoint (user just not logged in)
+          if (originalRequest.url?.includes('/api/auth/profile')) {
+            return Promise.reject(error)
+          }
 
           const refreshed = await refreshToken()
           if (refreshed) {

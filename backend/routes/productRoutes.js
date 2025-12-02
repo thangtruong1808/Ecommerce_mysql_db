@@ -39,7 +39,12 @@ router.get('/', async (req, res) => {
     const result = await productModel.getAllProducts(filters)
     res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error('Error fetching products:', error)
+    console.error('Error stack:', error.stack)
+    res.status(500).json({ 
+      message: error.message || 'Failed to fetch products',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
   }
 })
 

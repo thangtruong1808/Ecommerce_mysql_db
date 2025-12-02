@@ -7,7 +7,6 @@
  */
 
 import { Component } from 'react'
-import { Link } from 'react-router-dom'
 import Button from './Button'
 
 /**
@@ -39,6 +38,13 @@ class ErrorBoundary extends Component {
   }
 
   /**
+   * Navigate to home page
+   */
+  handleGoHome = () => {
+    window.location.href = '/'
+  }
+
+  /**
    * Render error UI or children
    * @returns {JSX.Element} Error UI or children
    */
@@ -59,11 +65,13 @@ class ErrorBoundary extends Component {
               >
                 Reload Page
               </Button>
-              <Link to="/" className="block">
-                <Button variant="secondary" icon="home">
-                  Go Home
-                </Button>
-              </Link>
+              <Button 
+                variant="secondary" 
+                icon="home"
+                onClick={this.handleGoHome}
+              >
+                Go Home
+              </Button>
             </div>
           </div>
         </div>

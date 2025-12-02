@@ -192,7 +192,7 @@ const Checkout = () => {
               {cart.items.map((item) => (
                 <div key={item.cart_item_id} className="flex justify-between text-sm">
                   <span>{item.name} x {item.quantity}</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  <span>${((Number(item.price) || 0) * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>

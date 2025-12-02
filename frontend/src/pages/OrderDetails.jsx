@@ -157,12 +157,14 @@ const OrderDetails = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.name}</h3>
                     <p className="text-gray-600 text-sm">Quantity: {item.quantity}</p>
-                    <p className="text-gray-600">${item.price} each</p>
+                    <p className="text-gray-600">${(Number(item.price) || 0).toFixed(2)} each</p>
                   </div>
 
                   {/* Item total */}
                   <div className="text-right">
-                    <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold">
+                      ${((Number(item.price) || 0) * item.quantity).toFixed(2)}
+                    </p>
                   </div>
                 </div>
               ))}

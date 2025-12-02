@@ -61,7 +61,10 @@ export const getAllProducts = async (filters = {}) => {
     sortOrder = 'DESC'
   } = filters
 
-  const offset = (page - 1) * limit
+  // Ensure limit and offset are valid integers
+  const validLimit = parseInt(limit) || 12
+  const validPage = parseInt(page) || 1
+  const offset = (validPage - 1) * validLimit
   const conditions = []
   const values = []
 
@@ -92,11 +95,33 @@ export const getAllProducts = async (filters = {}) => {
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-  const orderBy = `ORDER BY p.${sortBy} ${sortOrder}`
+  
+  // Validate and sanitize sortBy to prevent SQL injection
+  const allowedSortFields = ['created_at', 'name', 'price', 'rating', 'stock']
+  const sanitizedSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at'
+  const sanitizedSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const orderBy = `ORDER BY p.${sanitizedSortBy} ${sanitizedSortOrder}`
 
   // Get products with full 3-level hierarchy
-  const [rows] = await db.execute(
-    `SELECT p.*, 
+  // Ensure LIMIT and OFFSET are integers (MySQL requirement)
+  const limitInt = Number.isInteger(validLimit) ? validLimit : parseInt(validLimit, 10)
+  const offsetInt = Number.isInteger(offset) ? offset : parseInt(offset, 10)
+  
+  // Validate integers are valid numbers
+  if (isNaN(limitInt) || limitInt < 1) {
+    throw new Error('Invalid limit parameter')
+  }
+  if (isNaN(offsetInt) || offsetInt < 0) {
+    throw new Error('Invalid offset parameter')
+  }
+  
+  // Build query with LIMIT and OFFSET safely interpolated (already validated as integers)
+  // MySQL prepared statements sometimes have issues with LIMIT/OFFSET as parameters
+  // Since we've validated limitInt and offsetInt as safe integers, direct interpolation is safe
+  const safeLimit = Math.floor(Number(limitInt))
+  const safeOffset = Math.floor(Number(offsetInt))
+  
+  const query = `SELECT p.*, 
             cc.name as child_category_name,
             cc.id as child_category_id,
             s.name as subcategory_name,
@@ -109,35 +134,67 @@ export const getAllProducts = async (filters = {}) => {
      JOIN categories c ON s.category_id = c.id
      ${whereClause} 
      ${orderBy} 
-     LIMIT ? OFFSET ?`,
-    [...values, limit, offset]
-  )
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`
+  
+  // Build parameters array - only include values that correspond to WHERE clause placeholders
+  // values array already contains only non-null values from conditions
+  const queryParams = [...values]
+  
+  let rows = []
+  try {
+    const result = await db.execute(query, queryParams)
+    rows = result[0] || []
+  } catch (dbError) {
+    console.error('Database query error:', dbError)
+    console.error('Query:', query)
+    console.error('Params count:', queryParams.length)
+    console.error('Params:', queryParams)
+    throw new Error(`Database query failed: ${dbError.message}`)
+  }
 
-  // Get total count
-  const [countResult] = await db.execute(
-    `SELECT COUNT(*) as total 
+  // Get total count (no LIMIT/OFFSET needed)
+  const countQuery = `SELECT COUNT(*) as total 
      FROM products p
      JOIN child_categories cc ON p.child_category_id = cc.id
      JOIN subcategories s ON cc.subcategory_id = s.id
      JOIN categories c ON s.category_id = c.id
-     ${whereClause}`,
-    values
-  )
-  const total = countResult[0].total
+     ${whereClause}`
+  
+  let total = 0
+  try {
+    const [countResult] = await db.execute(countQuery, values)
+    total = countResult[0]?.total || 0
+  } catch (dbError) {
+    console.error('Count query error:', dbError)
+    throw new Error(`Count query failed: ${dbError.message}`)
+  }
 
-  // Get images for each product
-  const productIds = rows.map(p => p.id)
-  const imagesMap = await productMediaModel.getProductsImages(productIds)
+  // Get images for each product (only if there are products)
+  let imagesMap = {}
+  if (rows.length > 0) {
+    try {
+      const productIds = rows.map(p => p.id)
+      imagesMap = await productMediaModel.getProductsImages(productIds)
+    } catch (imageError) {
+      console.error('Error fetching product images:', imageError)
+      // Continue without images rather than failing completely
+      imagesMap = {}
+    }
+  }
 
   // Attach images and calculate discounted prices
+  // Convert MySQL DECIMAL to JavaScript numbers
   const productsWithImages = rows.map(product => {
+    // Convert price from MySQL DECIMAL (string) to number
+    const price = parseFloat(product.price) || 0
     const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
     const discountedPrice = isActive && product.is_on_clearance
-      ? calculateDiscountedPrice(product.price, product.discount_type, product.discount_value)
-      : product.price
+      ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
+      : price
     
     return {
       ...product,
+      price: price, // Ensure price is a number
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
       has_discount: isActive && product.is_on_clearance
@@ -147,10 +204,10 @@ export const getAllProducts = async (filters = {}) => {
   return {
     products: productsWithImages,
     pagination: {
-      page,
-      limit,
+      page: validPage,
+      limit: validLimit,
       total,
-      pages: Math.ceil(total / limit)
+      pages: Math.ceil(total / validLimit)
     }
   }
 }
@@ -181,6 +238,9 @@ export const getProductById = async (id) => {
   if (productRows.length === 0) return null
 
   const product = productRows[0]
+
+  // Convert price from MySQL DECIMAL (string) to number
+  product.price = parseFloat(product.price) || 0
 
   // Get product images and videos
   product.images = await productMediaModel.getProductImages(id)
@@ -339,12 +399,39 @@ export const getClearanceProducts = async (filters = {}) => {
     sortOrder = 'DESC'
   } = filters
 
-  const offset = (page - 1) * limit
-  const now = new Date()
+  // Ensure limit and offset are valid integers
+  const validLimit = parseInt(limit) || 12
+  const validPage = parseInt(page) || 1
+  const offset = (validPage - 1) * validLimit
+  // Convert Date to MySQL datetime string format
+  const now = new Date().toISOString().slice(0, 19).replace('T', ' ')
+
+  // Validate and sanitize sortBy to prevent SQL injection
+  const allowedSortFields = ['created_at', 'name', 'price', 'rating', 'stock']
+  const sanitizedSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at'
+  const sanitizedSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const orderBy = `ORDER BY p.${sanitizedSortBy} ${sanitizedSortOrder}`
 
   // Get products with active discounts
-  const [rows] = await db.execute(
-    `SELECT p.*, 
+  // Ensure LIMIT and OFFSET are integers (MySQL requirement)
+  const limitInt = Number.isInteger(validLimit) ? validLimit : parseInt(validLimit, 10)
+  const offsetInt = Number.isInteger(offset) ? offset : parseInt(offset, 10)
+  
+  // Validate integers are valid numbers
+  if (isNaN(limitInt) || limitInt < 1) {
+    throw new Error('Invalid limit parameter')
+  }
+  if (isNaN(offsetInt) || offsetInt < 0) {
+    throw new Error('Invalid offset parameter')
+  }
+  
+  // Build query with LIMIT and OFFSET safely interpolated (already validated as integers)
+  // MySQL prepared statements sometimes have issues with LIMIT/OFFSET as parameters
+  // Since we've validated limitInt and offsetInt as safe integers, direct interpolation is safe
+  const safeLimit = Math.floor(Number(limitInt))
+  const safeOffset = Math.floor(Number(offsetInt))
+  
+  const query = `SELECT p.*, 
             cc.name as child_category_name,
             cc.id as child_category_id,
             s.name as subcategory_name,
@@ -360,10 +447,21 @@ export const getClearanceProducts = async (filters = {}) => {
      AND p.discount_value IS NOT NULL
      AND p.discount_start_date <= ?
      AND p.discount_end_date >= ?
-     ORDER BY p.${sortBy} ${sortOrder}
-     LIMIT ? OFFSET ?`,
-    [true, now, now, limit, offset]
-  )
+     ${orderBy}
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`
+  
+  const params = [true, now, now]
+  
+  let rows = []
+  try {
+    const result = await db.execute(query, params)
+    rows = result[0] || []
+  } catch (dbError) {
+    console.error('Database query error in getClearanceProducts:', dbError)
+    console.error('Query:', query)
+    console.error('Params:', params)
+    throw new Error(`Database query failed: ${dbError.message}`)
+  }
 
   // Get total count
   const [countResult] = await db.execute(
@@ -386,15 +484,19 @@ export const getClearanceProducts = async (filters = {}) => {
   const imagesMap = await productMediaModel.getProductsImages(productIds)
 
   // Attach images and calculate discounted prices
+  // Convert MySQL DECIMAL to JavaScript numbers
   const productsWithImages = rows.map(product => {
+    // Convert price from MySQL DECIMAL (string) to number
+    const price = parseFloat(product.price) || 0
     const discountedPrice = calculateDiscountedPrice(
-      product.price,
+      price,
       product.discount_type,
       product.discount_value
     )
     
     return {
       ...product,
+      price: price, // Ensure price is a number
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
       has_discount: true
@@ -404,10 +506,10 @@ export const getClearanceProducts = async (filters = {}) => {
   return {
     products: productsWithImages,
     pagination: {
-      page,
-      limit,
+      page: validPage,
+      limit: validLimit,
       total,
-      pages: Math.ceil(total / limit)
+      pages: Math.ceil(total / validLimit)
     }
   }
 }

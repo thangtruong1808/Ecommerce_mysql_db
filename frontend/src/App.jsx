@@ -45,7 +45,12 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Router>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
           {/* Main application container */}
           <div className="min-h-screen bg-gray-50">
             {/* Navigation bar */}
@@ -175,8 +180,19 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
           
-          {/* Toast notifications container */}
-          <ToastContainer position="top-right" autoClose={3000} />
+          {/* Toast notifications container with 10 second auto-close and progress bar */}
+          <ToastContainer 
+            position="top-right" 
+            autoClose={10000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
           
           {/* Site footer */}
           <Footer />

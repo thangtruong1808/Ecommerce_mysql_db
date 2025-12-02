@@ -151,7 +151,7 @@ const Cart = () => {
                 {/* Product details */}
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{item.name}</h3>
-                  <p className="text-gray-600">${item.price}</p>
+                  <p className="text-gray-600">${(Number(item.price) || 0).toFixed(2)}</p>
                   <p className="text-sm text-gray-500">Stock: {item.stock}</p>
                 </div>
 
@@ -176,7 +176,9 @@ const Cart = () => {
 
                 {/* Item total and remove */}
                 <div className="text-right">
-                  <p className="font-semibold text-lg">${(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="font-semibold text-lg">
+                    ${((Number(item.price) || 0) * item.quantity).toFixed(2)}
+                  </p>
                   <button
                     onClick={() => handleRemoveItem(item.cart_item_id)}
                     className="text-red-600 hover:text-red-800 text-sm mt-2"

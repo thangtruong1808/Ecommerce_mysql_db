@@ -300,27 +300,27 @@ INSERT INTO child_categories (subcategory_id, name, description) VALUES
 -- Each child category will have 20 products with realistic names, descriptions, and prices
 
 -- Sample products for first child category (Android Phones - child_category_id = 1)
-INSERT INTO products (name, description, price, child_category_id, stock) VALUES
-('Samsung Galaxy S24 Ultra', 'Flagship Android smartphone with 200MP camera, 12GB RAM, 256GB storage, 6.8" display', 1199.99, 1, 50),
-('Google Pixel 8 Pro', 'Premium Android phone with advanced AI features, 50MP camera, 12GB RAM, 128GB storage', 999.99, 1, 45),
-('OnePlus 12', 'High-performance Android device with Snapdragon 8 Gen 3, 16GB RAM, 256GB storage, 6.82" display', 899.99, 1, 40),
-('Xiaomi 14 Pro', 'Flagship Android smartphone with Leica cameras, 12GB RAM, 512GB storage, 6.73" AMOLED display', 849.99, 1, 35),
-('Samsung Galaxy S23', 'Premium Android phone with 50MP camera, 8GB RAM, 128GB storage, 6.1" display', 799.99, 1, 60),
-('Google Pixel 7a', 'Mid-range Android phone with great camera, 8GB RAM, 128GB storage, 6.1" display', 499.99, 1, 55),
-('OnePlus Nord 3', 'Affordable flagship with 50MP camera, 8GB RAM, 128GB storage, 6.74" display', 449.99, 1, 50),
-('Samsung Galaxy A54', 'Mid-range Android phone with 50MP camera, 6GB RAM, 128GB storage, 6.4" display', 449.99, 1, 65),
-('Motorola Edge 40', 'Premium design Android phone with 50MP camera, 8GB RAM, 256GB storage', 599.99, 1, 40),
-('Nothing Phone 2', 'Unique transparent design Android phone with 50MP camera, 12GB RAM, 256GB storage', 599.99, 1, 30),
-('Realme GT 5 Pro', 'Performance-focused Android phone with 50MP camera, 16GB RAM, 512GB storage', 699.99, 1, 35),
-('Vivo X100 Pro', 'Camera-focused Android phone with 50MP main camera, 12GB RAM, 256GB storage', 899.99, 1, 25),
-('Oppo Find X6 Pro', 'Premium Android phone with triple 50MP cameras, 12GB RAM, 256GB storage', 999.99, 1, 20),
-('Sony Xperia 1 V', 'Professional Android phone with 4K display, 12GB RAM, 256GB storage', 1299.99, 1, 15),
-('Asus ROG Phone 7', 'Gaming Android phone with 165Hz display, 16GB RAM, 512GB storage', 1099.99, 1, 20),
-('Redmi Note 13 Pro', 'Budget-friendly Android phone with 200MP camera, 8GB RAM, 256GB storage', 349.99, 1, 70),
-('Poco X6 Pro', 'Value Android phone with 64MP camera, 12GB RAM, 256GB storage', 399.99, 1, 60),
-('Honor Magic 6 Pro', 'Premium Android phone with 50MP camera, 12GB RAM, 512GB storage', 899.99, 1, 30),
-('Tecno Phantom V Fold', 'Foldable Android phone with 50MP cameras, 12GB RAM, 512GB storage', 1199.99, 1, 10),
-('Infinix Zero 30', 'Mid-range Android phone with 108MP camera, 8GB RAM, 256GB storage', 299.99, 1, 55);
+INSERT INTO products (name, description, price, child_category_id, stock, discount_type, discount_value, discount_start_date, discount_end_date, is_on_clearance) VALUES
+('Samsung Galaxy S24 Ultra', 'Flagship Android smartphone with 200MP camera, 12GB RAM, 256GB storage, 6.8" display', 1199.99, 1, 50, NULL, NULL, NULL, NULL, FALSE),
+('Google Pixel 8 Pro', 'Premium Android phone with advanced AI features, 50MP camera, 12GB RAM, 128GB storage', 999.99, 1, 45, NULL, NULL, NULL, NULL, FALSE),
+('OnePlus 12', 'High-performance Android device with Snapdragon 8 Gen 3, 16GB RAM, 256GB storage, 6.82" display', 899.99, 1, 40, NULL, NULL, NULL, NULL, FALSE),
+('Xiaomi 14 Pro', 'Flagship Android smartphone with Leica cameras, 12GB RAM, 512GB storage, 6.73" AMOLED display', 849.99, 1, 35, NULL, NULL, NULL, NULL, FALSE),
+('Samsung Galaxy S23', 'Premium Android phone with 50MP camera, 8GB RAM, 128GB storage, 6.1" display', 799.99, 1, 60, NULL, NULL, NULL, NULL, FALSE),
+('Google Pixel 7a', 'Mid-range Android phone with great camera, 8GB RAM, 128GB storage, 6.1" display', 499.99, 1, 55, NULL, NULL, NULL, NULL, FALSE),
+('OnePlus Nord 3', 'Affordable flagship with 50MP camera, 8GB RAM, 128GB storage, 6.74" display', 449.99, 1, 50, NULL, NULL, NULL, NULL, FALSE),
+('Samsung Galaxy A54', 'Mid-range Android phone with 50MP camera, 6GB RAM, 128GB storage, 6.4" display', 449.99, 1, 65, NULL, NULL, NULL, NULL, FALSE),
+('Motorola Edge 40', 'Premium design Android phone with 50MP camera, 8GB RAM, 256GB storage', 599.99, 1, 40, NULL, NULL, NULL, NULL, FALSE),
+('Nothing Phone 2', 'Unique transparent design Android phone with 50MP camera, 12GB RAM, 256GB storage', 599.99, 1, 30, NULL, NULL, NULL, NULL, FALSE),
+('Realme GT 5 Pro', 'Performance-focused Android phone with 50MP camera, 16GB RAM, 512GB storage', 699.99, 1, 35, NULL, NULL, NULL, NULL, FALSE),
+('Vivo X100 Pro', 'Camera-focused Android phone with 50MP main camera, 12GB RAM, 256GB storage', 899.99, 1, 25, NULL, NULL, NULL, NULL, FALSE),
+('Oppo Find X6 Pro', 'Premium Android phone with triple 50MP cameras, 12GB RAM, 256GB storage', 999.99, 1, 20, NULL, NULL, NULL, NULL, FALSE),
+('Sony Xperia 1 V', 'Professional Android phone with 4K display, 12GB RAM, 256GB storage', 1299.99, 1, 15, NULL, NULL, NULL, NULL, FALSE),
+('Asus ROG Phone 7', 'Gaming Android phone with 165Hz display, 16GB RAM, 512GB storage', 1099.99, 1, 20, NULL, NULL, NULL, NULL, FALSE),
+('Redmi Note 13 Pro', 'Budget-friendly Android phone with 200MP camera, 8GB RAM, 256GB storage', 349.99, 1, 70, NULL, NULL, NULL, NULL, FALSE),
+('Poco X6 Pro', 'Value Android phone with 64MP camera, 12GB RAM, 256GB storage', 399.99, 1, 60, NULL, NULL, NULL, NULL, FALSE),
+('Honor Magic 6 Pro', 'Premium Android phone with 50MP camera, 12GB RAM, 512GB storage', 899.99, 1, 30, NULL, NULL, NULL, NULL, FALSE),
+('Tecno Phantom V Fold', 'Foldable Android phone with 50MP cameras, 12GB RAM, 512GB storage', 1199.99, 1, 10, NULL, NULL, NULL, NULL, FALSE),
+('Infinix Zero 30', 'Mid-range Android phone with 108MP camera, 8GB RAM, 256GB storage', 299.99, 1, 55, NULL, NULL, NULL, NULL, FALSE);
 
 -- Note: For the remaining 2480 products, continue this pattern for each child category (2-125)
 -- Each child category should have 20 products with realistic names, descriptions, prices, and stock

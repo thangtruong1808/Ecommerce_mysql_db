@@ -161,10 +161,10 @@ const ProductDetail = () => {
               <div>
                 <div className="flex items-center space-x-2 mb-2">
                   <span className="text-3xl font-semibold text-blue-600">
-                    ${product.discounted_price.toFixed(2)}
+                    ${(Number(product.discounted_price) || 0).toFixed(2)}
                   </span>
                   <span className="text-xl text-gray-400 line-through">
-                    ${product.price.toFixed(2)}
+                    ${(Number(product.price) || 0).toFixed(2)}
                   </span>
                   <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
                     <FaTag />
@@ -177,7 +177,9 @@ const ProductDetail = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-3xl font-semibold text-blue-600">${product.price.toFixed(2)}</p>
+              <p className="text-3xl font-semibold text-blue-600">
+                ${(Number(product.price) || 0).toFixed(2)}
+              </p>
             )}
           </div>
 

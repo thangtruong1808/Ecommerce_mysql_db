@@ -26,7 +26,22 @@ import commentRoutes from './routes/commentRoutes.js'
 import likeRoutes from './routes/likeRoutes.js'
 import voucherRoutes from './routes/voucherRoutes.js'
 
-dotenv.config()
+// Load environment variables from root .env file
+// Note: db.js also loads dotenv, but we load it here too for other modules
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const rootDir = path.resolve(__dirname, '..')
+const envPath = path.join(rootDir, '.env')
+
+// Load .env file and verify it was loaded
+const envResult = dotenv.config({ path: envPath })
+if (envResult.error) {
+  console.warn(`Warning: Could not load .env file from ${envPath}`)
+  console.warn('Please ensure .env file exists in the project root directory.')
+  console.warn('You can copy backend/env.example to .env and update the values.')
+} else {
+  console.log(`Environment variables loaded from: ${envPath}`)
+}
 
 // Connect to database
 connectDB()
@@ -55,8 +70,6 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Serve uploaded files
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // Routes

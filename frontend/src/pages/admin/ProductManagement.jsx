@@ -88,7 +88,9 @@ const ProductManagement = () => {
                 <tr key={product.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{product.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.price}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${(Number(product.price) || 0).toFixed(2)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.stock}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <Link

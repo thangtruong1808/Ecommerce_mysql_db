@@ -75,15 +75,17 @@ const ProductCard = ({ product, onAddToCart }) => {
           <div className="mb-2">
             <div className="flex items-center space-x-2">
               <span className="text-xl font-semibold text-blue-600">
-                ${product.discounted_price.toFixed(2)}
+                ${(Number(product.discounted_price) || 0).toFixed(2)}
               </span>
               <span className="text-sm text-gray-400 line-through">
-                ${product.price.toFixed(2)}
+                ${(Number(product.price) || 0).toFixed(2)}
               </span>
             </div>
           </div>
         ) : (
-          <p className="text-xl font-semibold text-blue-600 mb-2">${product.price.toFixed(2)}</p>
+          <p className="text-xl font-semibold text-blue-600 mb-2">
+            ${(Number(product.price) || 0).toFixed(2)}
+          </p>
         )}
         
         {product.rating > 0 && (

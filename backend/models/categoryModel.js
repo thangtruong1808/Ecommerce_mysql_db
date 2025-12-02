@@ -25,20 +25,32 @@ export const getAllCategories = async () => {
  */
 export const getCategoriesWithSubcategories = async () => {
   // Get categories with subcategories
+  // Note: Fetch subcategories separately to avoid DISTINCT JSON_OBJECT syntax issues
   const [categoryRows] = await db.execute(
-    `SELECT c.*, 
-            JSON_ARRAYAGG(
-              DISTINCT JSON_OBJECT(
-                'id', s.id,
-                'name', s.name,
-                'description', s.description
-              )
-            ) as subcategories
+    `SELECT c.*
      FROM categories c
-     LEFT JOIN subcategories s ON c.id = s.category_id
-     GROUP BY c.id
      ORDER BY c.name ASC`
   )
+  
+  // Get all subcategories grouped by category
+  const [subcategoryRows] = await db.execute(
+    `SELECT s.*, s.category_id
+     FROM subcategories s
+     ORDER BY s.category_id, s.name ASC`
+  )
+  
+  // Group subcategories by category_id
+  const subcategoriesByCategory = {}
+  subcategoryRows.forEach(sub => {
+    if (!subcategoriesByCategory[sub.category_id]) {
+      subcategoriesByCategory[sub.category_id] = []
+    }
+    subcategoriesByCategory[sub.category_id].push({
+      id: sub.id,
+      name: sub.name,
+      description: sub.description
+    })
+  })
   
   // Get child categories grouped by subcategory
   const [childRows] = await db.execute(
@@ -59,20 +71,26 @@ export const getCategoriesWithSubcategories = async () => {
   const childMap = {}
   childRows.forEach(row => {
     if (row.child_categories) {
-      childMap[row.subcategory_id] = JSON.parse(row.child_categories)
+      try {
+        childMap[row.subcategory_id] = JSON.parse(row.child_categories)
+      } catch (e) {
+        childMap[row.subcategory_id] = []
+      }
+    } else {
+      childMap[row.subcategory_id] = []
     }
   })
   
-  // Parse and attach child categories to subcategories
-  return categoryRows.map(row => {
-    const subcategories = row.subcategories ? JSON.parse(row.subcategories) : []
+  // Attach subcategories and child categories to categories
+  return categoryRows.map(category => {
+    const subcategories = subcategoriesByCategory[category.id] || []
     const subcategoriesWithChildren = subcategories.map(sub => ({
       ...sub,
       child_categories: childMap[sub.id] || []
     }))
     
     return {
-      ...row,
+      ...category,
       subcategories: subcategoriesWithChildren
     }
   })

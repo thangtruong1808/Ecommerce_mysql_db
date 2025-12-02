@@ -174,6 +174,30 @@ CREATE TABLE cart_items (
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Vouchers table (discount codes for total order price)
+-- Must be created before orders table since orders references vouchers
+CREATE TABLE vouchers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    discount_type ENUM('percentage', 'fixed') NOT NULL,
+    discount_value DECIMAL(10, 2) NOT NULL,
+    min_purchase_amount DECIMAL(10, 2) DEFAULT 0.00,
+    max_discount_amount DECIMAL(10, 2) NULL,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP NOT NULL,
+    usage_limit_per_user INT DEFAULT 1,
+    total_usage_limit INT NULL,
+    current_usage_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code),
+    INDEX idx_is_active (is_active),
+    INDEX idx_start_date (start_date),
+    INDEX idx_end_date (end_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Orders table
 CREATE TABLE orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -303,30 +327,8 @@ CREATE TABLE product_likes (
     INDEX idx_product_user (product_id, user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Vouchers table (discount codes for total order price)
-CREATE TABLE vouchers (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT,
-    discount_type ENUM('percentage', 'fixed') NOT NULL,
-    discount_value DECIMAL(10, 2) NOT NULL,
-    min_purchase_amount DECIMAL(10, 2) DEFAULT 0.00,
-    max_discount_amount DECIMAL(10, 2) NULL,
-    start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP NOT NULL,
-    usage_limit_per_user INT DEFAULT 1,
-    total_usage_limit INT NULL,
-    current_usage_count INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_code (code),
-    INDEX idx_is_active (is_active),
-    INDEX idx_start_date (start_date),
-    INDEX idx_end_date (end_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Voucher usages table (track voucher usage)
+-- Must be created after both vouchers and orders tables
 CREATE TABLE voucher_usages (
     id INT PRIMARY KEY AUTO_INCREMENT,
     voucher_id INT NOT NULL,
