@@ -6,10 +6,13 @@
  * @date 2024-12-19
  */
 
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
+import SkeletonLoader from '../components/SkeletonLoader'
+import Button from '../components/Button'
 
 /**
  * Cart component
@@ -19,6 +22,7 @@ const Cart = () => {
   const { cart, loading, updateQuantity, removeFromCart, getTotals, getItemCount } = useCart()
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const [processingItems, setProcessingItems] = useState({})
 
   /**
    * Handle quantity change
@@ -29,11 +33,16 @@ const Cart = () => {
     if (newQuantity < 1) {
       return
     }
-    const result = await updateQuantity(itemId, newQuantity)
-    if (result.success) {
-      toast.success('Cart updated')
-    } else {
-      toast.error(result.error || 'Failed to update quantity')
+    setProcessingItems(prev => ({ ...prev, [itemId]: true }))
+    try {
+      const result = await updateQuantity(itemId, newQuantity)
+      if (result.success) {
+        toast.success('Cart updated')
+      } else {
+        toast.error(result.error || 'Failed to update quantity')
+      }
+    } finally {
+      setProcessingItems(prev => ({ ...prev, [itemId]: false }))
     }
   }
 
@@ -42,11 +51,16 @@ const Cart = () => {
    * @param {number} itemId - Cart item ID
    */
   const handleRemoveItem = async (itemId) => {
-    const result = await removeFromCart(itemId)
-    if (result.success) {
-      toast.success('Item removed from cart')
-    } else {
-      toast.error(result.error || 'Failed to remove item')
+    setProcessingItems(prev => ({ ...prev, [itemId]: true }))
+    try {
+      const result = await removeFromCart(itemId)
+      if (result.success) {
+        toast.success('Item removed from cart')
+      } else {
+        toast.error(result.error || 'Failed to remove item')
+      }
+    } finally {
+      setProcessingItems(prev => ({ ...prev, [itemId]: false }))
     }
   }
 
@@ -68,11 +82,9 @@ const Cart = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading state */}
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading cart...</p>
-        </div>
+        {/* Loading skeleton */}
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+        <SkeletonLoader type="list" count={3} />
       </div>
     )
   }
@@ -124,7 +136,17 @@ const Cart = () => {
             {cart.items.map((item) => (
               <div key={item.cart_item_id} className="flex items-center border-b pb-4 last:border-0">
                 {/* Product image */}
-                <div className="w-24 h-24 bg-gray-200 rounded-lg mr-4 flex-shrink-0"></div>
+                <div className="w-24 h-24 bg-gray-200 rounded-lg mr-4 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <p className="text-gray-400 text-xs">No image</p>
+                  )}
+                </div>
                 
                 {/* Product details */}
                 <div className="flex-1">
@@ -193,12 +215,13 @@ const Cart = () => {
             </div>
 
             {/* Checkout button */}
-            <button
+            <Button
               onClick={handleCheckout}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium"
+              icon="cart"
+              className="w-full py-3"
             >
               Proceed to Checkout
-            </button>
+            </Button>
 
             {/* Continue shopping link */}
             <Link

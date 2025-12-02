@@ -9,8 +9,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
+import { FaPlus } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import SkeletonLoader from '../../components/SkeletonLoader'
+import Button from '../../components/Button'
 
 /**
  * ProductManagement component
@@ -31,6 +35,7 @@ const ProductManagement = () => {
         setProducts(response.data.products || [])
       } catch (error) {
         console.error('Error fetching products:', error)
+        toast.error(error.response?.data?.message || 'Failed to load products')
       } finally {
         setLoading(false)
       }
@@ -43,11 +48,9 @@ const ProductManagement = () => {
     return (
       <AdminLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Loading state */}
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading products...</p>
-          </div>
+          {/* Loading skeleton */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Product Management</h1>
+          <SkeletonLoader type="table" />
         </div>
       </AdminLayout>
     )
@@ -59,11 +62,10 @@ const ProductManagement = () => {
         {/* Page header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
-          <Link
-            to="/admin/products/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            Add New Product
+          <Link to="/admin/products/new">
+            <Button icon="add">
+              Add New Product
+            </Button>
           </Link>
         </div>
 
@@ -90,7 +92,7 @@ const ProductManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.stock}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <Link
-                      to={`/admin/products/${product.id}`}
+                      to={`/admin/products/${product.id}/edit`}
                       className="text-blue-600 hover:text-blue-800 mr-4"
                     >
                       Edit

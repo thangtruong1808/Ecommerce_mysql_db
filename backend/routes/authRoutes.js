@@ -13,9 +13,8 @@ import bcrypt from 'bcryptjs'
 import * as userModel from '../models/userModel.js'
 import * as refreshTokenModel from '../models/refreshTokenModel.js'
 import { protect } from '../middleware/authMiddleware.js'
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/tokenUtils.js'
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, getTokenExpiration } from '../utils/tokenUtils.js'
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAllTokenCookies } from '../utils/cookieUtils.js'
-import { getTokenExpiration } from '../utils/tokenUtils.js'
 
 const router = express.Router()
 
@@ -232,16 +231,16 @@ router.put(
 
       const updatedUser = await userModel.updateUser(req.user.id, updateData)
 
-      if (updatedUser) {
-        res.json({
-          _id: updatedUser.id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          role: updatedUser.role,
-        })
-      } else {
-        res.status(404).json({ message: 'User not found' })
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' })
       }
+      
+      res.json({
+        _id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+      })
     } catch (error) {
       res.status(500).json({ message: error.message })
     }

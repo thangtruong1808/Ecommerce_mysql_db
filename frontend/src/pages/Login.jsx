@@ -6,11 +6,12 @@
  * @date 2024-12-19
  */
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
+import Button from '../components/Button'
 
 /**
  * Login component
@@ -19,6 +20,7 @@ import { toast } from 'react-toastify'
 const Login = () => {
   const { login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
   const {
     register,
     handleSubmit,
@@ -39,12 +41,17 @@ const Login = () => {
    * @param {Object} data - Form data (email, password)
    */
   const onSubmit = async (data) => {
-    const result = await login(data.email, data.password)
-    if (result.success) {
-      toast.success('Login successful!')
-      navigate('/')
-    } else {
-      toast.error(result.error || 'Login failed')
+    try {
+      setLoading(true)
+      const result = await login(data.email, data.password)
+      if (result.success) {
+        toast.success('Login successful!')
+        navigate('/')
+      } else {
+        toast.error(result.error || 'Login failed')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -103,12 +110,14 @@ const Login = () => {
 
           {/* Submit button */}
           <div>
-            <button
+            <Button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              loading={loading}
+              icon="login"
+              className="w-full"
             >
               Sign in
-            </button>
+            </Button>
           </div>
         </form>
       </div>

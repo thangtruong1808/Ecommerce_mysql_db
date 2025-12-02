@@ -30,11 +30,14 @@ export const createOrder = async (orderData) => {
     } = orderData
 
     // Create order
+    const voucherId = orderData.voucher_id || null
+    const voucherDiscount = orderData.voucher_discount || 0
+    
     const [orderResult] = await connection.execute(
       `INSERT INTO orders 
-       (user_id, payment_method, tax_price, shipping_price, total_price) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [user_id, paymentMethod, taxPrice, shippingPrice, totalPrice]
+       (user_id, voucher_id, voucher_discount, payment_method, tax_price, shipping_price, total_price) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, voucherId, voucherDiscount, paymentMethod, taxPrice, shippingPrice, totalPrice]
     )
     const orderId = orderResult.insertId
 
@@ -75,7 +78,7 @@ export const createOrder = async (orderData) => {
 /**
  * Get order by ID with full details
  * @param {number} orderId - Order ID
- * @param {number} userId - User ID (for authorization check)
+ * @param {number} userId - User ID for authorization
  * @returns {Promise<Object|null>} - Order object or null
  */
 export const getOrderById = async (orderId, userId = null) => {
@@ -158,17 +161,12 @@ export const getUserOrders = async (userId, filters = {}) => {
 export const getAllOrders = async (filters = {}) => {
   const { page = 1, limit = 20, status = null } = filters
   const offset = (page - 1) * limit
-
   let whereClause = ''
   const params = []
 
-  if (status === 'paid') {
-    whereClause = 'WHERE o.is_paid = 1'
-  } else if (status === 'delivered') {
-    whereClause = 'WHERE o.is_delivered = 1'
-  } else if (status === 'pending') {
-    whereClause = 'WHERE o.is_paid = 0'
-  }
+  if (status === 'paid') whereClause = 'WHERE o.is_paid = 1'
+  else if (status === 'delivered') whereClause = 'WHERE o.is_delivered = 1'
+  else if (status === 'pending') whereClause = 'WHERE o.is_paid = 0'
 
   const [rows] = await db.execute(
     `SELECT o.*, 
@@ -233,7 +231,7 @@ export const updateOrderPayment = async (orderId, paymentData) => {
 /**
  * Update order delivery status
  * @param {number} orderId - Order ID
- * @returns {Promise<boolean>} - True if updated, false otherwise
+ * @returns {Promise<boolean>} - True if updated
  */
 export const updateOrderDelivery = async (orderId) => {
   const [result] = await db.execute(

@@ -11,6 +11,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import AdminLayout from '../../components/admin/AdminLayout'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import SkeletonLoader from '../../components/SkeletonLoader'
 
 /**
  * UserManagement component
@@ -31,6 +32,7 @@ const UserManagement = () => {
         setUsers(response.data.users || [])
       } catch (error) {
         console.error('Error fetching users:', error)
+        toast.error(error.response?.data?.message || 'Failed to load users')
       } finally {
         setLoading(false)
       }
@@ -68,11 +70,9 @@ const UserManagement = () => {
     return (
       <AdminLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Loading state */}
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading users...</p>
-          </div>
+          {/* Loading skeleton */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">User Management</h1>
+          <SkeletonLoader type="table" />
         </div>
       </AdminLayout>
     )

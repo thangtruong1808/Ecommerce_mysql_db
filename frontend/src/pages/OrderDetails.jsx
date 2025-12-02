@@ -9,8 +9,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import ProtectedRoute from '../components/ProtectedRoute'
+import SkeletonLoader from '../components/SkeletonLoader'
 
 /**
  * OrderDetails component
@@ -43,6 +45,7 @@ const OrderDetails = () => {
         }
       } catch (error) {
         console.error('Error fetching invoice:', error)
+        toast.error(error.response?.data?.message || 'Failed to load invoice')
       }
     }
     fetchInvoice()
@@ -61,6 +64,7 @@ const OrderDetails = () => {
         setOrder(response.data)
       } catch (error) {
         console.error('Error fetching order:', error)
+        toast.error(error.response?.data?.message || 'Failed to load order details')
       } finally {
         setLoading(false)
       }

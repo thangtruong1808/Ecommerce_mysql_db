@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import ReviewItem from './ReviewItem'
 
 /**
@@ -31,6 +32,7 @@ const ReviewList = ({ productId }) => {
         setReviews(response.data.reviews || [])
       } catch (error) {
         console.error('Error fetching reviews:', error)
+        toast.error(error.response?.data?.message || 'Failed to load reviews')
       } finally {
         setLoading(false)
       }

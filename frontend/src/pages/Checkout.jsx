@@ -14,6 +14,10 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import ProtectedRoute from '../components/ProtectedRoute'
+import AddressForm from '../components/AddressForm'
+import VoucherForm from '../components/VoucherForm'
+import Button from '../components/Button'
+import { FaCheck } from 'react-icons/fa'
 
 /**
  * Checkout component
@@ -21,9 +25,11 @@ import ProtectedRoute from '../components/ProtectedRoute'
  */
 const Checkout = () => {
   const { cart, getTotals, refreshCart } = useCart()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const [processing, setProcessing] = useState(false)
+  const [voucherCode, setVoucherCode] = useState(null)
+  const [voucherDiscount, setVoucherDiscount] = useState(0)
   const {
     register,
     handleSubmit,
@@ -31,6 +37,13 @@ const Checkout = () => {
   } = useForm()
 
   const totals = getTotals()
+  
+  // Calculate totals with voucher discount
+  const subtotal = totals.subtotal
+  const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount)
+  const tax = subtotalAfterDiscount * 0.1
+  const shipping = subtotalAfterDiscount > 100 ? 0 : 10
+  const finalTotal = subtotalAfterDiscount + tax + shipping
 
   /**
    * Redirect if cart is empty
@@ -46,7 +59,7 @@ const Checkout = () => {
    * Handle order submission
    * @param {Object} data - Form data (shipping address)
    */
-  const onSubmit = async (data) => {
+  const handleOrderSubmit = async (data) => {
     if (cart.items.length === 0) {
       toast.error('Your cart is empty')
       return
@@ -71,6 +84,7 @@ const Checkout = () => {
           country: data.country,
         },
         paymentMethod: 'Mock Payment',
+        voucher_code: voucherCode,
       }
 
       // Create order
@@ -129,63 +143,10 @@ const Checkout = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-6">Shipping Address</h2>
             
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Address field */}
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                  Address
-                </label>
-                <input
-                  {...register('address', { required: 'Address is required' })}
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Street address"
-                />
-                {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
-              </div>
-
-              {/* City field */}
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                  City
-                </label>
-                <input
-                  {...register('city', { required: 'City is required' })}
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="City"
-                />
-                {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>}
-              </div>
-
-              {/* Postal code field */}
-              <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2">
-                  Postal Code
-                </label>
-                <input
-                  {...register('postalCode', { required: 'Postal code is required' })}
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Postal code"
-                />
-                {errors.postalCode && <p className="mt-1 text-sm text-red-600">{errors.postalCode.message}</p>}
-              </div>
-
-              {/* Country field */}
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  Country
-                </label>
-                <input
-                  {...register('country', { required: 'Country is required' })}
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Country"
-                />
-                {errors.country && <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>}
-              </div>
-
+            {/* Address form */}
+            <form onSubmit={handleSubmit(handleOrderSubmit)} className="space-y-4">
+              <AddressForm register={register} errors={errors} />
+              
               {/* Payment method info */}
               <div className="bg-gray-50 p-4 rounded-md">
                 <p className="text-sm text-gray-600">
@@ -194,13 +155,14 @@ const Checkout = () => {
               </div>
 
               {/* Submit button */}
-              <button
+              <Button
                 type="submit"
-                disabled={processing}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+                loading={processing}
+                icon={<FaCheck />}
+                className="w-full py-3"
               >
-                {processing ? 'Processing...' : 'Place Order'}
-              </button>
+                Place Order
+              </Button>
             </form>
           </div>
         </div>
@@ -209,6 +171,21 @@ const Checkout = () => {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+            
+            {/* Voucher form */}
+            <div className="mb-4">
+              <VoucherForm
+                orderTotal={subtotal}
+                onVoucherApplied={(voucher, discount) => {
+                  setVoucherCode(voucher.code)
+                  setVoucherDiscount(discount)
+                }}
+                onVoucherRemoved={() => {
+                  setVoucherCode(null)
+                  setVoucherDiscount(0)
+                }}
+              />
+            </div>
             
             {/* Order items */}
             <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
@@ -224,19 +201,25 @@ const Checkout = () => {
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span>${totals.subtotal.toFixed(2)}</span>
+                <span>${subtotal.toFixed(2)}</span>
               </div>
+              {voucherDiscount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Voucher Discount</span>
+                  <span>-${voucherDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax</span>
-                <span>${totals.tax.toFixed(2)}</span>
+                <span>${tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
-                <span>${totals.shipping.toFixed(2)}</span>
+                <span>${shipping.toFixed(2)}</span>
               </div>
               <div className="border-t pt-2 flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span>${totals.total.toFixed(2)}</span>
+                <span>${finalTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>

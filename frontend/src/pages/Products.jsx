@@ -12,6 +12,10 @@ import axios from 'axios'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
+import SkeletonLoader from '../components/SkeletonLoader'
+import ProductCard from '../components/ProductCard'
+import Pagination from '../components/Pagination'
+import FilterSidebar from '../components/FilterSidebar'
 
 /**
  * Products component
@@ -23,11 +27,14 @@ const Products = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
+  const [childCategories, setChildCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [filters, setFilters] = useState({
     search: '',
     category: '',
     subcategory: '',
+    childCategory: '',
     minPrice: '',
     maxPrice: '',
     sortBy: 'created_at',
@@ -45,16 +52,18 @@ const Products = () => {
       if (filters.search) params.append('search', filters.search)
       if (filters.category) params.append('category', filters.category)
       if (filters.subcategory) params.append('subcategory', filters.subcategory)
+      if (filters.childCategory) params.append('childCategory', filters.childCategory)
       if (filters.minPrice) params.append('minPrice', filters.minPrice)
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice)
       if (filters.sortBy) params.append('sortBy', filters.sortBy)
       params.append('page', filters.page)
 
       const response = await axios.get(`/api/products?${params}`)
-      setProducts(response.data.products)
+      setProducts(response.data.products || [])
+      setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
     } catch (error) {
       console.error('Error fetching products:', error)
-      toast.error('Failed to load products')
+      toast.error(error.response?.data?.message || 'Failed to load products')
     } finally {
       setLoading(false)
     }
@@ -69,6 +78,7 @@ const Products = () => {
       setCategories(response.data)
     } catch (error) {
       console.error('Error fetching categories:', error)
+      toast.error(error.response?.data?.message || 'Failed to load categories')
     }
   }
 
@@ -77,20 +87,56 @@ const Products = () => {
    */
   useEffect(() => {
     if (filters.category) {
-      const fetchSubcategories = async () => {
-        try {
-          const response = await axios.get(`/api/products/subcategories/${filters.category}`)
-          setSubcategories(response.data)
-        } catch (error) {
-          console.error('Error fetching subcategories:', error)
+      const selectedCategory = categories.find(cat => cat.id === parseInt(filters.category))
+      if (selectedCategory?.subcategories) {
+        setSubcategories(selectedCategory.subcategories)
+      } else {
+        const fetchSubcategories = async () => {
+          try {
+            const response = await axios.get(`/api/products/subcategories/${filters.category}`)
+            setSubcategories(response.data)
+          } catch (error) {
+            console.error('Error fetching subcategories:', error)
+            toast.error(error.response?.data?.message || 'Failed to load subcategories')
+          }
         }
+        fetchSubcategories()
       }
-      fetchSubcategories()
+      setFilters(prev => ({ ...prev, subcategory: '', childCategory: '' }))
+      setChildCategories([])
     } else {
       setSubcategories([])
-      setFilters(prev => ({ ...prev, subcategory: '' }))
+      setFilters(prev => ({ ...prev, subcategory: '', childCategory: '' }))
+      setChildCategories([])
     }
-  }, [filters.category])
+  }, [filters.category, categories])
+
+  /**
+   * Fetch child categories when subcategory changes
+   */
+  useEffect(() => {
+    if (filters.subcategory) {
+      const selectedSubcategory = subcategories.find(sub => sub.id === parseInt(filters.subcategory))
+      if (selectedSubcategory?.child_categories) {
+        setChildCategories(selectedSubcategory.child_categories)
+      } else {
+        const fetchChildCategories = async () => {
+          try {
+            const response = await axios.get(`/api/products/child-categories/${filters.subcategory}`)
+            setChildCategories(response.data)
+          } catch (error) {
+            console.error('Error fetching child categories:', error)
+            toast.error(error.response?.data?.message || 'Failed to load child categories')
+          }
+        }
+        fetchChildCategories()
+      }
+      setFilters(prev => ({ ...prev, childCategory: '' }))
+    } else {
+      setChildCategories([])
+      setFilters(prev => ({ ...prev, childCategory: '' }))
+    }
+  }, [filters.subcategory, subcategories])
 
   /**
    * Load data on mount and filter changes
@@ -110,6 +156,14 @@ const Products = () => {
    */
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }))
+  }
+
+  /**
+   * Handle page change
+   * @param {number} page - Page number
+   */
+  const handlePageChange = (page) => {
+    setFilters(prev => ({ ...prev, page }))
   }
 
   /**
@@ -133,11 +187,9 @@ const Products = () => {
   if (loading && products.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading state */}
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading products...</p>
-        </div>
+        {/* Loading skeleton */}
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Products</h1>
+        <SkeletonLoader type="card" count={6} />
       </div>
     )
   }
@@ -150,94 +202,13 @@ const Products = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Filters</h2>
-
-            {/* Search */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-              <input
-                type="text"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Search products..."
-              />
-            </div>
-
-            {/* Category filter */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Subcategory filter */}
-            {filters.category && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
-                <select
-                  value={filters.subcategory}
-                  onChange={(e) => handleFilterChange('subcategory', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">All Subcategories</option>
-                  {subcategories.map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Price range */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
-              <div className="flex space-x-2">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.minPrice}
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.maxPrice}
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-
-            {/* Sort */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-              <select
-                value={filters.sortBy}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="created_at">Newest</option>
-                <option value="price">Price: Low to High</option>
-                <option value="price DESC">Price: High to Low</option>
-                <option value="name">Name: A to Z</option>
-                <option value="rating DESC">Highest Rated</option>
-              </select>
-            </div>
-          </div>
+          <FilterSidebar
+            categories={categories}
+            subcategories={subcategories}
+            childCategories={childCategories}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+          />
         </div>
 
         {/* Products grid */}
@@ -248,33 +219,24 @@ const Products = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {/* Products grid */}
               {products.map((product) => (
-                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                  {/* Product image */}
-                  <Link to={`/products/${product.id}`}>
-                    <div className="h-48 bg-gray-200"></div>
-                  </Link>
-                  
-                  {/* Product info */}
-                  <div className="p-4">
-                    <Link to={`/products/${product.id}`}>
-                      <h3 className="font-semibold text-lg mb-2 hover:text-blue-600">{product.name}</h3>
-                    </Link>
-                    <p className="text-sm text-gray-600 mb-2">{product.category_name} / {product.subcategory_name}</p>
-                    <p className="text-xl font-semibold text-blue-600 mb-2">${product.price}</p>
-                    {product.rating > 0 && (
-                      <p className="text-sm text-gray-500 mb-2">★ {product.rating.toFixed(1)} ({product.num_reviews})</p>
-                    )}
-                    <button
-                      onClick={() => handleAddToCart(product.id)}
-                      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                />
               ))}
             </div>
+          )}
+
+          {/* Pagination */}
+          {products.length > 0 && (
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={pagination.pages}
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </div>

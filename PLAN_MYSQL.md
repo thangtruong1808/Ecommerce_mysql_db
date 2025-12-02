@@ -33,10 +33,11 @@ The MySQL database schema has been created in `database/schema.sql`. Key tables 
 
 - **users** - User accounts with authentication and role-based access (user/admin)
 - **refresh_tokens** - Refresh tokens for JWT authentication (stored in HTTP cookies)
-- **categories** - Top-level product categories
-- **subcategories** - Subcategories that belong to categories (category → subcategory → product hierarchy)
-- **products** - Product information with ratings (belongs to subcategories)
-- **product_images** - Multiple images per product
+- **categories** - Top-level product categories (Level 1)
+- **subcategories** - Subcategories that belong to categories (Level 2)
+- **child_categories** - Child categories that belong to subcategories (Level 3)
+- **products** - Product information with ratings (belongs to child categories - 3-level hierarchy: category → subcategory → child_category → product)
+- **product_images** - Multiple images per product (nullable - products can exist without images initially, images can be added later via scripts or admin interface. image_url column is nullable to allow creating placeholder records that can be updated later)
 - **product_videos** - Videos for products (optional)
 - **user_addresses** - Shipping addresses
 - **carts** - Shopping carts (one per user)
@@ -67,9 +68,10 @@ See `database/schema.sql` and `database/README.md` for full details.
 - **Database Models/Queries** (`backend/models/`):
   - `userModel.js` - User queries (create, find, update)
   - `refreshTokenModel.js` - Refresh token queries (create, find, delete, cleanup expired)
-  - `categoryModel.js` - Category queries
-  - `subcategoryModel.js` - Subcategory queries (get by category, create, update, delete)
-  - `productModel.js` - Product queries with joins (includes subcategory and category)
+  - `categoryModel.js` - Category queries (with nested subcategories and child categories)
+  - `subcategoryModel.js` - Subcategory queries (get by category, with child categories, create, update, delete)
+  - `childCategoryModel.js` - Child category queries (get by subcategory, create, update, delete)
+  - `productModel.js` - Product queries with joins (includes full 3-level hierarchy: category, subcategory, child_category)
   - `cartModel.js` - Cart and cart item queries
   - `orderModel.js` - Order queries with joins
   - `invoiceModel.js` - Invoice queries and generation
@@ -126,8 +128,9 @@ See `database/schema.sql` and `database/README.md` for full details.
 ### Backend Product Features
 - **Enhanced Product Routes** (`backend/routes/productRoutes.js`):
   - GET `/api/products` - Get all products (with pagination, filtering, sorting, search using MySQL queries)
-  - GET `/api/products/:id` - Get single product with reviews (JOIN queries with subcategory and category)
-  - POST `/api/products` - Create product (admin only, requires subcategory_id)
+  - GET `/api/products/:id` - Get single product with reviews (JOIN queries with full 3-level hierarchy)
+  - POST `/api/products` - Create product (admin only, requires child_category_id)
+  - GET `/api/products/child-categories/:subcategoryId` - Get child categories by subcategory ID
   - PUT `/api/products/:id` - Update product (admin only)
   - DELETE `/api/products/:id` - Delete product (admin only)
   - GET `/api/products/categories` - Get all categories with their subcategories
@@ -138,15 +141,18 @@ See `database/schema.sql` and `database/README.md` for full details.
   - Business logic separation
   - Error handling
   - MySQL query building for filters
-  - JOIN queries to include category and subcategory information
+    - JOIN queries to include full 3-level hierarchy (category, subcategory, child_category)
 
 - **File Upload** (`backend/middleware/uploadMiddleware.js`):
   - Multer configuration for product images and videos
   - Image/video validation and storage
-  - POST `/api/products/:id/upload` - Upload product images
+  - POST `/api/products/:id/images` - Upload product images (multiple images per product)
   - POST `/api/products/:id/videos` - Upload product videos (OPTIONAL - not required)
   - Store image URLs in product_images table
   - Store video URLs in product_videos table (videos are optional, products can exist without videos)
+  - **Note**: Products can be created without images initially. Images are nullable and can be added later via scripts or admin interface.
+  - **One product can have multiple images** (one-to-many relationship)
+  - **image_url column is nullable** - Allows creating placeholder image records that can be updated later via scripts
 
 ### Frontend Product Features
 - **Product Pages**:
@@ -154,23 +160,26 @@ See `database/schema.sql` and `database/README.md` for full details.
     - Search functionality (using MySQL FULLTEXT search)
     - Category filters (top-level)
     - Subcategory filters (filtered by selected category)
+    - Child category filters (filtered by selected subcategory)
     - Price range filters
     - Sort options (price, name, newest)
     - Pagination
     - Loading states
   - Enhanced `ProductDetail.jsx` - Product details with:
-    - Image gallery (from product_images table)
+    - Image gallery (from product_images table - displays multiple images if available, handles products without images gracefully)
     - Video player (from product_videos table, OPTIONAL - only display if videos exist)
     - Add to cart functionality
     - Stock availability
     - Related products section
+    - **Note**: Products can exist without images initially. The UI should handle cases where no images exist.
 
 - **Components**:
-  - `ProductCard.jsx` - Reusable product card component (shows category and subcategory)
+  - `ProductCard.jsx` - Reusable product card component (shows full 3-level hierarchy)
   - `SearchBar.jsx` - Search input component
-  - `FilterSidebar.jsx` - Filter panel component (category and subcategory filters)
+  - `FilterSidebar.jsx` - Filter panel component (category, subcategory, and child category filters)
   - `CategoryFilter.jsx` - Category selection component
   - `SubcategoryFilter.jsx` - Subcategory selection component (depends on category)
+  - `ChildCategoryFilter.jsx` - Child category selection component (depends on subcategory)
   - `Pagination.jsx` - Pagination component
   - `ImageGallery.jsx` - Product image carousel
   - `VideoPlayer.jsx` - Product video player component
@@ -327,15 +336,21 @@ See `database/schema.sql` and `database/README.md` for full details.
 
 ### Frontend Improvements
 - **Loading States**:
-  - Skeleton loaders for products
+  - Skeleton loaders for all pages (products, orders, invoices, admin pages, etc.)
   - Loading spinners
   - Progress indicators
+  - **Button loading states** - All buttons show loading indicator when clicked/processing
+  - **Loading skeleton components** - Reusable skeleton components for different content types
 
 - **Error Handling**:
   - Error boundaries
-  - Error toast notifications
+  - Error toast notifications (using react-toastify)
   - 404 page
   - Form validation feedback
+  - **All try-catch blocks must display errors to users via toast notifications**
+  - **No empty catch blocks - all errors must be shown in UI**
+  - **Backend errors should return user-friendly messages**
+  - **Frontend should handle all API errors gracefully with user feedback**
 
 - **Responsive Design**:
   - Mobile-first approach
@@ -355,6 +370,10 @@ See `database/schema.sql` and `database/README.md` for full details.
   - `Modal.jsx` - Reusable modal component
   - `Toast.jsx` - Toast notification component
   - `Footer.jsx` - Site footer
+  - `SkeletonLoader.jsx` - Reusable skeleton loading component
+  - `Button.jsx` - Reusable button component with loading state and icons
+  - **All buttons must have icons and loading states**
+  - **All pages must have skeleton loading states for better UX**
 
 ## Phase 8: Additional Features
 
@@ -368,6 +387,9 @@ See `database/schema.sql` and `database/README.md` for full details.
   - Custom error classes
   - Centralized error handler
   - Error logging
+  - **All route handlers must use try-catch with proper error responses**
+  - **Error responses must include user-friendly messages**
+  - **Never leave catch blocks empty - always return error response**
 
 - **Security**:
   - Rate limiting
@@ -387,6 +409,10 @@ See `database/schema.sql` and `database/README.md` for full details.
   - Product comparison
   - Recently viewed products
   - Breadcrumb navigation
+  - **Button icons** - All buttons should have appropriate icons (using react-icons or similar)
+  - **Button loading states** - All buttons show spinner/loading indicator when processing
+  - **Page skeleton loaders** - All pages show skeleton loaders during data fetching
+  - **Smooth transitions** - Loading states should transition smoothly
 
 ## Phase 9: Invoice System
 

@@ -8,6 +8,7 @@
 
 import { createContext, useState, useContext, useEffect } from 'react'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import { useAuth } from './AuthContext'
 
 const CartContext = createContext()
@@ -52,6 +53,8 @@ export const CartProvider = ({ children }) => {
       setCart(response.data)
     } catch (error) {
       console.error('Error fetching cart:', error)
+      const message = error.response?.data?.message || 'Failed to load cart'
+      toast.error(message)
       setCart({ items: [] })
     } finally {
       setLoading(false)

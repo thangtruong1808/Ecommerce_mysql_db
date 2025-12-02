@@ -6,11 +6,12 @@
  * @date 2024-12-19
  */
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
+import Button from '../components/Button'
 
 /**
  * Register component
@@ -19,6 +20,7 @@ import { toast } from 'react-toastify'
 const Register = () => {
   const { register: registerUser, isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
   const {
     register,
     handleSubmit,
@@ -42,12 +44,17 @@ const Register = () => {
    * @param {Object} data - Form data (name, email, password, confirmPassword)
    */
   const onSubmit = async (data) => {
-    const result = await registerUser(data.name, data.email, data.password)
-    if (result.success) {
-      toast.success('Registration successful!')
-      navigate('/')
-    } else {
-      toast.error(result.error || 'Registration failed')
+    try {
+      setLoading(true)
+      const result = await registerUser(data.name, data.email, data.password)
+      if (result.success) {
+        toast.success('Registration successful!')
+        navigate('/')
+      } else {
+        toast.error(result.error || 'Registration failed')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -140,12 +147,14 @@ const Register = () => {
 
           {/* Submit button */}
           <div>
-            <button
+            <Button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              loading={loading}
+              icon="register"
+              className="w-full"
             >
               Register
-            </button>
+            </Button>
           </div>
         </form>
       </div>

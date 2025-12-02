@@ -10,6 +10,7 @@ import express from 'express'
 import * as orderModel from '../models/orderModel.js'
 import * as cartModel from '../models/cartModel.js'
 import * as invoiceModel from '../models/invoiceModel.js'
+import * as voucherModel from '../models/voucherModel.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
@@ -20,7 +21,7 @@ const router = express.Router()
  */
 router.post('/', protect, async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod } = req.body
+    const { orderItems, shippingAddress, paymentMethod, voucher_code } = req.body
 
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({ message: 'Order items are required' })
@@ -30,11 +31,38 @@ router.post('/', protect, async (req, res) => {
       return res.status(400).json({ message: 'Shipping address is required' })
     }
 
-    // Calculate totals
+    // Calculate subtotal
     const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const taxPrice = subtotal * 0.1 // 10% tax
-    const shippingPrice = subtotal > 100 ? 0 : 10 // Free shipping over $100
-    const totalPrice = subtotal + taxPrice + shippingPrice
+    
+    // Validate and apply voucher if provided
+    let voucherId = null
+    let voucherDiscount = 0
+    
+    if (voucher_code) {
+      const validation = await voucherModel.validateVoucher(voucher_code, req.user.id, subtotal)
+      
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.error })
+      }
+      
+      voucherId = validation.voucher.id
+      
+      // Calculate discount amount
+      if (validation.voucher.discount_type === 'percentage') {
+        voucherDiscount = (subtotal * validation.voucher.discount_value) / 100
+        if (validation.voucher.max_discount_amount) {
+          voucherDiscount = Math.min(voucherDiscount, validation.voucher.max_discount_amount)
+        }
+      } else {
+        voucherDiscount = validation.voucher.discount_value
+      }
+    }
+    
+    // Calculate totals (voucher discount applied before tax and shipping)
+    const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount)
+    const taxPrice = subtotalAfterDiscount * 0.1 // 10% tax
+    const shippingPrice = subtotalAfterDiscount > 100 ? 0 : 10 // Free shipping over $100
+    const totalPrice = subtotalAfterDiscount + taxPrice + shippingPrice
 
     // Create order
     const orderId = await orderModel.createOrder({
@@ -45,7 +73,14 @@ router.post('/', protect, async (req, res) => {
       taxPrice,
       shippingPrice,
       totalPrice,
+      voucher_id: voucherId,
+      voucher_discount: voucherDiscount,
     })
+
+    // Record voucher usage if voucher was used
+    if (voucherId) {
+      await voucherModel.useVoucher(voucherId, req.user.id, orderId)
+    }
 
     // Clear cart after order creation
     await cartModel.clearCart(req.user.id)

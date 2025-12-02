@@ -20,14 +20,15 @@ export const getAllCategories = async () => {
 }
 
 /**
- * Get categories with their subcategories
- * @returns {Promise<Array>} - Array of categories with nested subcategories
+ * Get categories with their subcategories and child categories (3-level hierarchy)
+ * @returns {Promise<Array>} - Array of categories with nested subcategories and child categories
  */
 export const getCategoriesWithSubcategories = async () => {
-  const [rows] = await db.execute(
+  // Get categories with subcategories
+  const [categoryRows] = await db.execute(
     `SELECT c.*, 
             JSON_ARRAYAGG(
-              JSON_OBJECT(
+              DISTINCT JSON_OBJECT(
                 'id', s.id,
                 'name', s.name,
                 'description', s.description
@@ -39,11 +40,42 @@ export const getCategoriesWithSubcategories = async () => {
      ORDER BY c.name ASC`
   )
   
-  // Parse JSON subcategories
-  return rows.map(row => ({
-    ...row,
-    subcategories: row.subcategories ? JSON.parse(row.subcategories) : []
-  }))
+  // Get child categories grouped by subcategory
+  const [childRows] = await db.execute(
+    `SELECT s.id as subcategory_id,
+            JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'id', cc.id,
+                'name', cc.name,
+                'description', cc.description
+              )
+            ) as child_categories
+     FROM subcategories s
+     LEFT JOIN child_categories cc ON s.id = cc.subcategory_id
+     GROUP BY s.id`
+  )
+  
+  // Build child categories map
+  const childMap = {}
+  childRows.forEach(row => {
+    if (row.child_categories) {
+      childMap[row.subcategory_id] = JSON.parse(row.child_categories)
+    }
+  })
+  
+  // Parse and attach child categories to subcategories
+  return categoryRows.map(row => {
+    const subcategories = row.subcategories ? JSON.parse(row.subcategories) : []
+    const subcategoriesWithChildren = subcategories.map(sub => ({
+      ...sub,
+      child_categories: childMap[sub.id] || []
+    }))
+    
+    return {
+      ...row,
+      subcategories: subcategoriesWithChildren
+    }
+  })
 }
 
 /**

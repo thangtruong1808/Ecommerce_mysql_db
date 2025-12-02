@@ -14,7 +14,15 @@ import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import ReviewList from '../components/ReviewList'
 import ReviewForm from '../components/ReviewForm'
+import CommentList from '../components/CommentList'
+import CommentForm from '../components/CommentForm'
+import LikeButton from '../components/LikeButton'
 import StarRating from '../components/StarRating'
+import ImageGallery from '../components/ImageGallery'
+import VideoPlayer from '../components/VideoPlayer'
+import SkeletonLoader from '../components/SkeletonLoader'
+import Button from '../components/Button'
+import { FaTag } from 'react-icons/fa'
 
 /**
  * ProductDetail component
@@ -27,6 +35,7 @@ const ProductDetail = () => {
   const { isAuthenticated } = useAuth()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [addingToCart, setAddingToCart] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
   /**
@@ -65,11 +74,16 @@ const ProductDetail = () => {
       return
     }
 
-    const result = await addToCart(product.id, quantity)
-    if (result.success) {
-      toast.success('Item added to cart!')
-    } else {
-      toast.error(result.error || 'Failed to add item to cart')
+    setAddingToCart(true)
+    try {
+      const result = await addToCart(product.id, quantity)
+      if (result.success) {
+        toast.success('Item added to cart!')
+      } else {
+        toast.error(result.error || 'Failed to add item to cart')
+      }
+    } finally {
+      setAddingToCart(false)
     }
   }
 
@@ -86,11 +100,8 @@ const ProductDetail = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading state */}
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading product...</p>
-        </div>
+        {/* Loading skeleton */}
+        <SkeletonLoader type="card" count={1} />
       </div>
     )
   }
@@ -101,12 +112,12 @@ const ProductDetail = () => {
         {/* Product not found */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h1>
-          <button
+          <Button
             onClick={() => navigate('/products')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            icon="search"
           >
             Back to Products
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -117,14 +128,8 @@ const ProductDetail = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product image section */}
         <div>
-          <div className="h-96 bg-gray-200 rounded-lg mb-4"></div>
-          {product.images && product.images.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
-                <div key={index} className="h-20 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          )}
+          {/* Image gallery */}
+          <ImageGallery images={product.images || []} />
         </div>
 
         {/* Product details section */}
@@ -134,8 +139,11 @@ const ProductDetail = () => {
             {product.category_name} / {product.subcategory_name}
           </div>
 
-          {/* Product name */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
+          {/* Product name and like button */}
+          <div className="flex items-start justify-between mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 flex-1">{product.name}</h1>
+            <LikeButton productId={product.id} />
+          </div>
 
           {/* Rating */}
           {product.rating > 0 && (
@@ -147,8 +155,31 @@ const ProductDetail = () => {
             </div>
           )}
 
-          {/* Price */}
-          <p className="text-3xl font-semibold text-blue-600 mb-4">${product.price}</p>
+          {/* Price with discount */}
+          <div className="mb-4">
+            {product.has_discount && product.discounted_price ? (
+              <div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-3xl font-semibold text-blue-600">
+                    ${product.discounted_price.toFixed(2)}
+                  </span>
+                  <span className="text-xl text-gray-400 line-through">
+                    ${product.price.toFixed(2)}
+                  </span>
+                  <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
+                    <FaTag />
+                    <span>
+                      {product.discount_type === 'percentage'
+                        ? `${product.discount_value}% OFF`
+                        : `$${product.discount_value} OFF`}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-3xl font-semibold text-blue-600">${product.price.toFixed(2)}</p>
+            )}
+          </div>
 
           {/* Description */}
           <p className="text-gray-600 mb-6">{product.description}</p>
@@ -194,15 +225,25 @@ const ProductDetail = () => {
           )}
 
           {/* Add to cart button */}
-          <button
+          <Button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium mb-4"
+            loading={addingToCart}
+            icon="cart"
+            className="w-full py-3 mb-4"
           >
             {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-          </button>
+          </Button>
         </div>
       </div>
+
+      {/* Product videos section (optional) */}
+      {product.videos && product.videos.length > 0 && (
+        <div className="mt-8">
+          {/* Videos container */}
+          <VideoPlayer videos={product.videos} />
+        </div>
+      )}
 
       {/* Reviews section */}
       <div className="mt-12">
@@ -216,6 +257,21 @@ const ProductDetail = () => {
         {/* Reviews list */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <ReviewList productId={product.id} />
+        </div>
+      </div>
+
+      {/* Comments section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments</h2>
+        
+        {/* Comment form */}
+        <div className="mb-8">
+          <CommentForm productId={product.id} onCommentSubmitted={() => window.location.reload()} />
+        </div>
+
+        {/* Comments list */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <CommentList productId={product.id} />
         </div>
       </div>
     </div>

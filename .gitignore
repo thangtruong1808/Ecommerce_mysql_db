@@ -45,3 +45,6 @@ coverage/
 *.pem
 .cache/
 
+# Uploaded files
+backend/uploads/
+

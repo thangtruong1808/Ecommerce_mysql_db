@@ -9,8 +9,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import ProtectedRoute from '../components/ProtectedRoute'
+import SkeletonLoader from '../components/SkeletonLoader'
 
 /**
  * InvoiceDetail component
@@ -35,6 +37,7 @@ const InvoiceDetail = () => {
         setInvoice(response.data)
       } catch (error) {
         console.error('Error fetching invoice:', error)
+        toast.error(error.response?.data?.message || 'Failed to load invoice')
       } finally {
         setLoading(false)
       }
@@ -60,11 +63,8 @@ const InvoiceDetail = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading state */}
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading invoice...</p>
-        </div>
+        {/* Loading skeleton */}
+        <SkeletonLoader type="card" count={1} />
       </div>
     )
   }

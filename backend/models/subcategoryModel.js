@@ -115,29 +115,38 @@ export const deleteSubcategory = async (id) => {
 }
 
 /**
- * Get categories with their subcategories
- * @returns {Promise<Array>} - Array of categories with nested subcategories
+ * Get subcategories with their child categories
+ * @param {number} categoryId - Category ID (optional)
+ * @returns {Promise<Array>} - Array of subcategories with nested child categories
  */
-export const getCategoriesWithSubcategories = async () => {
-  const [rows] = await db.execute(
-    `SELECT c.*, 
-            JSON_ARRAYAGG(
-              JSON_OBJECT(
-                'id', s.id,
-                'name', s.name,
-                'description', s.description
-              )
-            ) as subcategories
-     FROM categories c
-     LEFT JOIN subcategories s ON c.id = s.category_id
-     GROUP BY c.id
-     ORDER BY c.name ASC`
-  )
+export const getSubcategoriesWithChildCategories = async (categoryId = null) => {
+  let query = `
+    SELECT s.*,
+           JSON_ARRAYAGG(
+             JSON_OBJECT(
+               'id', cc.id,
+               'name', cc.name,
+               'description', cc.description
+             )
+           ) as child_categories
+     FROM subcategories s
+     LEFT JOIN child_categories cc ON s.id = cc.subcategory_id
+  `
+  const params = []
   
-  // Parse JSON subcategories
+  if (categoryId) {
+    query += ' WHERE s.category_id = ?'
+    params.push(categoryId)
+  }
+  
+  query += ' GROUP BY s.id ORDER BY s.name ASC'
+  
+  const [rows] = await db.execute(query, params)
+  
+  // Parse JSON child categories
   return rows.map(row => ({
     ...row,
-    subcategories: row.subcategories ? JSON.parse(row.subcategories) : []
+    child_categories: row.child_categories ? JSON.parse(row.child_categories) : []
   }))
 }
 

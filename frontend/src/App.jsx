@@ -14,6 +14,7 @@ import { CartProvider } from './context/CartContext'
 import Home from './pages/Home'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
+import Clearance from './pages/Clearance'
 import Cart from './pages/Cart'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -25,10 +26,15 @@ import AdminDashboard from './pages/admin/Dashboard'
 import ProductManagement from './pages/admin/ProductManagement'
 import OrderManagement from './pages/admin/OrderManagement'
 import UserManagement from './pages/admin/UserManagement'
+import ProductForm from './pages/admin/ProductForm'
+import VoucherManagement from './pages/admin/VoucherManagement'
+import CommentModeration from './pages/admin/CommentModeration'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
+import NotFound from './pages/NotFound'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 
 /**
@@ -50,6 +56,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/clearance" element={<Clearance />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -102,6 +109,22 @@ function App() {
               }
             />
             <Route
+              path="/admin/products/new"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ProductForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/products/:id/edit"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ProductForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/orders"
               element={
                 <ProtectedRoute adminOnly>
@@ -114,6 +137,22 @@ function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/vouchers"
+              element={
+                <ProtectedRoute adminOnly>
+                  <VoucherManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/comments"
+              element={
+                <ProtectedRoute adminOnly>
+                  <CommentModeration />
                 </ProtectedRoute>
               }
             />
@@ -133,6 +172,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
           
           {/* Toast notifications container */}

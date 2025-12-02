@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import StatsCard from '../../components/admin/StatsCard'
 import ProtectedRoute from '../../components/ProtectedRoute'
 
@@ -31,6 +32,7 @@ const Dashboard = () => {
         setStats(response.data)
       } catch (error) {
         console.error('Error fetching stats:', error)
+        toast.error(error.response?.data?.message || 'Failed to load dashboard statistics')
       } finally {
         setLoading(false)
       }
@@ -42,11 +44,17 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading state */}
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        {/* Loading skeleton */}
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          ))}
         </div>
+        <SkeletonLoader type="list" count={2} />
       </div>
     )
   }

@@ -9,8 +9,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import AdminLayout from '../../components/admin/AdminLayout'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import SkeletonLoader from '../../components/SkeletonLoader'
 
 /**
  * OrderManagement component
@@ -33,6 +35,7 @@ const OrderManagement = () => {
         setOrders(response.data.orders || [])
       } catch (error) {
         console.error('Error fetching orders:', error)
+        toast.error(error.response?.data?.message || 'Failed to load orders')
       } finally {
         setLoading(false)
       }
@@ -69,11 +72,9 @@ const OrderManagement = () => {
     return (
       <AdminLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Loading state */}
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading orders...</p>
-          </div>
+          {/* Loading skeleton */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Order Management</h1>
+          <SkeletonLoader type="table" />
         </div>
       </AdminLayout>
     )

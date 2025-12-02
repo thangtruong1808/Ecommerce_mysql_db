@@ -12,6 +12,8 @@ import dotenv from 'dotenv'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import cookieParser from 'cookie-parser'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { connectDB } from './config/db.js'
 import productRoutes from './routes/productRoutes.js'
 import authRoutes from './routes/authRoutes.js'
@@ -20,6 +22,9 @@ import orderRoutes from './routes/orderRoutes.js'
 import reviewRoutes from './routes/reviewRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import invoiceRoutes from './routes/invoiceRoutes.js'
+import commentRoutes from './routes/commentRoutes.js'
+import likeRoutes from './routes/likeRoutes.js'
+import voucherRoutes from './routes/voucherRoutes.js'
 
 dotenv.config()
 
@@ -49,6 +54,11 @@ app.use(cookieParser()) // Parse cookies
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Serve uploaded files
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/products', productRoutes)
@@ -57,6 +67,9 @@ app.use('/api/orders', orderRoutes)
 app.use('/api', reviewRoutes)
 app.use('/api/invoices', invoiceRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api', commentRoutes)
+app.use('/api', likeRoutes)
+app.use('/api', voucherRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

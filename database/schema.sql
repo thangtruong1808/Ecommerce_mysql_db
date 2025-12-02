@@ -1,5 +1,9 @@
 -- Ecommerce Database Schema for MySQL
 -- This schema supports the full ecommerce application
+-- Note: All application code should implement proper error handling with try-catch blocks
+-- that display user-friendly error messages in the UI. No catch blocks should be left empty.
+-- Note: All UI buttons should have icons and loading states when clicked/processing.
+-- Note: All pages should have skeleton loading states for better user experience during data fetching.
 
 -- Create database
 CREATE DATABASE IF NOT EXISTS ecommerce_db;
@@ -55,31 +59,57 @@ CREATE TABLE subcategories (
     INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Products table (products belong to subcategories)
+-- Child categories table (child categories belong to subcategories - 3-level hierarchy)
+-- Hierarchy: Categories -> Subcategories -> Child Categories -> Products
+CREATE TABLE child_categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    subcategory_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (subcategory_id) REFERENCES subcategories(id) ON DELETE RESTRICT,
+    UNIQUE KEY unique_subcategory_child (subcategory_id, name),
+    INDEX idx_subcategory (subcategory_id),
+    INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Products table (products belong to child categories - 3-level hierarchy)
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    subcategory_id INT NOT NULL,
+    child_category_id INT NOT NULL,
     stock INT NOT NULL DEFAULT 0,
     rating DECIMAL(3, 2) DEFAULT 0.00,
     num_reviews INT DEFAULT 0,
+    discount_type ENUM('percentage', 'fixed') NULL,
+    discount_value DECIMAL(10, 2) NULL,
+    discount_start_date TIMESTAMP NULL,
+    discount_end_date TIMESTAMP NULL,
+    is_on_clearance BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (subcategory_id) REFERENCES subcategories(id) ON DELETE RESTRICT,
-    INDEX idx_subcategory (subcategory_id),
+    FOREIGN KEY (child_category_id) REFERENCES child_categories(id) ON DELETE RESTRICT,
+    INDEX idx_child_category (child_category_id),
     INDEX idx_price (price),
     INDEX idx_rating (rating),
     INDEX idx_name (name),
+    INDEX idx_is_on_clearance (is_on_clearance),
+    INDEX idx_discount_end_date (discount_end_date),
     FULLTEXT idx_search (name, description)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Product images table (separate table for multiple images per product)
+-- Note: Products can exist without images initially (nullable relationship)
+-- Images can be added later via scripts or admin interface
+-- One product can have multiple images (one-to-many relationship)
+-- image_url is nullable to allow creating placeholder records that can be updated later via scripts
 CREATE TABLE product_images (
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
-    image_url VARCHAR(500) NOT NULL,
+    image_url VARCHAR(500) NULL, -- Nullable to allow placeholder records for scripts
     is_primary BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
@@ -89,10 +119,11 @@ CREATE TABLE product_images (
 -- Product videos table (OPTIONAL - for displaying videos about products)
 -- Note: Videos are not required - products can exist without videos
 -- This is a one-to-many relationship where a product may have zero or more videos
+-- video_url is nullable to allow creating placeholder records that can be updated later via scripts
 CREATE TABLE product_videos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
-    video_url VARCHAR(500) NOT NULL,
+    video_url VARCHAR(500) NULL, -- Nullable to allow placeholder records for scripts
     title VARCHAR(255),
     description TEXT,
     thumbnail_url VARCHAR(500),
@@ -147,6 +178,8 @@ CREATE TABLE cart_items (
 CREATE TABLE orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
+    voucher_id INT NULL,
+    voucher_discount DECIMAL(10, 2) DEFAULT 0.00,
     payment_method VARCHAR(100) NOT NULL DEFAULT 'Mock Payment',
     payment_result_id VARCHAR(255),
     payment_status VARCHAR(50),
@@ -162,7 +195,9 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE SET NULL,
     INDEX idx_user (user_id),
+    INDEX idx_voucher (voucher_id),
     INDEX idx_created (created_at),
     INDEX idx_status (is_paid, is_delivered)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -238,6 +273,75 @@ CREATE TABLE invoices (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Product comments table (authenticated users can comment on products)
+CREATE TABLE product_comments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    user_id INT NOT NULL,
+    comment TEXT NOT NULL,
+    is_approved BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_product (product_id),
+    INDEX idx_user (user_id),
+    INDEX idx_is_approved (is_approved)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Product likes table (authenticated users can like products)
+CREATE TABLE product_likes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_product_like (user_id, product_id),
+    INDEX idx_product (product_id),
+    INDEX idx_user (user_id),
+    INDEX idx_product_user (product_id, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Vouchers table (discount codes for total order price)
+CREATE TABLE vouchers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    discount_type ENUM('percentage', 'fixed') NOT NULL,
+    discount_value DECIMAL(10, 2) NOT NULL,
+    min_purchase_amount DECIMAL(10, 2) DEFAULT 0.00,
+    max_discount_amount DECIMAL(10, 2) NULL,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP NOT NULL,
+    usage_limit_per_user INT DEFAULT 1,
+    total_usage_limit INT NULL,
+    current_usage_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code),
+    INDEX idx_is_active (is_active),
+    INDEX idx_start_date (start_date),
+    INDEX idx_end_date (end_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Voucher usages table (track voucher usage)
+CREATE TABLE voucher_usages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    voucher_id INT NOT NULL,
+    user_id INT NOT NULL,
+    order_id INT NOT NULL,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (voucher_id) REFERENCES vouchers(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE RESTRICT,
+    INDEX idx_voucher (voucher_id),
+    INDEX idx_user (user_id),
+    INDEX idx_order (order_id),
+    INDEX idx_voucher_user (voucher_id, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Trigger to update product rating when review is added/updated/deleted
 DELIMITER //
 
@@ -292,43 +396,11 @@ END//
 
 DELIMITER ;
 
--- Insert sample categories
-INSERT INTO categories (name, description) VALUES
-('Electronics', 'Electronic devices and accessories'),
-('Clothing', 'Apparel and fashion items'),
-('Accessories', 'Various accessories'),
-('Home & Garden', 'Home and garden products'),
-('Sports', 'Sports and outdoor equipment');
-
--- Insert sample subcategories
-INSERT INTO subcategories (category_id, name, description) VALUES
--- Electronics subcategories
-(1, 'Smartphones', 'Mobile phones and smartphones'),
-(1, 'Laptops', 'Laptop computers and notebooks'),
-(1, 'Tablets', 'Tablet devices'),
-(1, 'Headphones', 'Audio headphones and earbuds'),
--- Clothing subcategories
-(2, 'Men\'s Clothing', 'Clothing for men'),
-(2, 'Women\'s Clothing', 'Clothing for women'),
-(2, 'Kids\' Clothing', 'Clothing for children'),
-(2, 'Shoes', 'Footwear'),
--- Accessories subcategories
-(3, 'Watches', 'Wristwatches and timepieces'),
-(3, 'Bags', 'Handbags and backpacks'),
-(3, 'Jewelry', 'Jewelry and accessories'),
--- Home & Garden subcategories
-(4, 'Furniture', 'Home furniture'),
-(4, 'Kitchen', 'Kitchen appliances and tools'),
-(4, 'Garden Tools', 'Gardening equipment'),
--- Sports subcategories
-(5, 'Fitness', 'Fitness equipment and gear'),
-(5, 'Outdoor', 'Outdoor sports equipment'),
-(5, 'Team Sports', 'Team sports equipment');
-
 -- Create indexes for better performance
 -- Additional composite indexes for common queries
-CREATE INDEX idx_products_subcategory_price ON products(subcategory_id, price);
-CREATE INDEX idx_subcategories_category ON subcategories(category_id);
+-- Note: idx_category already exists on subcategories table, so not creating duplicate
+-- Note: idx_subcategory already exists on child_categories table, so not creating duplicate
+CREATE INDEX idx_products_child_category_price ON products(child_category_id, price);
 CREATE INDEX idx_orders_user_created ON orders(user_id, created_at DESC);
 CREATE INDEX idx_cart_items_cart_product ON cart_items(cart_id, product_id);
 CREATE INDEX idx_invoices_user_created ON invoices(user_id, created_at DESC);
