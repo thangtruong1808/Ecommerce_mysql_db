@@ -9,6 +9,7 @@
 import { Link } from 'react-router-dom'
 import Button from './Button'
 import { FaTag } from 'react-icons/fa'
+import comingSoon from '../assets/images/image_comming_soon.png'
 
 /**
  * ProductCard component
@@ -30,7 +31,7 @@ const ProductCard = ({ product, onAddToCart }) => {
     return null
   }
 
-  const imageUrl = getPrimaryImage()
+  const imageUrl = getPrimaryImage() || comingSoon
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition relative">
@@ -49,15 +50,12 @@ const ProductCard = ({ product, onAddToCart }) => {
       {/* Product image */}
       <Link to={`/products/${product.id}`}>
         <div className="h-48 bg-gray-200 overflow-hidden flex items-center justify-center">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <p className="text-gray-500 text-sm">No image</p>
-          )}
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover"
+            onError={(e) => { if (e.target.src !== comingSoon) e.target.src = comingSoon }}
+          />
         </div>
       </Link>
       

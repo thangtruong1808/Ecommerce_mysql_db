@@ -13,10 +13,12 @@
  * @param {Array} props.subcategories - Subcategories array (filtered by category)
  * @param {Array} props.childCategories - Child categories array (filtered by subcategory)
  * @param {Object} props.filters - Current filter values
+ * @param {string} props.searchValue - Debounced search display value
  * @param {Function} props.onFilterChange - Filter change handler
+ * @param {Function} props.onClear - Clear all filters handler
  * @returns {JSX.Element} Filter sidebar component
  */
-const FilterSidebar = ({ categories, subcategories, childCategories, filters, onFilterChange }) => {
+const FilterSidebar = ({ categories, subcategories, childCategories, filters, searchValue, onFilterChange, onClear }) => {
   // Get subcategories for selected category
   const selectedCategory = categories.find(cat => cat.id === parseInt(filters.category))
   const availableSubcategories = selectedCategory?.subcategories || subcategories
@@ -34,7 +36,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, on
         <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
         <input
           type="text"
-          value={filters.search}
+          value={searchValue}
           onChange={(e) => onFilterChange('search', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
           placeholder="Search products..."
@@ -121,16 +123,27 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, on
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
         <select
-          value={filters.sortBy}
-          onChange={(e) => onFilterChange('sortBy', e.target.value)}
+          value={`${filters.sortBy}|${filters.sortOrder || 'DESC'}`}
+          onChange={(e) => onFilterChange('sort', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
         >
-          <option value="created_at">Newest</option>
-          <option value="price">Price: Low to High</option>
-          <option value="price DESC">Price: High to Low</option>
-          <option value="name">Name: A to Z</option>
-          <option value="rating DESC">Highest Rated</option>
+          <option value="created_at|DESC">Newest</option>
+          <option value="price|ASC">Price: Low to High</option>
+          <option value="price|DESC">Price: High to Low</option>
+          <option value="name|ASC">Name: A to Z</option>
+          <option value="rating|DESC">Highest Rated</option>
         </select>
+      </div>
+
+      {/* Clear all */}
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={onClear}
+          className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Clear all filters
+        </button>
       </div>
     </div>
   )

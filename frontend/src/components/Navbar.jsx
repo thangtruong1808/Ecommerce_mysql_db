@@ -5,12 +5,12 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import logoImage from '../assets/images/Logo.png'
-import { FaUserCircle, FaSignOutAlt, FaShoppingBag, FaFileInvoice, FaUser, FaCog, FaBars, FaTimes } from 'react-icons/fa'
+import { FaUserCircle, FaSignOutAlt, FaShoppingBag, FaFileInvoice, FaUser, FaCog, FaBars, FaTimes, FaSearch } from 'react-icons/fa'
 import { loadCategories } from '../utils/categoryCache'
 
 /**
@@ -21,6 +21,7 @@ const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth()
   const { getItemCount } = useCart()
   const location = useLocation()
+  const navigate = useNavigate()
   const [categories, setCategories] = useState([])
   const [isMegaOpen, setIsMegaOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -89,6 +90,17 @@ const Navbar = () => {
       setIsMegaOpen(false)
       closeTimerRef.current = null
     }, 150)
+  }
+
+  /**
+   * Open filters drawer on products page
+   */
+  const openFilterDrawer = () => {
+    if (location.pathname.startsWith('/products')) {
+      window.dispatchEvent(new CustomEvent('toggle-filters'))
+    } else {
+      navigate('/products?openFilters=1')
+    }
   }
 
   /**
@@ -182,6 +194,17 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+            <button
+              type="button"
+              onClick={openFilterDrawer}
+              aria-controls="product-filters-drawer"
+              aria-expanded="false"
+              aria-haspopup="dialog"
+              className="px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors text-gray-600 hover:text-gray-900"
+              aria-label="Open product filters"
+            >
+              <FaSearch className="mr-1" /> Filters
+            </button>
             <Link to="/clearance" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/clearance') ? 'text-red-700 bg-red-50 font-bold' : 'text-red-600 hover:text-red-700 font-semibold'}`}>Clearance</Link>
             <Link to="/cart" className={`px-3 py-2 rounded-md text-sm font-medium relative transition-colors ${isActive('/cart') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}>
               Cart
@@ -255,6 +278,14 @@ const Navbar = () => {
                 <button type="button" onClick={() => setIsMegaOpen(!isMegaOpen)} className={`w-full flex items-center justify-between py-2 text-base font-medium transition-colors ${isActive('/products') ? 'text-blue-600 bg-blue-50 px-2 rounded font-semibold' : 'text-gray-600 hover:text-gray-900'}`}>
                   Products <span className="text-xs">{isMegaOpen ? '▲' : '▼'}</span>
                 </button>
+              <button
+                type="button"
+                onClick={openFilterDrawer}
+                className="w-full text-left py-2 text-base font-medium text-gray-600 hover:text-gray-900 flex items-center space-x-2"
+              >
+                <FaSearch />
+                <span>Filters</span>
+              </button>
                 {isMegaOpen && (
                   <div className="pl-4 mt-2 space-y-3">
                     {categories.map((category) => (

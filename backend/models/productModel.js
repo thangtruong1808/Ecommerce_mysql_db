@@ -99,7 +99,7 @@ export const getAllProducts = async (filters = {}) => {
   // Validate and sanitize sortBy to prevent SQL injection
   const allowedSortFields = ['created_at', 'name', 'price', 'rating', 'stock']
   const sanitizedSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at'
-  const sanitizedSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const sanitizedSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
   const orderBy = `ORDER BY p.${sanitizedSortBy} ${sanitizedSortOrder}`
 
   // Get products with full 3-level hierarchy
