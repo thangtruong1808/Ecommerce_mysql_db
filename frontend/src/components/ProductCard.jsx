@@ -1,13 +1,11 @@
 /**
  * Product Card Component
  * Reusable product card for displaying products in listings
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { Link } from 'react-router-dom'
-import Button from './Button'
 import { FaTag } from 'react-icons/fa'
 import comingSoon from '../assets/images/image_comming_soon.png'
 
@@ -17,11 +15,15 @@ import comingSoon from '../assets/images/image_comming_soon.png'
  * @param {Object} props.product - Product object
  * @param {Function} props.onAddToCart - Add to cart handler
  * @returns {JSX.Element} Product card component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const ProductCard = ({ product, onAddToCart }) => {
   /**
    * Get primary image URL
    * @returns {string|null} Primary image URL or null
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const getPrimaryImage = () => {
     if (product.images && product.images.length > 0) {
@@ -32,8 +34,12 @@ const ProductCard = ({ product, onAddToCart }) => {
   }
 
   const imageUrl = getPrimaryImage() || comingSoon
+  const likesCount = product.likes_count ?? product.like_count ?? product.total_likes ?? product.num_likes ?? 0
+  const commentsCount = product.comments_count ?? product.comment_count ?? product.total_comments ?? product.num_comments ?? 0
+  const reviewCount = product.num_reviews ?? 0
 
   return (
+    /* Product card layout */
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition relative">
       {/* Discount badge */}
       {product.has_discount && product.discounted_price && (
@@ -60,44 +66,43 @@ const ProductCard = ({ product, onAddToCart }) => {
       </Link>
       
       {/* Product info */}
-      <div className="p-4">
-        <Link to={`/products/${product.id}`}>
-          <h3 className="font-semibold text-lg mb-2 hover:text-blue-600">{product.name}</h3>
-        </Link>
-        <p className="text-sm text-gray-600 mb-2">
-          {product.category_name} / {product.subcategory_name}
-        </p>
-        
-        {/* Price with discount */}
-        {product.has_discount && product.discounted_price ? (
-          <div className="mb-2">
-            <div className="flex items-center space-x-2">
-              <span className="text-xl font-semibold text-blue-600">
-                ${(Number(product.discounted_price) || 0).toFixed(2)}
-              </span>
-              <span className="text-sm text-gray-400 line-through">
+      <div className="p-2">
+        <div className="flex items-center justify-between">
+          <Link to={`/products/${product.id}`}>
+            <h3 className="font-semibold text-sm leading-5 hover:text-blue-600 line-clamp-2">{product.name}</h3>
+          </Link>
+          <div className="text-right">
+            {product.has_discount && product.discounted_price ? (
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-semibold text-blue-600">
+                  ${(Number(product.discounted_price) || 0).toFixed(2)}
+                </span>
+                <span className="text-xs text-gray-400 line-through">
+                  ${(Number(product.price) || 0).toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              <span className="text-base font-semibold text-blue-600">
                 ${(Number(product.price) || 0).toFixed(2)}
               </span>
-            </div>
+            )}
           </div>
-        ) : (
-          <p className="text-xl font-semibold text-blue-600 mb-2">
-            ${(Number(product.price) || 0).toFixed(2)}
-          </p>
-        )}
-        
-        {product.rating > 0 && (
-          <p className="text-sm text-gray-500 mb-2">
-            ★ {product.rating.toFixed(1)} ({product.num_reviews})
-          </p>
-        )}
-        <Button
-          onClick={() => onAddToCart(product.id)}
-          icon="cart"
-          className="w-full"
-        >
-          Add to Cart
-        </Button>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-gray-600 ">
+          <span className="flex items-center space-x-1">
+            <span>★ {product.rating > 0 ? product.rating.toFixed(1) : '0.0'}</span>
+            <span>({reviewCount} reviews)</span>
+          </span>
+          <span className="flex items-center space-x-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+              👍 {likesCount}
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+              💬 {commentsCount}
+            </span>
+          </span>
+        </div>
       </div>
     </div>
   )

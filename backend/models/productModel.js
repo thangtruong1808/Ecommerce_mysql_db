@@ -50,7 +50,7 @@ const isDiscountActive = (discountStartDate, discountEndDate) => {
 export const getAllProducts = async (filters = {}) => {
   const {
     page = 1,
-    limit = 12,
+    limit = 15,
     category = null,
     subcategory = null,
     childCategory = null,

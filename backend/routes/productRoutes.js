@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
   try {
     const filters = {
       page: parseInt(req.query.page) || 1,
-      limit: parseInt(req.query.limit) || 12,
+      limit: parseInt(req.query.limit) || 15,
       category: req.query.category ? parseInt(req.query.category) : null,
       subcategory: req.query.subcategory ? parseInt(req.query.subcategory) : null,
       childCategory: req.query.childCategory ? parseInt(req.query.childCategory) : null,
@@ -56,7 +56,7 @@ router.get('/clearance', async (req, res) => {
   try {
     const filters = {
       page: parseInt(req.query.page) || 1,
-      limit: parseInt(req.query.limit) || 12,
+      limit: parseInt(req.query.limit) || 15,
       sortBy: req.query.sortBy || 'created_at',
       sortOrder: req.query.sortOrder || 'DESC'
     }

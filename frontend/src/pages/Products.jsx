@@ -1,9 +1,8 @@
 /**
  * Products Page Component
  * Displays product listing with filters, search, and pagination
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useEffect, useRef } from 'react'
@@ -19,6 +18,8 @@ import { useProductsData } from '../hooks/useProductsData'
 /**
  * Products component
  * @returns {JSX.Element} Products listing page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const Products = () => {
   const { addToCart } = useCart()
@@ -56,6 +57,8 @@ const Products = () => {
   /**
    * Handle add to cart
    * @param {number} productId - Product ID
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
@@ -82,6 +85,7 @@ const Products = () => {
   }
 
   return (
+    /* Products page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
@@ -149,7 +153,7 @@ const Products = () => {
               <p className="text-gray-600">No products found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}

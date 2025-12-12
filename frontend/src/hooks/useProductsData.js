@@ -3,6 +3,8 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { loadCategories } from '../utils/categoryCache'
 
+const PAGE_SIZE = 15
+
 const initialFilters = (searchParams) => ({
   search: searchParams.get('search') || '',
   category: searchParams.get('category') || '',
@@ -30,6 +32,12 @@ export const useProductsData = (searchParams, setSearchParams) => {
   const isUpdatingFromUrl = useRef(false)
   const productsLoadingRef = useRef(false)
 
+  /**
+   * Fetch products with current filters
+   * @returns {Promise<void>} Resolves when products fetched
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
   const fetchProducts = async () => {
     if (productsLoadingRef.current) return
     productsLoadingRef.current = true
@@ -45,6 +53,7 @@ export const useProductsData = (searchParams, setSearchParams) => {
       if (filters.sortBy) params.append('sortBy', filters.sortBy)
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
       params.append('page', filters.page)
+      params.append('limit', PAGE_SIZE)
 
       const response = await axios.get(`/api/products?${params}`)
       setProducts(response.data.products || [])
