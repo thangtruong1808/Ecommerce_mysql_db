@@ -50,7 +50,11 @@ export const useProductsData = (searchParams, setSearchParams) => {
       setProducts(response.data.products || [])
       setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load products')
+      if (error?.response?.status === 429) {
+        toast.error('Please retry in a moment (rate limited).')
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to load products')
+      }
     } finally {
       setLoading(false)
       productsLoadingRef.current = false
@@ -62,7 +66,9 @@ export const useProductsData = (searchParams, setSearchParams) => {
       const data = await loadCategories()
       setCategories(data || [])
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load categories')
+      if (error?.response?.status !== 429) {
+        toast.error(error.response?.data?.message || 'Failed to load categories')
+      }
     }
   }
 
