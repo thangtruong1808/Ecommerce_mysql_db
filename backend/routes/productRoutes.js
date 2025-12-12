@@ -12,7 +12,13 @@ import * as categoryModel from '../models/categoryModel.js'
 import * as subcategoryModel from '../models/subcategoryModel.js'
 import * as childCategoryModel from '../models/childCategoryModel.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
-import { uploadImage, uploadVideo } from '../middleware/uploadMiddleware.js'
+import { uploadImage, uploadVideo, resizeImage } from '../middleware/uploadMiddleware.js'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const router = express.Router()
 
@@ -49,7 +55,11 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /api/products/clearance
- * Get all clearance products (products with active discounts)
+ * Get all clearance products (products marked for clearance)
+ * Business logic: Shows all products with is_on_clearance=true
+ * Discount fields are optional - if present and active, discounted price is calculated
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/clearance', async (req, res) => {
   try {
@@ -140,10 +150,16 @@ router.get('/child-category/:id', async (req, res) => {
 /**
  * GET /api/products/:id
  * Get single product by ID with images and videos
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/:id', async (req, res) => {
   try {
-    const product = await productModel.getProductById(parseInt(req.params.id))
+    const productId = parseInt(req.params.id)
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).json({ message: 'Invalid product ID' })
+    }
+    const product = await productModel.getProductById(productId)
     if (!product) {
       return res.status(404).json({ message: 'Product not found' })
     }
@@ -245,6 +261,9 @@ router.delete('/:id', protect, admin, async (req, res) => {
 /**
  * POST /api/products/:id/images
  * Upload product images (admin only)
+ * Resizes images to 500x500 (1:1 aspect ratio) for optimal display
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.post('/:id/images', protect, admin, uploadImage.array('images', 10), async (req, res) => {
   try {
@@ -260,18 +279,31 @@ router.post('/:id/images', protect, admin, uploadImage.array('images', 10), asyn
       return res.status(400).json({ message: 'No images uploaded' })
     }
 
-      const imageUrls = []
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i]
-        const imageUrl = `/uploads/images/${file.filename}`
-        const isPrimary = i === 0 && product.images.length === 0
-        
-        await productMediaModel.addProductImage(productId, imageUrl, isPrimary)
-        imageUrls.push(imageUrl)
+    const imageUrls = []
+    const uploadsDir = path.join(__dirname, '../uploads/images')
+    
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i]
+      const originalPath = file.path
+      const resizedPath = path.join(uploadsDir, `resized-${file.filename}`)
+      
+      // Resize image to 500x500
+      await resizeImage(originalPath, resizedPath)
+      
+      // Replace original with resized version
+      if (fs.existsSync(resizedPath)) {
+        fs.renameSync(resizedPath, originalPath)
       }
+      
+      const imageUrl = `/uploads/images/${file.filename}`
+      const isPrimary = i === 0 && product.images.length === 0
+      
+      await productMediaModel.addProductImage(productId, imageUrl, isPrimary)
+      imageUrls.push(imageUrl)
+    }
 
     res.status(201).json({ 
-      message: 'Images uploaded successfully',
+      message: 'Images uploaded and resized successfully',
       images: imageUrls
     })
   } catch (error) {

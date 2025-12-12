@@ -1,9 +1,8 @@
 /**
  * Product Media Model
  * Handles product images and videos operations
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import db from '../config/db.js'
@@ -43,11 +42,17 @@ export const addProductVideo = async (productId, videoData) => {
  * Get product images
  * @param {number} productId - Product ID
  * @returns {Promise<Array>} - Array of image objects
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getProductImages = async (productId) => {
+  const id = parseInt(productId)
+  if (isNaN(id) || id <= 0) {
+    return []
+  }
   const [rows] = await db.execute(
     'SELECT * FROM product_images WHERE product_id = ? AND image_url IS NOT NULL ORDER BY is_primary DESC, created_at ASC',
-    [productId]
+    [id]
   )
   return rows
 }
@@ -56,11 +61,17 @@ export const getProductImages = async (productId) => {
  * Get product videos
  * @param {number} productId - Product ID
  * @returns {Promise<Array>} - Array of video objects
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getProductVideos = async (productId) => {
+  const id = parseInt(productId)
+  if (isNaN(id) || id <= 0) {
+    return []
+  }
   const [rows] = await db.execute(
     'SELECT * FROM product_videos WHERE product_id = ? AND video_url IS NOT NULL ORDER BY is_primary DESC, created_at ASC',
-    [productId]
+    [id]
   )
   return rows
 }

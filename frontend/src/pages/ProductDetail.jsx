@@ -1,9 +1,8 @@
 /**
  * Product Detail Page Component
  * Displays detailed product information with add to cart functionality
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -27,6 +26,8 @@ import { FaTag } from 'react-icons/fa'
 /**
  * ProductDetail component
  * @returns {JSX.Element} Product detail page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const ProductDetail = () => {
   const { id } = useParams()
@@ -38,9 +39,6 @@ const ProductDetail = () => {
   const [addingToCart, setAddingToCart] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
-  /**
-   * Fetch product details
-   */
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -48,19 +46,19 @@ const ProductDetail = () => {
         const response = await axios.get(`/api/products/${id}`)
         setProduct(response.data)
       } catch (error) {
-        console.error('Error fetching product:', error)
-        toast.error('Product not found')
+        toast.error(error.response?.data?.message || 'Product not found')
         navigate('/products')
       } finally {
         setLoading(false)
       }
     }
-
-    fetchProduct()
+    if (id) fetchProduct()
   }, [id, navigate])
 
   /**
    * Handle add to cart
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -68,12 +66,10 @@ const ProductDetail = () => {
       navigate('/login')
       return
     }
-
     if (quantity < 1 || quantity > product.stock) {
       toast.error('Invalid quantity')
       return
     }
-
     setAddingToCart(true)
     try {
       const result = await addToCart(product.id, quantity)
@@ -90,6 +86,8 @@ const ProductDetail = () => {
   /**
    * Handle quantity change
    * @param {number} newQuantity - New quantity value
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= product.stock) {
@@ -100,7 +98,6 @@ const ProductDetail = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading skeleton */}
         <SkeletonLoader type="card" count={1} />
       </div>
     )
@@ -109,21 +106,16 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Product not found */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h1>
-          <Button
-            onClick={() => navigate('/products')}
-            icon="search"
-          >
-            Back to Products
-          </Button>
+          <Button onClick={() => navigate('/products')} icon="search">Back to Products</Button>
         </div>
       </div>
     )
   }
 
   return (
+    /* Product detail page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product image section */}
@@ -132,61 +124,35 @@ const ProductDetail = () => {
           <ImageGallery images={product.images || []} />
         </div>
 
-        {/* Product details section */}
         <div>
-          {/* Category and subcategory breadcrumb */}
-          <div className="text-sm text-gray-600 mb-2">
-            {product.category_name} / {product.subcategory_name}
-          </div>
-
-          {/* Product name and like button */}
+          <div className="text-sm text-gray-600 mb-2">{product.category_name} / {product.subcategory_name}</div>
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900 flex-1">{product.name}</h1>
             <LikeButton productId={product.id} />
           </div>
-
-          {/* Rating */}
           {product.rating > 0 && (
             <div className="flex items-center mb-4">
-              <StarRating rating={Math.round(product.rating)} readOnly />
+              <StarRating rating={Math.round(parseFloat(product.rating) || 0)} readOnly />
               <span className="ml-2 text-gray-600">
-                {product.rating.toFixed(1)} ({product.num_reviews} reviews)
+                {(parseFloat(product.rating) || 0).toFixed(1)} ({product.num_reviews || 0} reviews)
               </span>
             </div>
           )}
-
-          {/* Price with discount */}
           <div className="mb-4">
             {product.has_discount && product.discounted_price ? (
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-3xl font-semibold text-blue-600">
-                    ${(Number(product.discounted_price) || 0).toFixed(2)}
-                  </span>
-                  <span className="text-xl text-gray-400 line-through">
-                    ${(Number(product.price) || 0).toFixed(2)}
-                  </span>
-                  <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
-                    <FaTag />
-                    <span>
-                      {product.discount_type === 'percentage'
-                        ? `${product.discount_value}% OFF`
-                        : `$${product.discount_value} OFF`}
-                    </span>
-                  </span>
-                </div>
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="text-3xl font-semibold text-blue-600">${(Number(product.discounted_price) || 0).toFixed(2)}</span>
+                <span className="text-xl text-gray-400 line-through">${(Number(product.price) || 0).toFixed(2)}</span>
+                <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
+                  <FaTag />
+                  <span>{product.discount_type === 'percentage' ? `${product.discount_value}% OFF` : `$${product.discount_value} OFF`}</span>
+                </span>
               </div>
             ) : (
-              <p className="text-3xl font-semibold text-blue-600">
-                ${(Number(product.price) || 0).toFixed(2)}
-              </p>
+              <p className="text-3xl font-semibold text-blue-600">${(Number(product.price) || 0).toFixed(2)}</p>
             )}
           </div>
-
-          {/* Description */}
           <p className="text-gray-600 mb-6">{product.description}</p>
-
-          {/* Stock status */}
           <div className="mb-6">
             {product.stock > 0 ? (
               <p className="text-green-600">In Stock ({product.stock} available)</p>
@@ -195,83 +161,44 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Quantity selector */}
           {product.stock > 0 && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handleQuantityChange(quantity - 1)}
-                  className="w-10 h-10 rounded border border-gray-300 hover:bg-gray-100"
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  max={product.stock}
-                  value={quantity}
-                  onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                  className="w-20 text-center border border-gray-300 rounded"
-                />
-                <button
-                  onClick={() => handleQuantityChange(quantity + 1)}
-                  className="w-10 h-10 rounded border border-gray-300 hover:bg-gray-100"
-                  disabled={quantity >= product.stock}
-                >
-                  +
-                </button>
+              <div className="flex items-center space-x-2 mb-3">
+                <button onClick={() => handleQuantityChange(quantity - 1)} className="w-10 h-10 rounded border border-gray-300 hover:bg-gray-100" disabled={quantity <= 1}>-</button>
+                <input type="number" min="1" max={product.stock} value={quantity} onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)} className="w-20 text-center border border-gray-300 rounded" />
+                <button onClick={() => handleQuantityChange(quantity + 1)} className="w-10 h-10 rounded border border-gray-300 hover:bg-gray-100" disabled={quantity >= product.stock}>+</button>
               </div>
+              <Button onClick={handleAddToCart} disabled={product.stock === 0} loading={addingToCart} icon="cart" className="w-full py-3">Add to Cart</Button>
             </div>
           )}
-
-          {/* Add to cart button */}
-          <Button
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            loading={addingToCart}
-            icon="cart"
-            className="w-full py-3 mb-4"
-          >
-            {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-          </Button>
+          {product.stock === 0 && (
+            <div className="mb-6">
+              <Button disabled={true} className="w-full py-3">Out of Stock</Button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Product videos section (optional) */}
       {product.videos && product.videos.length > 0 && (
         <div className="mt-8">
-          {/* Videos container */}
           <VideoPlayer videos={product.videos} />
         </div>
       )}
-
-      {/* Reviews section */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Reviews</h2>
-        
-        {/* Review form */}
         <div className="mb-8">
           <ReviewForm productId={product.id} onReviewSubmitted={() => window.location.reload()} />
         </div>
-
-        {/* Reviews list */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <ReviewList productId={product.id} />
         </div>
       </div>
-
-      {/* Comments section */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments</h2>
-        
-        {/* Comment form */}
         <div className="mb-8">
           <CommentForm productId={product.id} onCommentSubmitted={() => window.location.reload()} />
         </div>
-
-        {/* Comments list */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <CommentList productId={product.id} />
         </div>

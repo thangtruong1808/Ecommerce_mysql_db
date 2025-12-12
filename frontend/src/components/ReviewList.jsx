@@ -1,9 +1,8 @@
 /**
  * Review List Component
  * Displays list of product reviews
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -16,6 +15,8 @@ import ReviewItem from './ReviewItem'
  * @param {Object} props - Component props
  * @param {number} props.productId - Product ID
  * @returns {JSX.Element} Review list component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const ReviewList = ({ productId }) => {
   const [reviews, setReviews] = useState([])
@@ -23,6 +24,8 @@ const ReviewList = ({ productId }) => {
 
   /**
    * Fetch reviews for product
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchReviews = async () => {
@@ -31,13 +34,11 @@ const ReviewList = ({ productId }) => {
         const response = await axios.get(`/api/products/${productId}/reviews`)
         setReviews(response.data.reviews || [])
       } catch (error) {
-        console.error('Error fetching reviews:', error)
         toast.error(error.response?.data?.message || 'Failed to load reviews')
       } finally {
         setLoading(false)
       }
     }
-
     if (productId) {
       fetchReviews()
     }
@@ -62,8 +63,8 @@ const ReviewList = ({ productId }) => {
   }
 
   return (
+    /* Reviews list container */
     <div className="space-y-4">
-      {/* Reviews list */}
       {reviews.map((review) => (
         <ReviewItem key={review.id} review={review} />
       ))}

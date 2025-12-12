@@ -1,9 +1,8 @@
 /**
  * Product Model
  * Handles all database operations related to products
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import db from '../config/db.js'
@@ -15,6 +14,8 @@ import * as productMediaModel from './productMediaModel.js'
  * @param {string} discountType - 'percentage' or 'fixed'
  * @param {number} discountValue - Discount value
  * @returns {number} - Discounted price
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const calculateDiscountedPrice = (price, discountType, discountValue) => {
   if (!discountType || !discountValue) return price
@@ -31,6 +32,8 @@ const calculateDiscountedPrice = (price, discountType, discountValue) => {
  * @param {string} discountStartDate - Start date
  * @param {string} discountEndDate - End date
  * @returns {boolean} - True if discount is active
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const isDiscountActive = (discountStartDate, discountEndDate) => {
   if (!discountStartDate || !discountEndDate) return false
@@ -46,6 +49,8 @@ const isDiscountActive = (discountStartDate, discountEndDate) => {
  * Get all products with filters, pagination, and sorting
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Products and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getAllProducts = async (filters = {}) => {
   const {
@@ -145,10 +150,6 @@ export const getAllProducts = async (filters = {}) => {
     const result = await db.execute(query, queryParams)
     rows = result[0] || []
   } catch (dbError) {
-    console.error('Database query error:', dbError)
-    console.error('Query:', query)
-    console.error('Params count:', queryParams.length)
-    console.error('Params:', queryParams)
     throw new Error(`Database query failed: ${dbError.message}`)
   }
 
@@ -165,7 +166,6 @@ export const getAllProducts = async (filters = {}) => {
     const [countResult] = await db.execute(countQuery, values)
     total = countResult[0]?.total || 0
   } catch (dbError) {
-    console.error('Count query error:', dbError)
     throw new Error(`Count query failed: ${dbError.message}`)
   }
 
@@ -176,7 +176,6 @@ export const getAllProducts = async (filters = {}) => {
       const productIds = rows.map(p => p.id)
       imagesMap = await productMediaModel.getProductsImages(productIds)
     } catch (imageError) {
-      console.error('Error fetching product images:', imageError)
       // Continue without images rather than failing completely
       imagesMap = {}
     }
@@ -216,8 +215,16 @@ export const getAllProducts = async (filters = {}) => {
  * Get product by ID with images and videos
  * @param {number} id - Product ID
  * @returns {Promise<Object|null>} - Product object with related data or null
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getProductById = async (id) => {
+  // Validate id is a valid number
+  const productId = parseInt(id)
+  if (isNaN(productId) || productId <= 0) {
+    throw new Error('Invalid product ID')
+  }
+  
   // Get product with full 3-level hierarchy
   const [productRows] = await db.execute(
     `SELECT p.*, 
@@ -232,7 +239,7 @@ export const getProductById = async (id) => {
      JOIN subcategories s ON cc.subcategory_id = s.id
      JOIN categories c ON s.category_id = c.id
      WHERE p.id = ?`,
-    [id]
+    [productId]
   )
 
   if (productRows.length === 0) return null
@@ -243,8 +250,8 @@ export const getProductById = async (id) => {
   product.price = parseFloat(product.price) || 0
 
   // Get product images and videos
-  product.images = await productMediaModel.getProductImages(id)
-  product.videos = await productMediaModel.getProductVideos(id)
+  product.images = await productMediaModel.getProductImages(productId)
+  product.videos = await productMediaModel.getProductVideos(productId)
 
   // Calculate discounted price
   const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
@@ -387,20 +394,24 @@ export const updateProductStock = async (id, quantity) => {
 }
 
 /**
- * Get clearance products (products with active discounts)
+ * Get clearance products (products marked for clearance)
+ * Business logic: Shows all products with is_on_clearance=true
+ * If discount fields exist and are active, discounted price is calculated
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Products and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getClearanceProducts = async (filters = {}) => {
   const {
     page = 1,
-    limit = 12,
+    limit = 15,
     sortBy = 'created_at',
     sortOrder = 'DESC'
   } = filters
 
   // Ensure limit and offset are valid integers
-  const validLimit = parseInt(limit) || 12
+  const validLimit = parseInt(limit) || 15
   const validPage = parseInt(page) || 1
   const offset = (validPage - 1) * validLimit
   // Convert Date to MySQL datetime string format
@@ -443,23 +454,16 @@ export const getClearanceProducts = async (filters = {}) => {
      JOIN subcategories s ON cc.subcategory_id = s.id
      JOIN categories c ON s.category_id = c.id
      WHERE p.is_on_clearance = ?
-     AND p.discount_type IS NOT NULL
-     AND p.discount_value IS NOT NULL
-     AND p.discount_start_date <= ?
-     AND p.discount_end_date >= ?
      ${orderBy}
      LIMIT ${safeLimit} OFFSET ${safeOffset}`
   
-  const params = [true, now, now]
+  const params = [true]
   
   let rows = []
   try {
     const result = await db.execute(query, params)
     rows = result[0] || []
   } catch (dbError) {
-    console.error('Database query error in getClearanceProducts:', dbError)
-    console.error('Query:', query)
-    console.error('Params:', params)
     throw new Error(`Database query failed: ${dbError.message}`)
   }
 
@@ -470,12 +474,8 @@ export const getClearanceProducts = async (filters = {}) => {
      JOIN child_categories cc ON p.child_category_id = cc.id
      JOIN subcategories s ON cc.subcategory_id = s.id
      JOIN categories c ON s.category_id = c.id
-     WHERE p.is_on_clearance = ?
-     AND p.discount_type IS NOT NULL
-     AND p.discount_value IS NOT NULL
-     AND p.discount_start_date <= ?
-     AND p.discount_end_date >= ?`,
-    [true, now, now]
+     WHERE p.is_on_clearance = ?`,
+    [true]
   )
   const total = countResult[0].total
 
@@ -488,18 +488,18 @@ export const getClearanceProducts = async (filters = {}) => {
   const productsWithImages = rows.map(product => {
     // Convert price from MySQL DECIMAL (string) to number
     const price = parseFloat(product.price) || 0
-    const discountedPrice = calculateDiscountedPrice(
-      price,
-      product.discount_type,
-      product.discount_value
-    )
+    const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
+    const hasDiscountFields = product.discount_type && product.discount_value
+    const discountedPrice = isActive && hasDiscountFields
+      ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
+      : price
     
     return {
       ...product,
       price: price, // Ensure price is a number
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
-      has_discount: true
+      has_discount: isActive && hasDiscountFields
     }
   })
 

@@ -1,9 +1,8 @@
 /**
  * Review Model
  * Handles all database operations related to product reviews
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import db from '../config/db.js'
@@ -13,10 +12,31 @@ import db from '../config/db.js'
  * @param {number} productId - Product ID
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Reviews and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getProductReviews = async (productId, filters = {}) => {
+  // Validate productId
+  const id = parseInt(productId)
+  if (isNaN(id) || id <= 0) {
+    throw new Error('Invalid product ID')
+  }
+  
   const { page = 1, limit = 10 } = filters
-  const offset = (page - 1) * limit
+  const validPage = parseInt(page) || 1
+  const validLimit = parseInt(limit) || 10
+  const offset = (validPage - 1) * validLimit
+  
+  // Ensure limit and offset are valid integers for MySQL
+  const limitInt = Math.floor(Number(validLimit))
+  const offsetInt = Math.floor(Number(offset))
+  
+  if (isNaN(limitInt) || limitInt < 1) {
+    throw new Error('Invalid limit parameter')
+  }
+  if (isNaN(offsetInt) || offsetInt < 0) {
+    throw new Error('Invalid offset parameter')
+  }
 
   const [rows] = await db.execute(
     `SELECT r.*, 
@@ -26,23 +46,23 @@ export const getProductReviews = async (productId, filters = {}) => {
      JOIN users u ON r.user_id = u.id
      WHERE r.product_id = ?
      ORDER BY r.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [productId, limit, offset]
+     LIMIT ${limitInt} OFFSET ${offsetInt}`,
+    [id]
   )
 
   const [countResult] = await db.execute(
     'SELECT COUNT(*) as total FROM reviews WHERE product_id = ?',
-    [productId]
+    [id]
   )
   const total = countResult[0].total
 
   return {
     reviews: rows,
     pagination: {
-      page,
-      limit,
+      page: validPage,
+      limit: validLimit,
       total,
-      pages: Math.ceil(total / limit)
+      pages: Math.ceil(total / validLimit)
     }
   }
 }
@@ -51,6 +71,8 @@ export const getProductReviews = async (productId, filters = {}) => {
  * Create a new review
  * @param {Object} reviewData - Review data
  * @returns {Promise<number>} - Created review ID
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const createReview = async (reviewData) => {
   const { product_id, user_id, rating, comment } = reviewData
@@ -66,6 +88,8 @@ export const createReview = async (reviewData) => {
  * Get review by ID
  * @param {number} reviewId - Review ID
  * @returns {Promise<Object|null>} - Review object or null
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getReviewById = async (reviewId) => {
   const [rows] = await db.execute(
@@ -86,6 +110,8 @@ export const getReviewById = async (reviewId) => {
  * @param {number} reviewId - Review ID
  * @param {Object} updateData - Data to update
  * @returns {Promise<Object|null>} - Updated review or null
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const updateReview = async (reviewId, updateData) => {
   const fields = []
@@ -116,6 +142,8 @@ export const updateReview = async (reviewId, updateData) => {
  * Delete review
  * @param {number} reviewId - Review ID
  * @returns {Promise<boolean>} - True if deleted, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const deleteReview = async (reviewId) => {
   const [result] = await db.execute(
@@ -130,6 +158,8 @@ export const deleteReview = async (reviewId) => {
  * @param {number} userId - User ID
  * @param {number} productId - Product ID
  * @returns {Promise<boolean>} - True if user has purchased, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const hasUserPurchasedProduct = async (userId, productId) => {
   const [rows] = await db.execute(
@@ -149,6 +179,8 @@ export const hasUserPurchasedProduct = async (userId, productId) => {
  * @param {number} userId - User ID
  * @param {number} productId - Product ID
  * @returns {Promise<boolean>} - True if reviewed, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const hasUserReviewedProduct = async (userId, productId) => {
   const [rows] = await db.execute(

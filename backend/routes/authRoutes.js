@@ -13,6 +13,7 @@ import bcrypt from 'bcryptjs'
 import * as userModel from '../models/userModel.js'
 import * as refreshTokenModel from '../models/refreshTokenModel.js'
 import * as passwordResetModel from '../models/passwordResetModel.js'
+import * as userAddressModel from '../models/userAddressModel.js'
 import { protect } from '../middleware/authMiddleware.js'
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, getTokenExpiration } from '../utils/tokenUtils.js'
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAllTokenCookies } from '../utils/cookieUtils.js'
@@ -194,6 +195,8 @@ router.post('/logout', protect, async (req, res) => {
 /**
  * GET /api/auth/profile
  * Get current user profile
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/profile', protect, async (req, res) => {
   try {
@@ -210,6 +213,8 @@ router.get('/profile', protect, async (req, res) => {
 /**
  * PUT /api/auth/profile
  * Update user profile
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.put(
   '/profile',
@@ -240,10 +245,11 @@ router.put(
       }
       
       res.json({
-        _id: updatedUser.id,
+        id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        created_at: updatedUser.created_at,
       })
     } catch (error) {
       res.status(500).json({ message: error.message })
@@ -284,20 +290,12 @@ router.post(
       // Send reset email
       try {
         await sendPasswordResetEmail(user.email, resetToken, user.name)
-        console.log(`Password reset email sent to: ${user.email}`)
       } catch (emailError) {
-        console.error('Failed to send password reset email:', emailError.message || emailError)
-        // Log the reset token for manual use if email fails (development only)
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[DEV] Password reset token for ${user.email}: ${resetToken}`)
-          console.log(`[DEV] Reset URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`)
-        }
         // Still return success to prevent email enumeration
       }
 
       res.json({ message: 'If that email exists, a password reset link has been sent.' })
     } catch (error) {
-      console.error('Password reset request error:', error.message || error)
       // Always return success to prevent email enumeration, even on errors
       res.json({ message: 'If that email exists, a password reset link has been sent.' })
     }
@@ -341,10 +339,106 @@ router.post(
 
       res.json({ message: 'Password has been reset successfully' })
     } catch (error) {
-      console.error('Password reset error:', error)
       res.status(500).json({ message: 'Server error. Please try again later.' })
     }
   }
 )
+
+/**
+ * GET /api/auth/addresses
+ * Get all addresses for current user
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/addresses', protect, async (req, res) => {
+  try {
+    const addresses = await userAddressModel.getUserAddresses(req.user.id)
+    res.json(addresses)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * POST /api/auth/addresses
+ * Create a new address for current user
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.post(
+  '/addresses',
+  protect,
+  [
+    body('address').trim().notEmpty().withMessage('Address is required'),
+    body('city').trim().notEmpty().withMessage('City is required'),
+    body('postal_code').trim().notEmpty().withMessage('Postal code is required'),
+    body('country').trim().notEmpty().withMessage('Country is required'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+    try {
+      const addressId = await userAddressModel.createAddress(req.user.id, req.body)
+      const address = await userAddressModel.getAddressById(addressId, req.user.id)
+      res.status(201).json(address)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+)
+
+/**
+ * PUT /api/auth/addresses/:id
+ * Update an address for current user
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.put(
+  '/addresses/:id',
+  protect,
+  [
+    body('address').optional().trim().notEmpty().withMessage('Address cannot be empty'),
+    body('city').optional().trim().notEmpty().withMessage('City cannot be empty'),
+    body('postal_code').optional().trim().notEmpty().withMessage('Postal code cannot be empty'),
+    body('country').optional().trim().notEmpty().withMessage('Country cannot be empty'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+    try {
+      const addressId = parseInt(req.params.id)
+      const address = await userAddressModel.updateAddress(addressId, req.user.id, req.body)
+      if (!address) {
+        return res.status(404).json({ message: 'Address not found' })
+      }
+      res.json(address)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  }
+)
+
+/**
+ * DELETE /api/auth/addresses/:id
+ * Delete an address for current user
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.delete('/addresses/:id', protect, async (req, res) => {
+  try {
+    const addressId = parseInt(req.params.id)
+    const deleted = await userAddressModel.deleteAddress(addressId, req.user.id)
+    if (!deleted) {
+      return res.status(404).json({ message: 'Address not found' })
+    }
+    res.json({ message: 'Address deleted successfully' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
 export default router

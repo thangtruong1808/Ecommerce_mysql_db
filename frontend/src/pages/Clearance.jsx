@@ -1,9 +1,8 @@
 /**
  * Clearance Page Component
  * Displays all clearance products with active discounts
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -17,6 +16,8 @@ import { FaTag } from 'react-icons/fa'
 /**
  * Clearance component
  * @returns {JSX.Element} Clearance page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const Clearance = () => {
   const [products, setProducts] = useState([])
@@ -29,7 +30,10 @@ const Clearance = () => {
   })
 
   /**
-   * Fetch clearance products
+   * Fetch clearance products with current filters
+   * @returns {Promise<void>} Resolves when products fetched
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const fetchClearanceProducts = async () => {
     try {
@@ -39,12 +43,12 @@ const Clearance = () => {
       if (filters.sortBy) params.append('sortBy', filters.sortBy)
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
       params.append('page', filters.page)
+      params.append('limit', 15)
 
       const response = await axios.get(`/api/products/clearance?${params}`)
       setProducts(response.data.products || [])
-      setPagination(response.data.pagination || { page: 1, pages: 1, total: 0 })
+      setPagination(response.data.pagination || { page: 1, pages: 1, total: 0, limit: 15 })
     } catch (error) {
-      console.error('Error fetching clearance products:', error)
       toast.error(error.response?.data?.message || 'Failed to load clearance products')
     } finally {
       setLoading(false)
@@ -58,6 +62,8 @@ const Clearance = () => {
   /**
    * Handle page change
    * @param {number} page - Page number
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handlePageChange = (page) => {
     setFilters({ ...filters, page })
@@ -67,12 +73,15 @@ const Clearance = () => {
    * Handle sort change
    * @param {string} sortBy - Sort field
    * @param {string} sortOrder - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleSortChange = (sortBy, sortOrder) => {
     setFilters({ ...filters, sortBy, sortOrder, page: 1 })
   }
 
   return (
+    /* Clearance page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page header */}
       <div className="mb-8">
@@ -120,17 +129,19 @@ const Clearance = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mb-8">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
+          {products.length > 0 && (
             <Pagination
               currentPage={pagination.page}
               totalPages={pagination.pages}
+              limit={pagination.limit || 15}
+              total={pagination.total || 0}
               onPageChange={handlePageChange}
             />
           )}

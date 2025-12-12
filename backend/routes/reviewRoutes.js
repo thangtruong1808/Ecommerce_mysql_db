@@ -1,9 +1,8 @@
 /**
  * Review Routes
  * Handles all product review related API endpoints
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import express from 'express'
@@ -16,10 +15,15 @@ const router = express.Router()
 /**
  * GET /api/products/:productId/reviews
  * Get reviews for a product
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/products/:productId/reviews', async (req, res) => {
   try {
     const productId = parseInt(req.params.productId)
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).json({ message: 'Invalid product ID' })
+    }
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 10
 
@@ -33,6 +37,8 @@ router.get('/products/:productId/reviews', async (req, res) => {
 /**
  * POST /api/products/:productId/reviews
  * Create review for a product (only if user purchased it)
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.post(
   '/products/:productId/reviews',
@@ -49,6 +55,9 @@ router.post(
 
     try {
       const productId = parseInt(req.params.productId)
+      if (isNaN(productId) || productId <= 0) {
+        return res.status(400).json({ message: 'Invalid product ID' })
+      }
       const userId = req.user.id
 
       // Check if user has already reviewed this product
@@ -82,6 +91,8 @@ router.post(
 /**
  * PUT /api/reviews/:id
  * Update review (own review only)
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.put(
   '/:id',
@@ -98,6 +109,9 @@ router.put(
 
     try {
       const reviewId = parseInt(req.params.id)
+      if (isNaN(reviewId) || reviewId <= 0) {
+        return res.status(400).json({ message: 'Invalid review ID' })
+      }
       const review = await reviewModel.getReviewById(reviewId)
 
       if (!review) {
@@ -124,10 +138,15 @@ router.put(
 /**
  * DELETE /api/reviews/:id
  * Delete review (own review or admin)
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.delete('/:id', protect, async (req, res) => {
   try {
     const reviewId = parseInt(req.params.id)
+    if (isNaN(reviewId) || reviewId <= 0) {
+      return res.status(400).json({ message: 'Invalid review ID' })
+    }
     const review = await reviewModel.getReviewById(reviewId)
 
     if (!review) {
