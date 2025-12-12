@@ -1,11 +1,11 @@
 /**
  * Protected Route Component
  * Wrapper component that protects routes requiring authentication
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
+import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -15,9 +15,24 @@ import { useAuth } from '../context/AuthContext'
  * @param {ReactNode} props.children - Child components to render if authenticated
  * @param {boolean} props.adminOnly - If true, only admin users can access
  * @returns {JSX.Element} Protected route or redirect
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth()
+  const { isAuthenticated, isAdmin, loading, checkAuth } = useAuth()
+
+  /**
+   * Trigger auth check when ProtectedRoute mounts if not already checked
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  useEffect(() => {
+    // If still loading and we have checkAuth function, trigger it
+    // This handles the case where user navigates to protected route
+    if (loading && checkAuth && !isAuthenticated) {
+      checkAuth()
+    }
+  }, [loading, checkAuth, isAuthenticated])
 
   // Show loading spinner while checking authentication
   if (loading) {
@@ -43,7 +58,10 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 
   // Render protected content
-  return children
+  return (
+    /* Protected route content */
+    children
+  )
 }
 
 export default ProtectedRoute

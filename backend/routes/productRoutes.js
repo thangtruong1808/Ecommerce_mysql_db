@@ -1,9 +1,8 @@
 /**
  * Product Routes
  * Handles all product-related API endpoints
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import express from 'express'
@@ -20,6 +19,8 @@ const router = express.Router()
 /**
  * GET /api/products
  * Get all products with filters, pagination, and search
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/', async (req, res) => {
   try {
@@ -39,8 +40,6 @@ router.get('/', async (req, res) => {
     const result = await productModel.getAllProducts(filters)
     res.json(result)
   } catch (error) {
-    console.error('Error fetching products:', error)
-    console.error('Error stack:', error.stack)
     res.status(500).json({ 
       message: error.message || 'Failed to fetch products',
       error: process.env.NODE_ENV === 'development' ? error.stack : undefined

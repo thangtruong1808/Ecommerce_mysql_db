@@ -168,6 +168,8 @@ const Products = () => {
             <Pagination
               currentPage={pagination.page}
               totalPages={pagination.pages}
+              limit={pagination.limit}
+              total={pagination.total}
               onPageChange={handlePageChange}
             />
           )}

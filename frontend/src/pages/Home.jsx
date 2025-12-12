@@ -1,9 +1,8 @@
 /**
  * Home Page Component
  * Landing page with featured content
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { Link } from 'react-router-dom'
@@ -11,9 +10,12 @@ import { Link } from 'react-router-dom'
 /**
  * Home component
  * @returns {JSX.Element} Home page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const Home = () => {
   return (
+    /* Home page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Hero section */}
       <div className="text-center mb-16">
