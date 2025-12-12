@@ -6,12 +6,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import logoImage from '../assets/images/Logo.png'
 import { FaUserCircle, FaSignOutAlt, FaShoppingBag, FaFileInvoice, FaUser, FaCog, FaBars, FaTimes } from 'react-icons/fa'
+import { loadCategories } from '../utils/categoryCache'
 
 /**
  * Navbar component
@@ -57,12 +57,13 @@ const Navbar = () => {
    * Fetch categories with nested subcategories/child categories
    */
   const fetchCategories = async () => {
+    if (isLoadingCategories || categories.length) return
     try {
       setIsLoadingCategories(true)
-      const response = await axios.get('/api/products/categories')
-      setCategories(response.data || [])
-    } catch (error) {
-      console.error('Error fetching categories for navbar:', error)
+      const data = await loadCategories()
+      setCategories(data || [])
+    } catch {
+      // silent to avoid console noise
     } finally {
       setIsLoadingCategories(false)
     }

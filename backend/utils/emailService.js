@@ -18,7 +18,6 @@ const createTransporter = () => {
   
   // Check if SMTP credentials are configured
   if (!smtpUser || !smtpPass || smtpUser === 'your-email@gmail.com' || !smtpPass.trim()) {
-    console.warn('SMTP credentials not configured. Email sending will be disabled.')
     return null
   }
 
@@ -33,7 +32,6 @@ const createTransporter = () => {
       },
     })
   } catch (error) {
-    console.error('Error creating email transporter:', error)
     return null
   }
 }
@@ -77,10 +75,8 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Password reset email sent successfully:', info.messageId)
     return { success: true, messageId: info.messageId }
   } catch (error) {
-    console.error('Error sending password reset email:', error.message || error)
     throw new Error(`Failed to send password reset email: ${error.message || 'Unknown error'}`)
   }
 }

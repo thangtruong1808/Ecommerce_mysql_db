@@ -110,6 +110,35 @@ router.get('/subcategories/:categoryId', async (req, res) => {
 })
 
 /**
+ * GET /api/products/child-categories/:subcategoryId
+ * Get child categories by subcategory ID
+ */
+router.get('/child-categories/:subcategoryId', async (req, res) => {
+  try {
+    const subcategoryId = parseInt(req.params.subcategoryId)
+    const children = await childCategoryModel.getChildCategoriesBySubcategory(subcategoryId)
+    res.json(children)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/products/child-category/:id
+ * Get a single child category with hierarchy info
+ */
+router.get('/child-category/:id', async (req, res) => {
+  try {
+    const childId = parseInt(req.params.id)
+    const child = await childCategoryModel.getChildCategoryById(childId)
+    if (!child) return res.status(404).json({ message: 'Child category not found' })
+    res.json(child)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
  * GET /api/products/:id
  * Get single product by ID with images and videos
  */

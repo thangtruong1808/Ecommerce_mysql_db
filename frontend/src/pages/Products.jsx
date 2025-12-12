@@ -6,8 +6,8 @@
  * @date 2024-12-19
  */
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -24,6 +24,11 @@ import FilterSidebar from '../components/FilterSidebar'
 const Products = () => {
   const { addToCart } = useCart()
   const { isAuthenticated } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isUpdatingFromUrl = useRef(false)
+  const categoriesCacheRef = useRef(null)
+  const categoriesLoadingRef = useRef(false)
+  const productsLoadingRef = useRef(false)
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
@@ -31,21 +36,23 @@ const Products = () => {
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    subcategory: '',
-    childCategory: '',
-    minPrice: '',
-    maxPrice: '',
-    sortBy: 'created_at',
-    page: 1,
+    search: searchParams.get('search') || '',
+    category: searchParams.get('category') || '',
+    subcategory: searchParams.get('subcategory') || '',
+    childCategory: searchParams.get('childCategory') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    sortBy: searchParams.get('sortBy') || 'created_at',
+    page: parseInt(searchParams.get('page')) || 1,
   })
 
   /**
    * Fetch products with current filters
    */
   const fetchProducts = async () => {
+    if (productsLoadingRef.current) return
     try {
+      productsLoadingRef.current = true
       setLoading(true)
       const params = new URLSearchParams()
       
@@ -66,6 +73,7 @@ const Products = () => {
       toast.error(error.response?.data?.message || 'Failed to load products')
     } finally {
       setLoading(false)
+      productsLoadingRef.current = false
     }
   }
 
@@ -73,12 +81,20 @@ const Products = () => {
    * Fetch categories with subcategories
    */
   const fetchCategories = async () => {
+    if (categoriesCacheRef.current) {
+      setCategories(categoriesCacheRef.current)
+      return
+    }
+    if (categoriesLoadingRef.current) return
+    categoriesLoadingRef.current = true
     try {
       const response = await axios.get('/api/products/categories')
+      categoriesCacheRef.current = response.data
       setCategories(response.data)
     } catch (error) {
-      console.error('Error fetching categories:', error)
       toast.error(error.response?.data?.message || 'Failed to load categories')
+    } finally {
+      categoriesLoadingRef.current = false
     }
   }
 
@@ -131,12 +147,134 @@ const Products = () => {
         }
         fetchChildCategories()
       }
-      setFilters(prev => ({ ...prev, childCategory: '' }))
     } else {
       setChildCategories([])
       setFilters(prev => ({ ...prev, childCategory: '' }))
     }
   }, [filters.subcategory, subcategories])
+
+  /**
+   * Handle childCategory from URL: hydrate parent subcategory/category and child list
+   */
+  useEffect(() => {
+    const hydrateFromChildCategory = async () => {
+      if (!filters.childCategory || !categories.length) return
+      try {
+        const childRes = await axios.get(`/api/products/child-category/${filters.childCategory}`)
+        const childInfo = childRes.data
+        if (!childInfo?.subcategory_id) return
+
+        // Find parent category/subcategory in loaded categories
+        let parentCat = null
+        let parentSub = null
+        for (const cat of categories) {
+          const foundSub = (cat.subcategories || []).find(sub => sub.id === childInfo.subcategory_id)
+          if (foundSub) {
+            parentCat = cat
+            parentSub = foundSub
+            break
+          }
+        }
+
+        // If found in cached categories, set filters and fetch children for that subcategory
+        if (parentCat && parentSub) {
+          setSubcategories(parentCat.subcategories || [])
+          const childList = parentSub.child_categories || []
+          if (childList.length > 0) {
+            setChildCategories(childList)
+          } else {
+            const childListRes = await axios.get(`/api/products/child-categories/${parentSub.id}`)
+            setChildCategories(childListRes.data)
+          }
+          setFilters(prev => ({
+            ...prev,
+            category: parentCat.id.toString(),
+            subcategory: parentSub.id.toString(),
+            childCategory: filters.childCategory
+          }))
+          return
+        }
+
+        // Fallback: fetch subcategory and categories if not found locally
+        const subRes = await axios.get(`/api/products/subcategories/${childInfo.subcategory_id}`)
+        const sub = Array.isArray(subRes.data) ? subRes.data[0] : subRes.data
+        if (sub?.category_id) {
+          if (!categoriesCacheRef.current) {
+            const catRes = await axios.get('/api/products/categories')
+            categoriesCacheRef.current = catRes.data
+          }
+          const catList = categoriesCacheRef.current || []
+          const cat = catList.find(c => c.id === sub.category_id)
+          if (cat) {
+            setCategories(catList)
+            setSubcategories(cat.subcategories || [])
+            const childListRes = await axios.get(`/api/products/child-categories/${sub.id}`)
+            setChildCategories(childListRes.data)
+            setFilters(prev => ({
+              ...prev,
+              category: sub.category_id.toString(),
+              subcategory: sub.id.toString(),
+              childCategory: filters.childCategory
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error hydrating from child category:', error)
+      }
+    }
+
+    hydrateFromChildCategory()
+  }, [filters.childCategory, categories])
+
+  /**
+   * Sync filters from URL when URL changes (e.g., navigation from Navbar)
+   */
+  useEffect(() => {
+    const urlCategory = searchParams.get('category') || ''
+    const urlSubcategory = searchParams.get('subcategory') || ''
+    const urlChildCategory = searchParams.get('childCategory') || ''
+    const urlSearch = searchParams.get('search') || ''
+    const urlMinPrice = searchParams.get('minPrice') || ''
+    const urlMaxPrice = searchParams.get('maxPrice') || ''
+    const urlSortBy = searchParams.get('sortBy') || 'created_at'
+    const urlPage = parseInt(searchParams.get('page')) || 1
+
+    setFilters({
+      search: urlSearch,
+      category: urlCategory,
+      subcategory: urlSubcategory,
+      childCategory: urlChildCategory,
+      minPrice: urlMinPrice,
+      maxPrice: urlMaxPrice,
+      sortBy: urlSortBy,
+      page: urlPage,
+    })
+    isUpdatingFromUrl.current = true
+  }, [searchParams])
+
+  /**
+   * Update URL when filters change (skip if filters came from URL)
+   */
+  useEffect(() => {
+    if (isUpdatingFromUrl.current) {
+      isUpdatingFromUrl.current = false
+      return
+    }
+    const params = new URLSearchParams()
+    if (filters.search) params.set('search', filters.search)
+    if (filters.category) params.set('category', filters.category)
+    if (filters.subcategory) params.set('subcategory', filters.subcategory)
+    if (filters.childCategory) params.set('childCategory', filters.childCategory)
+    if (filters.minPrice) params.set('minPrice', filters.minPrice)
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice)
+    if (filters.sortBy && filters.sortBy !== 'created_at') params.set('sortBy', filters.sortBy)
+    if (filters.page > 1) params.set('page', filters.page.toString())
+    const currentParams = searchParams.toString()
+    const newParams = params.toString()
+    if (currentParams !== newParams) {
+      setSearchParams(params, { replace: true })
+    }
+  }, [filters, setSearchParams, searchParams])
 
   /**
    * Load data on mount and filter changes

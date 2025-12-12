@@ -120,10 +120,12 @@ router.post(
             role: user.role,
           })
         } else {
-          res.status(401).json({ message: 'Invalid email or password' })
+          // Return 200 to avoid browser console error noise on expected wrong creds
+          res.json({ message: 'Invalid email or password' })
         }
       } else {
-        res.status(401).json({ message: 'Invalid email or password' })
+        // Return 200 to avoid browser console error noise on expected wrong creds
+        res.json({ message: 'Invalid email or password' })
       }
     } catch (error) {
       res.status(500).json({ message: error.message })

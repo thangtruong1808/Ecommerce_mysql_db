@@ -147,7 +147,13 @@ export const AuthProvider = ({ children }) => {
         console.warn = originalWarn
         try {
           const data = JSON.parse(xhr.responseText || '{}')
-          if (xhr.status === 200) {
+          // Check if response has error message (backend returns 200 with message for wrong creds)
+          if (data.message && !data._id) {
+            const message = data.message || 'Invalid email or password'
+            setError(message)
+            resolve({ success: false, error: message })
+          } else if (xhr.status === 200 && data._id) {
+            // Success: response has user data
             setUser(data)
             setError(null)
             resolve({ success: true })
