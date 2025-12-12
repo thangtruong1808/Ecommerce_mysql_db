@@ -1,9 +1,7 @@
 /**
- * Login Page Component
- * Handles user authentication and login form
- * 
+ * Login Page Component - Handles user authentication and login form
  * @author Thang Truong
- * @date 2025-12-09
+ * @date 2025-01-09
  */
 
 import { useState, useEffect } from 'react'
@@ -12,6 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import Button from '../components/Button'
+import logoImage from '../assets/images/Logo.png'
 import { FaLock, FaShieldAlt, FaSmile } from 'react-icons/fa'
 
 /**
@@ -23,6 +22,7 @@ const Login = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState('')
   const {
     register,
     handleSubmit,
@@ -45,13 +45,18 @@ const Login = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true)
+      setLoginError('')
       const result = await login(data.email, data.password)
       if (result.success) {
         toast.success('Login successful!')
         navigate('/')
       } else {
-        toast.error(result.error || 'Login failed')
+        // Display inline error message instead of toast
+        setLoginError(result.error || 'Invalid email or password. Please try again.')
       }
+    } catch (error) {
+      // Display inline error message for network/server errors
+      setLoginError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -105,6 +110,17 @@ const Login = () => {
 
           {/* Login form card */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            {/* Logo section */}
+            <div className="mb-6 text-center">
+              <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
+                <img 
+                  src={logoImage} 
+                  alt="Ecommerce Store Logo" 
+                  className="h-20 w-auto object-contain mx-auto"
+                />
+              </Link>
+            </div>
+            
             {/* Header section */}
             <div className="mb-6 text-center">
               <h2 className="text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
@@ -117,7 +133,7 @@ const Login = () => {
             </div>
             
             {/* Login form */}
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className="space-y-4">
                 {/* Email input */}
                 <div>
@@ -132,8 +148,9 @@ const Login = () => {
                         message: 'Invalid email address',
                       },
                     })}
-                    type="email"
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    type="text"
+                    autoComplete="email"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email || loginError ? 'border-red-300' : 'border-gray-300'}`}
                     placeholder="you@company.com"
                   />
                   {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
@@ -148,7 +165,8 @@ const Login = () => {
                     <input
                       {...register('password', { required: 'Password is required' })}
                       type={showPassword ? 'text' : 'password'}
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      autoComplete="current-password"
+                      className={`block w-full rounded-lg border px-3 py-2 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.password || loginError ? 'border-red-300' : 'border-gray-300'}`}
                       placeholder="••••••••"
                     />
                     <button
@@ -161,6 +179,14 @@ const Login = () => {
                   </div>
                   {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
                 </div>
+                
+                {/* Login error message */}
+                {loginError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+                    <p className="text-sm text-red-600">{loginError}</p>
+                  </div>
+                )}
+                
                 {/* Forgot password link */}
                 <div className="text-right">
                   <Link

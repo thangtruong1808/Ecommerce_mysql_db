@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 import Button from '../components/Button'
+import logoImage from '../assets/images/Logo.png'
 import { FaEnvelope, FaArrowLeft, FaShieldAlt } from 'react-icons/fa'
 
 /**
@@ -87,6 +88,17 @@ const ResetPassword = () => {
 
           {/* Reset form card */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            {/* Logo section */}
+            <div className="mb-6 text-center">
+              <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
+                <img 
+                  src={logoImage} 
+                  alt="Ecommerce Store Logo" 
+                  className="h-20 w-auto object-contain mx-auto"
+                />
+              </Link>
+            </div>
+            
             {/* Header section */}
             <div className="mb-6 text-center">
               <h2 className="text-3xl font-extrabold text-gray-900">Reset Password</h2>

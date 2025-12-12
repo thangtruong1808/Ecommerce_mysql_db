@@ -1,14 +1,12 @@
 /**
- * Authentication Context
- * Manages global authentication state and provides auth functions
- * Handles token refresh automatically via HTTP-only cookies
- * 
+ * Authentication Context - Manages auth state, token refresh, and auto-logout
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-01-09
  */
 
-import { createContext, useState, useContext, useEffect } from 'react'
+import { createContext, useState, useContext, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const AuthContext = createContext()
 
@@ -26,63 +24,151 @@ export const useAuth = () => {
 
 /**
  * Auth Provider Component
- * @param {Object} props - Component props
- * @param {ReactNode} props.children - Child components
+ * @param {Object} props - Component props with children
  */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const isRedirectingRef = useRef(false)
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
 
   /**
-   * Fetch current user profile
+   * Handle automatic logout when refresh token expires
+   */
+  const handleTokenExpiration = async () => {
+    if (isRedirectingRef.current) return
+    isRedirectingRef.current = true
+    setUser(null)
+    setError(null)
+    const path = window.location.pathname
+    if (path !== '/login' && path !== '/register') {
+      toast.info('Your session has expired. Please login again.')
+      setTimeout(() => { window.location.href = '/login' }, 100)
+    } else {
+      isRedirectingRef.current = false
+    }
+  }
+
+  /**
+   * Fetch current user profile - silently handles 401 errors
    */
   const fetchUser = async () => {
     try {
-      const response = await axios.get('/api/auth/profile')
-      setUser(response.data)
-      setError(null)
+      const response = await axios.get('/api/auth/profile', {
+        validateStatus: (status) => status === 200 || status === 401
+      })
+      if (response.status === 200) {
+        setUser(response.data)
+        setError(null)
+      } else {
+        const path = window.location.pathname
+        const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
+        if (!isAuthPage) {
+          const refreshResponse = await axios.post('/api/auth/refresh', {}, {
+            validateStatus: (status) => status === 200 || status === 401
+          }).catch(() => ({ status: 401 }))
+          if (refreshResponse.status === 401) {
+            await handleTokenExpiration()
+          } else {
+            setUser(null)
+            setError(null)
+          }
+        } else {
+          setUser(null)
+          setError(null)
+        }
+      }
     } catch (error) {
       setUser(null)
-      // Don't set error for 401 (not logged in) - this is expected for unauthenticated users
-      // Suppress console errors for 401 to avoid noise in console
       if (error.response?.status !== 401) {
         setError(error.response?.data?.message || 'Failed to fetch user')
-        console.error('Auth error:', error.response?.data?.message || 'Failed to fetch user')
+      } else {
+        setError(null)
       }
-      // Silently handle 401 - user is just not logged in
     } finally {
       setLoading(false)
     }
   }
 
   /**
-   * Initialize auth state on mount
+   * Check refresh token expiration periodically when user is authenticated
    */
   useEffect(() => {
-    fetchUser()
+    if (!user) return
+    const checkTokenExpiration = async () => {
+      try {
+        const response = await axios.post('/api/auth/refresh', {}, {
+          validateStatus: (status) => status === 200 || status === 401
+        })
+        if (response.status === 401) {
+          await handleTokenExpiration()
+        }
+      } catch (error) {
+        if (error.response?.status === 401) {
+          await handleTokenExpiration()
+        }
+      }
+    }
+    checkTokenExpiration()
+    const interval = setInterval(checkTokenExpiration, 60 * 1000)
+    return () => clearInterval(interval)
+  }, [user])
+
+  /**
+   * Initialize auth state on mount - skip on auth pages
+   */
+  useEffect(() => {
+    const path = window.location.pathname
+    const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
+    if (!isAuthPage) fetchUser()
+    else setLoading(false)
   }, [])
 
   /**
-   * Login user
+   * Login user - silently handles 401 errors without console logging
    * @param {string} email - User email
    * @param {string} password - User password
    * @returns {Promise<Object>} Result object with success status
    */
   const login = async (email, password) => {
-    try {
-      const response = await axios.post('/api/auth/login', { email, password })
-      setUser(response.data)
-      setError(null)
-      return { success: true }
-    } catch (error) {
-      const message = error.response?.data?.message || 'Login failed'
-      setError(message)
-      return { success: false, error: message }
-    }
+    const originalError = console.error
+    const originalWarn = console.warn
+    console.error = console.warn = () => {}
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/api/auth/login', true)
+      xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.withCredentials = true
+      xhr.onload = () => {
+        console.error = originalError
+        console.warn = originalWarn
+        try {
+          const data = JSON.parse(xhr.responseText || '{}')
+          if (xhr.status === 200) {
+            setUser(data)
+            setError(null)
+            resolve({ success: true })
+          } else {
+            const message = data?.message || 'Invalid email or password'
+            setError(message)
+            resolve({ success: false, error: message })
+          }
+        } catch {
+          setError('Invalid email or password')
+          resolve({ success: false, error: 'Invalid email or password' })
+        }
+      }
+      xhr.onerror = () => {
+        console.error = originalError
+        console.warn = originalWarn
+        setError('Login failed. Please try again.')
+        resolve({ success: false, error: 'Login failed. Please try again.' })
+      }
+      xhr.send(JSON.stringify({ email, password }))
+    })
   }
 
   /**
@@ -99,9 +185,7 @@ export const AuthProvider = ({ children }) => {
       setError(null)
       return { success: true }
     } catch (error) {
-      const message = error.response?.data?.message || 
-                     error.response?.data?.errors?.[0]?.msg || 
-                     'Registration failed'
+      const message = error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || 'Registration failed'
       setError(message)
       return { success: false, error: message }
     }
@@ -113,8 +197,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post('/api/auth/logout')
-    } catch (error) {
-      console.error('Logout error:', error)
+    } catch {
+      // Silent fail
     } finally {
       setUser(null)
       setError(null)
@@ -140,51 +224,53 @@ export const AuthProvider = ({ children }) => {
   }
 
   /**
-   * Refresh access token
-   * Called automatically when access token expires
+   * Refresh access token - called automatically when access token expires
    * @returns {Promise<boolean>} Success status
    */
   const refreshToken = async () => {
     try {
-      await axios.post('/api/auth/refresh')
-      return true
+      const response = await axios.post('/api/auth/refresh', {}, {
+        validateStatus: (status) => status === 200 || status === 401
+      })
+      if (response.status === 200) return true
+      await handleTokenExpiration()
+      return false
     } catch (error) {
-      // If refresh fails, user needs to login again
-      setUser(null)
+      if (error.response?.status === 401) {
+        await handleTokenExpiration()
+      } else {
+        setUser(null)
+      }
       return false
     }
   }
 
-  // Axios interceptor for automatic token refresh
+  // Axios interceptor for automatic token refresh and auto-logout
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config
-
-        // If 401 and not already retried, try to refresh token
+        if (error.response?.status === 401 && (originalRequest.url?.includes('/api/auth/login') || originalRequest.url?.includes('/api/auth/profile'))) {
+          return Promise.reject(error)
+        }
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true
-
-          // Don't try to refresh for /api/auth/profile endpoint (user just not logged in)
-          if (originalRequest.url?.includes('/api/auth/profile')) {
+          if (originalRequest.url?.includes('/api/auth/refresh')) {
+            await handleTokenExpiration()
             return Promise.reject(error)
           }
-
           const refreshed = await refreshToken()
           if (refreshed) {
-            // Retry original request with new token
             return axios(originalRequest)
+          } else {
+            await handleTokenExpiration()
           }
         }
-
         return Promise.reject(error)
       }
     )
-
-    return () => {
-      axios.interceptors.response.eject(interceptor)
-    }
+    return () => axios.interceptors.response.eject(interceptor)
   }, [])
 
   const value = {

@@ -1,9 +1,7 @@
 /**
- * Register Page Component
- * Handles new user registration
- * 
+ * Register Page Component - Handles new user registration
  * @author Thang Truong
- * @date 2025-12-09
+ * @date 2025-01-09
  */
 
 import { useState, useEffect } from 'react'
@@ -12,6 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 import Button from '../components/Button'
+import logoImage from '../assets/images/Logo.png'
 import { FaIdBadge, FaUsers, FaHeadset } from 'react-icons/fa'
 
 /**
@@ -54,8 +53,12 @@ const Register = () => {
         toast.success('Registration successful!')
         navigate('/')
       } else {
+        // Only show toast for API/server errors, not validation errors
         toast.error(result.error || 'Registration failed')
       }
+    } catch (error) {
+      // Only show toast for network/server errors
+      toast.error('An error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -66,11 +69,7 @@ const Register = () => {
    * @param {boolean} isConfirm - whether toggling confirm field
    */
   const handleTogglePassword = (isConfirm = false) => {
-    if (isConfirm) {
-      setShowConfirm((prev) => !prev)
-    } else {
-      setShowPassword((prev) => !prev)
-    }
+    isConfirm ? setShowConfirm((prev) => !prev) : setShowPassword((prev) => !prev)
   }
 
   return (
@@ -114,7 +113,14 @@ const Register = () => {
 
           {/* Registration form card */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-            {/* Header section */}
+            {/* Logo section */}
+            <div className="mb-6 text-center">
+              <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
+                <img src={logoImage} alt="Ecommerce Store Logo" className="h-20 w-auto object-contain mx-auto" />
+              </Link>
+            </div>
+            
+            {/* Header */}
             <div className="mb-6 text-center">
               <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
               <p className="mt-2 text-sm text-gray-600">
@@ -126,17 +132,21 @@ const Register = () => {
             </div>
             
             {/* Registration form */}
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className="space-y-4">
                 {/* Name input */}
+                {/* Name input */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Full name
-                  </label>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full name</label>
                   <input
-                    {...register('name', { required: 'Name is required', minLength: { value: 2, message: 'Name must be at least 2 characters' } })}
+                    {...register('name', { 
+                      required: 'Name is required', 
+                      minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                      maxLength: { value: 100, message: 'Name must be less than 100 characters' }
+                    })}
                     type="text"
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    autoComplete="name"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? 'border-red-300' : 'border-gray-300'}`}
                     placeholder="Alex Johnson"
                   />
                   {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
@@ -144,9 +154,7 @@ const Register = () => {
                 
                 {/* Email input */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Work email
-                  </label>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Work email</label>
                   <input
                     {...register('email', {
                       required: 'Email is required',
@@ -154,9 +162,11 @@ const Register = () => {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: 'Invalid email address',
                       },
+                      maxLength: { value: 255, message: 'Email must be less than 255 characters' }
                     })}
-                    type="email"
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    type="text"
+                    autoComplete="email"
+                    className={`mt-1 block w-full rounded-lg border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? 'border-red-300' : 'border-gray-300'}`}
                     placeholder="you@company.com"
                   />
                   {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
@@ -164,17 +174,17 @@ const Register = () => {
                 
                 {/* Password input */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
-                  </label>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                   <div className="mt-1 relative">
                     <input
                       {...register('password', {
                         required: 'Password is required',
                         minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                        maxLength: { value: 100, message: 'Password must be less than 100 characters' }
                       })}
                       type={showPassword ? 'text' : 'password'}
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      autoComplete="new-password"
+                      className={`block w-full rounded-lg border px-3 py-2 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.password ? 'border-red-300' : 'border-gray-300'}`}
                       placeholder="Create a strong password"
                     />
                     <button
@@ -190,9 +200,7 @@ const Register = () => {
                 
                 {/* Confirm password input */}
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirm password
-                  </label>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm password</label>
                   <div className="mt-1 relative">
                     <input
                       {...register('confirmPassword', {
@@ -200,7 +208,8 @@ const Register = () => {
                         validate: (value) => value === password || 'Passwords do not match',
                       })}
                       type={showConfirm ? 'text' : 'password'}
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      autoComplete="new-password"
+                      className={`block w-full rounded-lg border px-3 py-2 pr-16 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'}`}
                       placeholder="Re-enter password"
                     />
                     <button
@@ -215,14 +224,9 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Submit + helper */}
+              {/* Submit button */}
               <div className="space-y-3">
-                <Button
-                  type="submit"
-                  loading={loading}
-                  icon="register"
-                  className="w-full"
-                >
+                <Button type="submit" loading={loading} icon="register" className="w-full">
                   Register
                 </Button>
                 <p className="text-xs text-gray-500 text-center">
