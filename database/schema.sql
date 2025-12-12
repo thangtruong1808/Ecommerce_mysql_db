@@ -5,8 +5,10 @@
 -- Note: All UI buttons should have icons and loading states when clicked/processing.
 -- Note: All pages should have skeleton loading states for better user experience during data fetching.
 
--- Create database
-CREATE DATABASE IF NOT EXISTS ecommerce_db;
+-- Create database with explicit collation
+CREATE DATABASE IF NOT EXISTS ecommerce_db 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
 USE ecommerce_db;
 
 -- Users table
@@ -165,9 +167,10 @@ CREATE TABLE user_addresses (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Cart table
+-- Note: user_id can be NULL for guest carts (unauthenticated users)
 CREATE TABLE carts (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL UNIQUE,
+    user_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -436,10 +439,11 @@ BEGIN
     SET date_part = DATE_FORMAT(NOW(), '%Y%m%d');
     
     -- Get the last sequence number for today
+    -- Use COLLATE to ensure consistent collation for LIKE operation
     SELECT COALESCE(MAX(CAST(SUBSTRING(invoice_number, -5) AS UNSIGNED)), 0) + 1
     INTO seq_num
     FROM invoices
-    WHERE invoice_number LIKE CONCAT('INV-', date_part, '-%');
+    WHERE invoice_number COLLATE utf8mb4_unicode_ci LIKE CONCAT('INV-', date_part, '-%') COLLATE utf8mb4_unicode_ci;
     
     SET invoice_num = CONCAT('INV-', date_part, '-', LPAD(seq_num, 5, '0'));
     

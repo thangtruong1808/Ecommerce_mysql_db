@@ -3,7 +3,7 @@
  * Handles all database operations related to invoices
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import db from '../config/db.js'
@@ -11,6 +11,8 @@ import db from '../config/db.js'
 /**
  * Generate unique invoice number using database function
  * @returns {Promise<string>} - Generated invoice number
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const generateInvoiceNumber = async () => {
   const [rows] = await db.execute('SELECT generate_invoice_number() as invoice_number')
@@ -21,6 +23,8 @@ export const generateInvoiceNumber = async () => {
  * Create invoice for an order
  * @param {Object} invoiceData - Invoice data
  * @returns {Promise<number>} - Created invoice ID
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const createInvoice = async (invoiceData) => {
   const {
@@ -65,6 +69,8 @@ export const createInvoice = async (invoiceData) => {
  * @param {number} invoiceId - Invoice ID
  * @param {number} userId - User ID (for authorization)
  * @returns {Promise<Object|null>} - Invoice object or null
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getInvoiceById = async (invoiceId, userId = null) => {
   let query = `
@@ -104,6 +110,8 @@ export const getInvoiceById = async (invoiceId, userId = null) => {
  * Get invoice by order ID
  * @param {number} orderId - Order ID
  * @returns {Promise<Object|null>} - Invoice object or null
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getInvoiceByOrderId = async (orderId) => {
   const [rows] = await db.execute(
@@ -132,18 +140,34 @@ export const getInvoiceByOrderId = async (orderId) => {
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Invoices and pagination info
  */
+/**
+ * Get all invoices for a user
+ * @param {number} userId - User ID
+ * @param {Object} filters - Filter options
+ * @returns {Promise<Object>} - Invoices and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
 export const getUserInvoices = async (userId, filters = {}) => {
   const { page = 1, limit = 10 } = filters
   const offset = (page - 1) * limit
+  
+  // Validate and convert to integers to avoid MySQL prepared statement issues
+  const limitInt = parseInt(limit, 10)
+  const offsetInt = parseInt(offset, 10)
+  if (isNaN(limitInt) || isNaN(offsetInt) || limitInt < 1 || offsetInt < 0) {
+    throw new Error('Invalid pagination parameters')
+  }
 
+  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
   const [rows] = await db.execute(
     `SELECT i.*, o.id as order_id
      FROM invoices i
      JOIN orders o ON i.order_id = o.id
      WHERE i.user_id = ?
      ORDER BY i.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [userId, limit, offset]
+     LIMIT ${limitInt} OFFSET ${offsetInt}`,
+    [userId]
   )
 
   const [countResult] = await db.execute(
@@ -167,6 +191,8 @@ export const getUserInvoices = async (userId, filters = {}) => {
  * Update invoice email sent status
  * @param {number} invoiceId - Invoice ID
  * @returns {Promise<boolean>} - True if updated, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const markInvoiceEmailSent = async (invoiceId) => {
   const [result] = await db.execute(
@@ -181,6 +207,8 @@ export const markInvoiceEmailSent = async (invoiceId) => {
  * @param {number} invoiceId - Invoice ID
  * @param {string} pdfPath - Path to PDF file
  * @returns {Promise<boolean>} - True if updated, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const updateInvoicePdfPath = async (invoiceId, pdfPath) => {
   const [result] = await db.execute(
@@ -195,10 +223,25 @@ export const updateInvoicePdfPath = async (invoiceId, pdfPath) => {
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Invoices and pagination info
  */
+/**
+ * Get all invoices (admin only)
+ * @param {Object} filters - Filter options
+ * @returns {Promise<Object>} - Invoices and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
 export const getAllInvoices = async (filters = {}) => {
   const { page = 1, limit = 20 } = filters
   const offset = (page - 1) * limit
+  
+  // Validate and convert to integers to avoid MySQL prepared statement issues
+  const limitInt = parseInt(limit, 10)
+  const offsetInt = parseInt(offset, 10)
+  if (isNaN(limitInt) || isNaN(offsetInt) || limitInt < 1 || offsetInt < 0) {
+    throw new Error('Invalid pagination parameters')
+  }
 
+  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
   const [rows] = await db.execute(
     `SELECT i.*, 
             u.name as user_name,
@@ -208,8 +251,7 @@ export const getAllInvoices = async (filters = {}) => {
      JOIN users u ON i.user_id = u.id
      JOIN orders o ON i.order_id = o.id
      ORDER BY i.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [limit, offset]
+     LIMIT ${limitInt} OFFSET ${offsetInt}`
   )
 
   const [countResult] = await db.execute('SELECT COUNT(*) as total FROM invoices')

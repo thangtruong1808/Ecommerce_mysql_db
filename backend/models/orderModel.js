@@ -3,7 +3,7 @@
  * Handles all database operations related to orders
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import db from '../config/db.js'
@@ -12,6 +12,8 @@ import db from '../config/db.js'
  * Create a new order with items and shipping address
  * @param {Object} orderData - Order data
  * @returns {Promise<number>} - Created order ID
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const createOrder = async (orderData) => {
   const connection = await db.getConnection()
@@ -80,6 +82,8 @@ export const createOrder = async (orderData) => {
  * @param {number} orderId - Order ID
  * @param {number} userId - User ID for authorization
  * @returns {Promise<Object|null>} - Order object or null
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getOrderById = async (orderId, userId = null) => {
   let query = `
@@ -120,10 +124,26 @@ export const getOrderById = async (orderId, userId = null) => {
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Orders and pagination info
  */
+/**
+ * Get all orders for a user
+ * @param {number} userId - User ID
+ * @param {Object} filters - Filter options
+ * @returns {Promise<Object>} - Orders and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
 export const getUserOrders = async (userId, filters = {}) => {
   const { page = 1, limit = 10 } = filters
   const offset = (page - 1) * limit
+  
+  // Validate and convert to integers to avoid MySQL prepared statement issues
+  const limitInt = parseInt(limit, 10)
+  const offsetInt = parseInt(offset, 10)
+  if (isNaN(limitInt) || isNaN(offsetInt) || limitInt < 1 || offsetInt < 0) {
+    throw new Error('Invalid pagination parameters')
+  }
 
+  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
   const [rows] = await db.execute(
     `SELECT o.*, 
             COUNT(oi.id) as item_count
@@ -132,8 +152,8 @@ export const getUserOrders = async (userId, filters = {}) => {
      WHERE o.user_id = ?
      GROUP BY o.id
      ORDER BY o.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [userId, limit, offset]
+     LIMIT ${limitInt} OFFSET ${offsetInt}`,
+    [userId]
   )
 
   const [countResult] = await db.execute(
@@ -157,10 +177,20 @@ export const getUserOrders = async (userId, filters = {}) => {
  * Get all orders (admin only)
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Orders and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const getAllOrders = async (filters = {}) => {
   const { page = 1, limit = 20, status = null } = filters
   const offset = (page - 1) * limit
+  
+  // Validate and convert to integers to avoid MySQL prepared statement issues
+  const limitInt = parseInt(limit, 10)
+  const offsetInt = parseInt(offset, 10)
+  if (isNaN(limitInt) || isNaN(offsetInt) || limitInt < 1 || offsetInt < 0) {
+    throw new Error('Invalid pagination parameters')
+  }
+  
   let whereClause = ''
   const params = []
 
@@ -168,6 +198,7 @@ export const getAllOrders = async (filters = {}) => {
   else if (status === 'delivered') whereClause = 'WHERE o.is_delivered = 1'
   else if (status === 'pending') whereClause = 'WHERE o.is_paid = 0'
 
+  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
   const [rows] = await db.execute(
     `SELECT o.*, 
             u.name as user_name, 
@@ -179,8 +210,8 @@ export const getAllOrders = async (filters = {}) => {
      ${whereClause}
      GROUP BY o.id
      ORDER BY o.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [...params, limit, offset]
+     LIMIT ${limitInt} OFFSET ${offsetInt}`,
+    params
   )
 
   const [countResult] = await db.execute(
@@ -205,6 +236,14 @@ export const getAllOrders = async (filters = {}) => {
  * @param {number} orderId - Order ID
  * @param {Object} paymentData - Payment information
  * @returns {Promise<boolean>} - True if updated, false otherwise
+ */
+/**
+ * Update order payment information
+ * @param {number} orderId - Order ID
+ * @param {Object} paymentData - Payment data
+ * @returns {Promise<boolean>} - True if updated, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const updateOrderPayment = async (orderId, paymentData) => {
   const {
@@ -232,6 +271,13 @@ export const updateOrderPayment = async (orderId, paymentData) => {
  * Update order delivery status
  * @param {number} orderId - Order ID
  * @returns {Promise<boolean>} - True if updated
+ */
+/**
+ * Update order delivery status
+ * @param {number} orderId - Order ID
+ * @returns {Promise<boolean>} - True if updated, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const updateOrderDelivery = async (orderId) => {
   const [result] = await db.execute(

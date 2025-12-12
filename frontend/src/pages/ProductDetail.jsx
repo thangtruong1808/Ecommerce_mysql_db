@@ -61,11 +61,6 @@ const ProductDetail = () => {
    * @date 2025-12-12
    */
   const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart')
-      navigate('/login')
-      return
-    }
     if (quantity < 1 || quantity > product.stock) {
       toast.error('Invalid quantity')
       return

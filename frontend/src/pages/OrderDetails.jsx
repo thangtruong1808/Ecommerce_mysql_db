@@ -3,7 +3,7 @@
  * Displays detailed information about a specific order
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -44,7 +44,6 @@ const OrderDetails = () => {
           setInvoice(orderInvoice)
         }
       } catch (error) {
-        console.error('Error fetching invoice:', error)
         toast.error(error.response?.data?.message || 'Failed to load invoice')
       }
     }
@@ -63,7 +62,6 @@ const OrderDetails = () => {
         const response = await axios.get(`/api/orders/${id}`)
         setOrder(response.data)
       } catch (error) {
-        console.error('Error fetching order:', error)
         toast.error(error.response?.data?.message || 'Failed to load order details')
       } finally {
         setLoading(false)

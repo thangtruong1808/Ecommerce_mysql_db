@@ -162,4 +162,3 @@ if (!fs.existsSync(videosDir)) {
  * @date 2025-12-12
  */
 export { resizeImage }
-

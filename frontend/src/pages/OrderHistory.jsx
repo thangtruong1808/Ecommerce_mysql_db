@@ -3,7 +3,7 @@
  * Displays list of user's past orders
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -25,6 +25,8 @@ const OrderHistory = () => {
 
   /**
    * Fetch user orders
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchOrders = async () => {
@@ -35,7 +37,6 @@ const OrderHistory = () => {
         const response = await axios.get('/api/orders')
         setOrders(response.data.orders || [])
       } catch (error) {
-        console.error('Error fetching orders:', error)
         toast.error(error.response?.data?.message || 'Failed to load orders')
       } finally {
         setLoading(false)
@@ -49,6 +50,8 @@ const OrderHistory = () => {
    * Format date
    * @param {string} dateString - Date string
    * @returns {string} Formatted date
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString()
@@ -58,6 +61,8 @@ const OrderHistory = () => {
    * Get order status badge
    * @param {Object} order - Order object
    * @returns {JSX.Element} Status badge
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const getStatusBadge = (order) => {
     if (order.is_delivered) {
@@ -83,6 +88,7 @@ const OrderHistory = () => {
     )
   }
 
+  /* Order history page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page header */}

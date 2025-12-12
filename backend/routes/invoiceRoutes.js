@@ -3,7 +3,7 @@
  * Handles all invoice-related API endpoints
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import express from 'express'
@@ -15,6 +15,8 @@ const router = express.Router()
 /**
  * GET /api/invoices
  * Get user's invoices
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/', protect, async (req, res) => {
   try {

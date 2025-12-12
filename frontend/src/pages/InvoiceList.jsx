@@ -3,7 +3,7 @@
  * Displays list of user's invoices
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -25,6 +25,8 @@ const InvoiceList = () => {
 
   /**
    * Fetch user invoices
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -35,7 +37,6 @@ const InvoiceList = () => {
         const response = await axios.get('/api/invoices')
         setInvoices(response.data.invoices || [])
       } catch (error) {
-        console.error('Error fetching invoices:', error)
         toast.error(error.response?.data?.message || 'Failed to load invoices')
       } finally {
         setLoading(false)
@@ -49,6 +50,8 @@ const InvoiceList = () => {
    * Format date
    * @param {string} dateString - Date string
    * @returns {string} Formatted date
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString()
@@ -68,6 +71,7 @@ const InvoiceList = () => {
     )
   }
 
+  /* Invoice list page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page header */}

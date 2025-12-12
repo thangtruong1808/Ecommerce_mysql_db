@@ -3,7 +3,7 @@
  * Displays detailed invoice information
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -36,7 +36,6 @@ const InvoiceDetail = () => {
         const response = await axios.get(`/api/invoices/${id}`)
         setInvoice(response.data)
       } catch (error) {
-        console.error('Error fetching invoice:', error)
         toast.error(error.response?.data?.message || 'Failed to load invoice')
       } finally {
         setLoading(false)

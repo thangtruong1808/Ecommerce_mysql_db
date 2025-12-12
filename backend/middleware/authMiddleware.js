@@ -43,6 +43,32 @@ export const protect = async (req, res, next) => {
 }
 
 /**
+ * Optional authentication middleware - sets req.user if token is valid, but doesn't require it
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const accessToken = req.cookies?.accessToken
+    if (accessToken) {
+      const decoded = verifyAccessToken(accessToken)
+      if (decoded) {
+        const user = await userModel.findUserById(decoded.id)
+        if (user) {
+          req.user = user
+        }
+      }
+    }
+    next()
+  } catch (error) {
+    next()
+  }
+}
+
+/**
  * Admin only middleware - check if user is admin
  * Must be used after protect middleware
  * @param {Object} req - Express request object

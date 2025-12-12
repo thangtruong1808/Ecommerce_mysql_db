@@ -1,9 +1,9 @@
 /**
  * Cart Context
  * Manages shopping cart state and provides cart functions
- * 
+ * Supports both authenticated (backend) and unauthenticated (localStorage) users
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { createContext, useState, useContext, useEffect } from 'react'
@@ -38,21 +38,18 @@ export const CartProvider = ({ children }) => {
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
 
+
   /**
-   * Fetch cart from server
+   * Fetch cart from server (works for both authenticated and guest users)
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const fetchCart = async () => {
-    if (!isAuthenticated) {
-      setCart({ items: [] })
-      return
-    }
-
     try {
       setLoading(true)
-      const response = await axios.get('/api/cart')
+      const response = await axios.get('/api/cart', { withCredentials: true })
       setCart(response.data)
     } catch (error) {
-      console.error('Error fetching cart:', error)
       const message = error.response?.data?.message || 'Failed to load cart'
       toast.error(message)
       setCart({ items: [] })
@@ -62,32 +59,47 @@ export const CartProvider = ({ children }) => {
   }
 
   /**
-   * Load cart when authenticated
+   * Transfer guest cart to user cart when user logs in
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const transferGuestCart = async () => {
+    try {
+      await axios.post('/api/cart/transfer', {}, { withCredentials: true })
+      await fetchCart()
+    } catch (error) {
+      // If transfer fails, just fetch user cart
+      await fetchCart()
+    }
+  }
+
+  /**
+   * Load cart when authenticated status changes
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCart()
+      transferGuestCart()
     } else {
-      setCart({ items: [] })
+      fetchCart()
     }
   }, [isAuthenticated])
 
   /**
-   * Add item to cart
+   * Add item to cart (works for both authenticated and guest users via backend)
    * @param {number} productId - Product ID
    * @param {number} quantity - Quantity to add
    * @returns {Promise<Object>} Result object
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const addToCart = async (productId, quantity = 1) => {
-    if (!isAuthenticated) {
-      return { success: false, error: 'Please login to add items to cart' }
-    }
-
     try {
       await axios.post('/api/cart', {
         product_id: productId,
         quantity: quantity,
-      })
+      }, { withCredentials: true })
       await fetchCart()
       return { success: true }
     } catch (error) {
@@ -97,78 +109,60 @@ export const CartProvider = ({ children }) => {
   }
 
   /**
-   * Update cart item quantity
-   * @param {number} itemId - Cart item ID
-   * @param {number} quantity - New quantity
-   * @returns {Promise<Object>} Result object
+   * Update cart item quantity (works for both authenticated and guest users)
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const updateQuantity = async (itemId, quantity) => {
-    if (!isAuthenticated) {
-      return { success: false, error: 'Please login' }
-    }
-
     try {
-      await axios.put(`/api/cart/${itemId}`, { quantity })
+      await axios.put(`/api/cart/${itemId}`, { quantity }, { withCredentials: true })
       await fetchCart()
       return { success: true }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to update quantity'
-      return { success: false, error: message }
+      return { success: false, error: error.response?.data?.message || 'Failed to update quantity' }
     }
   }
 
   /**
-   * Remove item from cart
-   * @param {number} itemId - Cart item ID
-   * @returns {Promise<Object>} Result object
+   * Remove item from cart (works for both authenticated and guest users)
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const removeFromCart = async (itemId) => {
-    if (!isAuthenticated) {
-      return { success: false, error: 'Please login' }
-    }
-
     try {
-      await axios.delete(`/api/cart/${itemId}`)
+      await axios.delete(`/api/cart/${itemId}`, { withCredentials: true })
       await fetchCart()
       return { success: true }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to remove item'
-      return { success: false, error: message }
+      return { success: false, error: error.response?.data?.message || 'Failed to remove item' }
     }
   }
 
   /**
-   * Clear entire cart
-   * @returns {Promise<Object>} Result object
+   * Clear entire cart (works for both authenticated and guest users)
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const clearCart = async () => {
-    if (!isAuthenticated) {
-      return { success: false, error: 'Please login' }
-    }
-
     try {
-      await axios.delete('/api/cart')
+      await axios.delete('/api/cart', { withCredentials: true })
       await fetchCart()
       return { success: true }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to clear cart'
-      return { success: false, error: message }
+      return { success: false, error: error.response?.data?.message || 'Failed to clear cart' }
     }
   }
 
   /**
    * Calculate cart totals
-   * @returns {Object} Totals object
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const getTotals = () => {
-    const subtotal = cart.items.reduce((sum, item) => {
-      return sum + item.price * item.quantity
-    }, 0)
-
-    const tax = subtotal * 0.1 // 10% tax
-    const shipping = subtotal > 100 ? 0 : 10 // Free shipping over $100
+    const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    const tax = subtotal * 0.1
+    const shipping = subtotal > 100 ? 0 : 10
     const total = subtotal + tax + shipping
-
     return {
       subtotal: parseFloat(subtotal.toFixed(2)),
       tax: parseFloat(tax.toFixed(2)),
@@ -179,11 +173,10 @@ export const CartProvider = ({ children }) => {
 
   /**
    * Get total items count
-   * @returns {number} Total items in cart
+   * @author Thang Truong
+   * @date 2025-12-12
    */
-  const getItemCount = () => {
-    return cart.items.reduce((sum, item) => sum + item.quantity, 0)
-  }
+  const getItemCount = () => cart.items.reduce((sum, item) => sum + item.quantity, 0)
 
   const value = {
     cart,

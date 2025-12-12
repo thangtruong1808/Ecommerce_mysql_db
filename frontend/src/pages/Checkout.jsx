@@ -3,7 +3,7 @@
  * Handles order placement with shipping address and mock payment
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -47,6 +47,8 @@ const Checkout = () => {
 
   /**
    * Redirect if cart is empty
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     if (cart.items.length === 0 && isAuthenticated) {
@@ -58,6 +60,8 @@ const Checkout = () => {
   /**
    * Handle order submission
    * @param {Object} data - Form data (shipping address)
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleOrderSubmit = async (data) => {
     if (cart.items.length === 0) {
@@ -104,7 +108,6 @@ const Checkout = () => {
       await refreshCart()
       navigate(`/orders/${response.data.orderId}`)
     } catch (error) {
-      console.error('Checkout error:', error)
       toast.error(error.response?.data?.message || 'Failed to place order')
     } finally {
       setProcessing(false)
@@ -132,6 +135,7 @@ const Checkout = () => {
     )
   }
 
+  /* Checkout page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Checkout header */}

@@ -3,7 +3,7 @@
  * Handles all order-related API endpoints
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import express from 'express'
@@ -97,6 +97,8 @@ router.post('/', protect, async (req, res) => {
 /**
  * GET /api/orders
  * Get user's orders
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/', protect, async (req, res) => {
   try {
