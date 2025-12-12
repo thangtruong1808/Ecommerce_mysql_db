@@ -18,6 +18,8 @@ import Clearance from './pages/Clearance'
 import Cart from './pages/Cart'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ResetPassword from './pages/ResetPassword'
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm'
 import Profile from './pages/Profile'
 import Checkout from './pages/Checkout'
 import OrderHistory from './pages/OrderHistory'
@@ -65,6 +67,8 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ResetPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordConfirm />} />
             <Route
               path="/profile"
               element={

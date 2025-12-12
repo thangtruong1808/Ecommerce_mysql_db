@@ -3,10 +3,11 @@
  * Site footer with links and information
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-01-09
  */
 
 import { Link } from 'react-router-dom'
+import logoImage from '../assets/images/Logo.png'
 
 /**
  * Footer component
@@ -18,11 +19,21 @@ const Footer = () => {
       {/* Footer container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company info */}
+          {/* Company info with logo matching navbar */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Ecommerce Store</h3>
-            <p className="text-gray-400 text-sm">
-              Your trusted online shopping destination
+            <Link to="/" className="flex items-center space-x-3 mb-4 hover:opacity-80 transition-opacity">
+              <img 
+                src={logoImage} 
+                alt="Ecommerce Store Logo" 
+                className="h-10 w-auto object-contain"
+              />
+              <div className="flex flex-col">
+                <span className="text-lg font-bold text-white">Ecommerce Store</span>
+                <span className="text-xs text-gray-400">Your trusted shopping destination</span>
+              </div>
+            </Link>
+            <p className="text-gray-400 text-sm mt-2">
+              Quality products, exceptional service, and secure shopping experience.
             </p>
           </div>
 

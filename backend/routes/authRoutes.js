@@ -12,9 +12,11 @@ import { body, validationResult } from 'express-validator'
 import bcrypt from 'bcryptjs'
 import * as userModel from '../models/userModel.js'
 import * as refreshTokenModel from '../models/refreshTokenModel.js'
+import * as passwordResetModel from '../models/passwordResetModel.js'
 import { protect } from '../middleware/authMiddleware.js'
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, getTokenExpiration } from '../utils/tokenUtils.js'
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAllTokenCookies } from '../utils/cookieUtils.js'
+import { sendPasswordResetEmail } from '../utils/emailService.js'
 
 const router = express.Router()
 
@@ -243,6 +245,95 @@ router.put(
       })
     } catch (error) {
       res.status(500).json({ message: error.message })
+    }
+  }
+)
+
+/**
+ * POST /api/auth/forgot-password
+ * Request password reset email
+ */
+router.post(
+  '/forgot-password',
+  [body('email').isEmail().withMessage('Please include a valid email')],
+  async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    try {
+      const { email } = req.body
+      const user = await userModel.findUserByEmail(email)
+
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return res.json({ message: 'If that email exists, a password reset link has been sent.' })
+      }
+
+      // Delete expired tokens for this user
+      await passwordResetModel.deleteExpiredTokens(user.id)
+
+      // Create reset token (expires in 1 hour)
+      const expiresAt = new Date()
+      expiresAt.setHours(expiresAt.getHours() + 1)
+      const resetToken = await passwordResetModel.createResetToken(user.id, expiresAt)
+
+      // Send reset email
+      try {
+        await sendPasswordResetEmail(user.email, resetToken, user.name)
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError)
+        // Still return success to prevent email enumeration
+      }
+
+      res.json({ message: 'If that email exists, a password reset link has been sent.' })
+    } catch (error) {
+      console.error('Password reset request error:', error)
+      res.status(500).json({ message: 'Server error. Please try again later.' })
+    }
+  }
+)
+
+/**
+ * POST /api/auth/reset-password
+ * Reset password using token
+ */
+router.post(
+  '/reset-password',
+  [
+    body('token').notEmpty().withMessage('Reset token is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    try {
+      const { token, password } = req.body
+
+      // Find valid token
+      const tokenRecord = await passwordResetModel.findResetToken(token)
+      if (!tokenRecord) {
+        return res.status(400).json({ message: 'Invalid or expired reset token' })
+      }
+
+      // Hash new password
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(password, salt)
+
+      // Update user password
+      await userModel.updateUser(tokenRecord.user_id, { password: hashedPassword })
+
+      // Mark token as used
+      await passwordResetModel.markTokenAsUsed(token)
+
+      res.json({ message: 'Password has been reset successfully' })
+    } catch (error) {
+      console.error('Password reset error:', error)
+      res.status(500).json({ message: 'Server error. Please try again later.' })
     }
   }
 )

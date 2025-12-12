@@ -161,6 +161,15 @@ const Login = () => {
                   </div>
                   {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
                 </div>
+                {/* Forgot password link */}
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
               {/* Submit + helper */}

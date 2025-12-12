@@ -7,7 +7,7 @@
  */
 
 import { FaSpinner } from 'react-icons/fa'
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaShoppingCart, FaSignInAlt, FaUserPlus, FaSave, FaTimes, FaCheck, FaHome } from 'react-icons/fa'
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaShoppingCart, FaSignInAlt, FaUserPlus, FaSave, FaTimes, FaCheck, FaHome, FaKey } from 'react-icons/fa'
 
 /**
  * Get icon component by name
@@ -27,6 +27,7 @@ const getIcon = (iconName) => {
     cancel: <FaTimes />,
     check: <FaCheck />,
     home: <FaHome />,
+    reset: <FaKey />,
   }
   return icons[iconName] || null
 }
