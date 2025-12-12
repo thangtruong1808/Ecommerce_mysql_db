@@ -13,6 +13,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import ProtectedRoute from '../components/ProtectedRoute'
 import SkeletonLoader from '../components/SkeletonLoader'
+import logoImage from '../assets/images/Logo.png'
 
 /**
  * InvoiceDetail component
@@ -26,6 +27,8 @@ const InvoiceDetail = () => {
 
   /**
    * Fetch invoice details
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -49,6 +52,8 @@ const InvoiceDetail = () => {
    * Format date
    * @param {string} dateString - Date string
    * @returns {string} Formatted date
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -85,10 +90,28 @@ const InvoiceDetail = () => {
     )
   }
 
+  /* Invoice detail page layout */
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Invoice header */}
       <div className="bg-white rounded-lg shadow-md p-8">
+        {/* Brand section with logo and description */}
+        <div className="mb-8 pb-8 border-b">
+          <div className="flex items-center gap-4 mb-4">
+            <img 
+              src={logoImage} 
+              alt="Company Logo" 
+              className="h-16 w-auto object-contain"
+            />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Ecommerce Store</h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Your trusted online shopping destination. Quality products, exceptional service, and fast delivery.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Invoice</h1>
