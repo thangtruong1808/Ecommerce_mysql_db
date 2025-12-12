@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import logoImage from '../assets/images/Logo.png'
@@ -41,10 +42,15 @@ const Navbar = () => {
   }
 
   /**
-   * Handle logout click
+   * Handle logout click with toast notification
    */
   const handleLogout = async () => {
-    await logout()
+    try {
+      await logout()
+      toast.success('Logged out successfully')
+    } catch (error) {
+      toast.error('Failed to logout. Please try again.')
+    }
   }
 
   /**

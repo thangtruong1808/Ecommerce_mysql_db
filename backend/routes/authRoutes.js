@@ -282,15 +282,22 @@ router.post(
       // Send reset email
       try {
         await sendPasswordResetEmail(user.email, resetToken, user.name)
+        console.log(`Password reset email sent to: ${user.email}`)
       } catch (emailError) {
-        console.error('Failed to send password reset email:', emailError)
+        console.error('Failed to send password reset email:', emailError.message || emailError)
+        // Log the reset token for manual use if email fails (development only)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[DEV] Password reset token for ${user.email}: ${resetToken}`)
+          console.log(`[DEV] Reset URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`)
+        }
         // Still return success to prevent email enumeration
       }
 
       res.json({ message: 'If that email exists, a password reset link has been sent.' })
     } catch (error) {
-      console.error('Password reset request error:', error)
-      res.status(500).json({ message: 'Server error. Please try again later.' })
+      console.error('Password reset request error:', error.message || error)
+      // Always return success to prevent email enumeration, even on errors
+      res.json({ message: 'If that email exists, a password reset link has been sent.' })
     }
   }
 )

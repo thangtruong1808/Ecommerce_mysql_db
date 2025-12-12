@@ -10,18 +10,32 @@ import nodemailer from 'nodemailer'
 
 /**
  * Create email transporter
- * @returns {Object} Nodemailer transporter
+ * @returns {Object|null} Nodemailer transporter or null if config is missing
  */
 const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  })
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  
+  // Check if SMTP credentials are configured
+  if (!smtpUser || !smtpPass || smtpUser === 'your-email@gmail.com' || !smtpPass.trim()) {
+    console.warn('SMTP credentials not configured. Email sending will be disabled.')
+    return null
+  }
+
+  try {
+    return nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    })
+  } catch (error) {
+    console.error('Error creating email transporter:', error)
+    return null
+  }
 }
 
 /**
@@ -32,8 +46,15 @@ const createTransporter = () => {
  * @returns {Promise<Object>} Email send result
  */
 export const sendPasswordResetEmail = async (email, resetToken, userName) => {
+  const transporter = createTransporter()
+  
+  if (!transporter) {
+    const errorMsg = 'Email service not configured. Please configure SMTP settings in environment variables.'
+    console.error(errorMsg)
+    throw new Error(errorMsg)
+  }
+
   try {
-    const transporter = createTransporter()
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`
     
     const mailOptions = {
@@ -56,10 +77,11 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     }
 
     const info = await transporter.sendMail(mailOptions)
+    console.log('Password reset email sent successfully:', info.messageId)
     return { success: true, messageId: info.messageId }
   } catch (error) {
-    console.error('Error sending password reset email:', error)
-    throw new Error('Failed to send password reset email')
+    console.error('Error sending password reset email:', error.message || error)
+    throw new Error(`Failed to send password reset email: ${error.message || 'Unknown error'}`)
   }
 }
 

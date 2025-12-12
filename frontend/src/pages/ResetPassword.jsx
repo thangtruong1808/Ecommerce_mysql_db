@@ -35,11 +35,19 @@ const ResetPassword = () => {
   const onSubmit = async (data) => {
     try {
       setLoading(true)
-      await axios.post('/api/auth/forgot-password', { email: data.email })
+      const response = await axios.post('/api/auth/forgot-password', { email: data.email })
       setEmailSent(true)
-      toast.success('If that email exists, a password reset link has been sent.')
+      toast.success(response.data?.message || 'If that email exists, a password reset link has been sent.')
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to send reset email')
+      // Handle validation errors
+      if (error.response?.status === 400 && error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors
+        const errorMessage = validationErrors.map(err => err.msg).join(', ') || 'Invalid email address'
+        toast.error(errorMessage)
+      } else {
+        // Handle other errors
+        toast.error(error.response?.data?.message || 'Failed to send reset email. Please check your email configuration.')
+      }
     } finally {
       setLoading(false)
     }
