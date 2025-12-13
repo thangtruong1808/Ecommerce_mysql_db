@@ -68,30 +68,37 @@ const resizeImage = async (inputPath, outputPath) => {
   }
 }
 
-// Configure storage for images with resizing
-const imageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(uploadsDir, 'images'))
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    const ext = path.extname(file.originalname).toLowerCase()
-    // Convert to jpeg for consistency after resizing
-    const finalExt = (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.webp') ? '.jpg' : ext
-    cb(null, `product-${uniqueSuffix}${finalExt}`)
-  }
-})
+// Check if using S3
+const useS3 = process.env.USE_AWS_S3 === 'true'
 
-// Configure storage for videos
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(uploadsDir, 'videos'))
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`)
-  }
-})
+// Configure storage for images - memory for S3, disk for local
+const imageStorage = useS3
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, path.join(uploadsDir, 'images'))
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        const ext = path.extname(file.originalname).toLowerCase()
+        // Convert to jpeg for consistency after resizing
+        const finalExt = (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.webp') ? '.jpg' : ext
+        cb(null, `product-${uniqueSuffix}${finalExt}`)
+      }
+    })
+
+// Configure storage for videos - memory for S3, disk for local
+const videoStorage = useS3
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, path.join(uploadsDir, 'videos'))
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`)
+      }
+    })
 
 /**
  * File filter for images

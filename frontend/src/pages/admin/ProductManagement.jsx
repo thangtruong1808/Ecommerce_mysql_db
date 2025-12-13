@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTrash } from 'react-icons/fa'
+import { FaTrash, FaImages } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import QuickActionButton from '../../components/admin/QuickActionButton'
@@ -257,13 +257,22 @@ const ProductManagement = () => {
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => setDeleteModal({ isOpen: true, product })}
-                      className="text-red-600 hover:text-red-800"
-                      aria-label="Delete product"
-                    >
-                      <FaTrash />
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        to={`/admin/products/${product.id}/media`}
+                        className="text-blue-600 hover:text-blue-800"
+                        aria-label="Manage media"
+                      >
+                        <FaImages />
+                      </Link>
+                      <button
+                        onClick={() => setDeleteModal({ isOpen: true, product })}
+                        className="text-red-600 hover:text-red-800"
+                        aria-label="Delete product"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

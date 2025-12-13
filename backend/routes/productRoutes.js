@@ -13,6 +13,7 @@ import * as subcategoryModel from '../models/subcategoryModel.js'
 import * as childCategoryModel from '../models/childCategoryModel.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
 import { uploadImage, uploadVideo, resizeImage } from '../middleware/uploadMiddleware.js'
+import { uploadImageWithResize, uploadVideo as uploadVideoToS3 } from '../utils/s3Service.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
@@ -279,28 +280,37 @@ router.post('/:id/images', protect, admin, uploadImage.array('images', 10), asyn
       return res.status(400).json({ message: 'No images uploaded' })
     }
 
-      const imageUrls = []
-    const uploadsDir = path.join(__dirname, '../uploads/images')
+    const useS3 = process.env.USE_AWS_S3 === 'true'
+    const imageUrls = []
     
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i]
-      const originalPath = file.path
-      const resizedPath = path.join(uploadsDir, `resized-${file.filename}`)
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i]
+      let imageUrl
+      const isPrimary = i === 0 && product.images.length === 0
       
-      // Resize image to 500x500
-      await resizeImage(originalPath, resizedPath)
-      
-      // Replace original with resized version
-      if (fs.existsSync(resizedPath)) {
-        fs.renameSync(resizedPath, originalPath)
-      }
-      
-        const imageUrl = `/uploads/images/${file.filename}`
-        const isPrimary = i === 0 && product.images.length === 0
+      if (useS3) {
+        // Upload to S3 with resize
+        imageUrl = await uploadImageWithResize(file.buffer, file.originalname, productId)
+      } else {
+        // Local storage (existing logic)
+        const uploadsDir = path.join(__dirname, '../uploads/images')
+        const originalPath = file.path
+        const resizedPath = path.join(uploadsDir, `resized-${file.filename}`)
         
-        await productMediaModel.addProductImage(productId, imageUrl, isPrimary)
-        imageUrls.push(imageUrl)
+        // Resize image to 500x500
+        await resizeImage(originalPath, resizedPath)
+        
+        // Replace original with resized version
+        if (fs.existsSync(resizedPath)) {
+          fs.renameSync(resizedPath, originalPath)
+        }
+        
+        imageUrl = `/uploads/images/${file.filename}`
       }
+      
+      await productMediaModel.addProductImage(productId, imageUrl, isPrimary)
+      imageUrls.push(imageUrl)
+    }
 
     res.status(201).json({ 
       message: 'Images uploaded and resized successfully',
@@ -329,8 +339,22 @@ router.post('/:id/videos', protect, admin, uploadVideo.single('video'), async (r
       return res.status(400).json({ message: 'No video uploaded' })
     }
 
-    const videoUrl = `/uploads/videos/${req.file.filename}`
+    const useS3 = process.env.USE_AWS_S3 === 'true'
     const isPrimary = product.videos.length === 0
+    let videoUrl
+    
+    if (useS3) {
+      // Upload to S3
+      videoUrl = await uploadVideoToS3(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        productId
+      )
+    } else {
+      // Local storage
+      videoUrl = `/uploads/videos/${req.file.filename}`
+    }
 
     await productMediaModel.addProductVideo(productId, {
       video_url: videoUrl,

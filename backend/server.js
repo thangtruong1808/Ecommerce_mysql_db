@@ -24,6 +24,7 @@ import invoiceRoutes from './routes/invoiceRoutes.js'
 import commentRoutes from './routes/commentRoutes.js'
 import likeRoutes from './routes/likeRoutes.js'
 import voucherRoutes from './routes/voucherRoutes.js'
+import mediaRoutes from './routes/mediaRoutes.js'
 
 // Load environment variables from root .env file
 // Note: db.js also loads dotenv, but we load it here too for other modules
@@ -85,6 +86,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api', commentRoutes)
 app.use('/api', likeRoutes)
 app.use('/api', voucherRoutes)
+app.use('/api/admin', mediaRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

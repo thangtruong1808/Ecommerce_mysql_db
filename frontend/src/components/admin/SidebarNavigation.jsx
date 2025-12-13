@@ -19,7 +19,9 @@ import {
   FaHome,
   FaSignOutAlt,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaImages,
+  FaVideo
 } from 'react-icons/fa'
 
 /**
@@ -70,6 +72,8 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
     { path: '/admin/users', label: 'Users', icon: FaUsers },
     { path: '/admin/vouchers', label: 'Vouchers', icon: FaTag },
     { path: '/admin/comments', label: 'Comments', icon: FaComment },
+    { path: '/admin/images', label: 'Images', icon: FaImages },
+    { path: '/admin/videos', label: 'Videos', icon: FaVideo },
   ]
 
   /* Sidebar navigation */

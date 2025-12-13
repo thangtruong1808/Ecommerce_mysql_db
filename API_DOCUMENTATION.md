@@ -663,8 +663,11 @@ All endpoints may return the following error responses:
 
 - All prices are returned as strings in decimal format
 - Dates are returned in ISO 8601 format
-- Image and video URLs are relative paths (e.g., `/uploads/images/filename.jpg`)
-- To access uploaded files, use: `http://localhost:5000/uploads/images/filename.jpg`
+- Image and video URLs can be:
+  - Relative paths for local storage (e.g., `/uploads/images/filename.jpg`)
+  - Full S3 URLs when using AWS S3 (e.g., `https://bucket.s3.amazonaws.com/images/1/filename.jpg`)
+- To access local uploaded files, use: `http://localhost:5000/uploads/images/filename.jpg`
+- AWS S3 URLs are publicly accessible when bucket is configured for public read access
 - Pagination starts at page 1
 - Maximum 10 images can be uploaded per request
 - Video file size limit: 100MB

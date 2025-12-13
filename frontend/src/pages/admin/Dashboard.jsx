@@ -360,7 +360,7 @@ const Dashboard = () => {
                     return date.toLocaleDateString()
                   }
                   return (
-                    <div key={`activity-${activity.id || activity.createdAt || activity.created_at || activity.date || index}`} className="flex items-start space-x-2 pb-2 border-b border-gray-200 last:border-0">
+                    <div key={`activity-${index}-${activity.id || activity.createdAt || activity.created_at || activity.date || Date.now()}`} className="flex items-start space-x-2 pb-2 border-b border-gray-200 last:border-0">
                       <span className="text-base mt-0.5">{getActivityIcon(activity.type)}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900">{activity.description || activity.message || 'Activity'}</p>

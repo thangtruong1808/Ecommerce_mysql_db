@@ -31,6 +31,9 @@ import UserManagement from './pages/admin/UserManagement'
 import ProductForm from './pages/admin/ProductForm'
 import VoucherManagement from './pages/admin/VoucherManagement'
 import CommentModeration from './pages/admin/CommentModeration'
+import MediaManagement from './pages/admin/MediaManagement'
+import ImageManagement from './pages/admin/ImageManagement'
+import VideoManagement from './pages/admin/VideoManagement'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
 import NotFound from './pages/NotFound'
@@ -160,6 +163,30 @@ const AppContent = () => {
               element={
                 <ProtectedRoute adminOnly>
                   <CommentModeration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/products/:productId/media"
+              element={
+                <ProtectedRoute adminOnly>
+                  <MediaManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/images"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ImageManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/videos"
+              element={
+                <ProtectedRoute adminOnly>
+                  <VideoManagement />
                 </ProtectedRoute>
               }
             />
