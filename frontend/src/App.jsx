@@ -3,7 +3,7 @@
  * Sets up routing and application structure
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
@@ -53,13 +53,14 @@ function App() {
             v7_relativeSplatPath: true
           }}
         >
-          {/* Main application container */}
-          <div className="min-h-screen bg-gray-50">
+          {/* Main application container with flex layout for sticky footer */}
+          <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Navigation bar */}
             <Navbar />
           
-          {/* Route definitions */}
-          <Routes>
+            {/* Route definitions - flex-grow to push footer down */}
+            <div className="flex-grow">
+              <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
@@ -181,26 +182,27 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
           
-          {/* Toast notifications container with 10 second auto-close and progress bar */}
-          <ToastContainer 
-            position="top-right" 
-            autoClose={10000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
+            {/* Toast notifications container with 10 second auto-close and progress bar */}
+            <ToastContainer 
+              position="top-right" 
+              autoClose={10000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
           
-          {/* Site footer */}
-          <Footer />
-        </div>
+            {/* Site footer - sticks to bottom */}
+            <Footer />
+          </div>
       </Router>
     </CartProvider>
   </AuthProvider>

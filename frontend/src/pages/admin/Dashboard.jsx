@@ -3,7 +3,7 @@
  * Displays admin overview with statistics
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -12,6 +12,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import StatsCard from '../../components/admin/StatsCard'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import SkeletonLoader from '../../components/SkeletonLoader'
 
 /**
  * Dashboard component
@@ -23,6 +24,8 @@ const Dashboard = () => {
 
   /**
    * Fetch dashboard statistics
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchStats = async () => {
@@ -31,7 +34,6 @@ const Dashboard = () => {
         const response = await axios.get('/api/admin/stats')
         setStats(response.data)
       } catch (error) {
-        console.error('Error fetching stats:', error)
         toast.error(error.response?.data?.message || 'Failed to load dashboard statistics')
       } finally {
         setLoading(false)
@@ -59,6 +61,7 @@ const Dashboard = () => {
     )
   }
 
+  /* Admin dashboard page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Dashboard header */}

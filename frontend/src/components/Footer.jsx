@@ -3,7 +3,7 @@
  * Site footer with links and information
  * 
  * @author Thang Truong
- * @date 2025-01-09
+ * @date 2025-12-12
  */
 
 import { Link } from 'react-router-dom'
@@ -14,8 +14,9 @@ import logoImage from '../assets/images/Logo.png'
  * @returns {JSX.Element} Footer component
  */
 const Footer = () => {
+  /* Footer component layout */
   return (
-    <footer className="bg-gray-800 text-white mt-12">
+    <footer className="bg-gray-800 text-white mt-auto">
       {/* Footer container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
