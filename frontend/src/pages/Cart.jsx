@@ -125,56 +125,22 @@ const Cart = () => {
           <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
             {cart.items.map((item) => (
               <div key={item.cart_item_id} className="flex items-center border-b pb-4 last:border-0">
-                {/* Product image */}
                 <div className="w-24 h-24 bg-gray-200 rounded-lg mr-4 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <p className="text-gray-400 text-xs">No image</p>
-                  )}
+                  {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : <p className="text-gray-400 text-xs">No image</p>}
                 </div>
-                
-                {/* Product details */}
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{item.name}</h3>
                   <p className="text-gray-600">${(Number(item.price) || 0).toFixed(2)}</p>
                   <p className="text-sm text-gray-500">Stock: {item.stock}</p>
                 </div>
-
-                {/* Quantity controls */}
                 <div className="flex items-center space-x-2 mr-4">
-                  <button
-                    onClick={() => handleQuantityChange(item.cart_item_id, item.quantity - 1)}
-                    className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100"
-                    disabled={item.quantity <= 1}
-                  >
-                    -
-                  </button>
+                  <button onClick={() => handleQuantityChange(item.cart_item_id, item.quantity - 1)} className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100" disabled={item.quantity <= 1}>-</button>
                   <span className="w-12 text-center">{item.quantity}</span>
-                  <button
-                    onClick={() => handleQuantityChange(item.cart_item_id, item.quantity + 1)}
-                    className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100"
-                    disabled={item.quantity >= item.stock}
-                  >
-                    +
-                  </button>
+                  <button onClick={() => handleQuantityChange(item.cart_item_id, item.quantity + 1)} className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100" disabled={item.quantity >= item.stock}>+</button>
                 </div>
-
-                {/* Item total and remove */}
                 <div className="text-right">
-                  <p className="font-semibold text-lg">
-                    ${((Number(item.price) || 0) * item.quantity).toFixed(2)}
-                  </p>
-                  <button
-                    onClick={() => handleRemoveItem(item.cart_item_id)}
-                    className="text-red-600 hover:text-red-800 text-sm mt-2"
-                  >
-                    Remove
-                  </button>
+                  <p className="font-semibold text-lg">${((Number(item.price) || 0) * item.quantity).toFixed(2)}</p>
+                  <button onClick={() => handleRemoveItem(item.cart_item_id)} className="text-red-600 hover:text-red-800 text-sm mt-2">Remove</button>
                 </div>
               </div>
             ))}
@@ -206,6 +172,15 @@ const Cart = () => {
               </div>
             </div>
 
+            {/* Free shipping reminder */}
+            {totals.subtotal < 100 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800 text-center">
+                  <strong>You're almost there!</strong> Add <strong>${(100 - totals.subtotal).toFixed(2)}</strong> more to qualify for <strong>FREE shipping</strong> on orders over $100.
+                </p>
+              </div>
+            )}
+
             {/* Checkout button or login prompt */}
             {isAuthenticated ? (
               <Button
@@ -218,17 +193,9 @@ const Cart = () => {
             ) : (
               <div className="space-y-3">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
-                  <p className="text-sm text-gray-700 text-center">
-                    To complete your purchase, please sign in to your account. Don't have an account? You can create one during checkout.
-                  </p>
+                  <p className="text-sm text-gray-700 text-center">To complete your purchase, please sign in to your account. Don't have an account? You can create one during checkout.</p>
                 </div>
-                <Button
-                  onClick={handleCheckout}
-                  icon="login"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Login to Checkout
-                </Button>
+                <Button onClick={handleCheckout} icon="login" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white">Login to Checkout</Button>
               </div>
             )}
 
