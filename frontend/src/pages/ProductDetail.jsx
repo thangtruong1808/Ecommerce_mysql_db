@@ -5,7 +5,7 @@
  * @date 2025-12-12
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useCart } from '../context/CartContext'
@@ -38,6 +38,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true)
   const [addingToCart, setAddingToCart] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  const reviewListRef = useRef(null)
+  const commentListRef = useRef(null)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -183,19 +185,27 @@ const ProductDetail = () => {
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Reviews</h2>
         <div className="mb-8">
-          <ReviewForm productId={product.id} onReviewSubmitted={() => window.location.reload()} />
+          <ReviewForm productId={product.id} onReviewSubmitted={() => {
+            if (reviewListRef.current) {
+              reviewListRef.current()
+            }
+          }} />
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
-          <ReviewList productId={product.id} />
+          <ReviewList productId={product.id} onRefetch={reviewListRef} />
         </div>
       </div>
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments</h2>
         <div className="mb-8">
-          <CommentForm productId={product.id} onCommentSubmitted={() => window.location.reload()} />
+          <CommentForm productId={product.id} onCommentSubmitted={() => {
+            if (commentListRef.current) {
+              commentListRef.current()
+            }
+          }} />
         </div>
         <div className="bg-white rounded-lg shadow-md p-6">
-          <CommentList productId={product.id} />
+          <CommentList productId={product.id} onRefetch={commentListRef} />
         </div>
       </div>
     </div>

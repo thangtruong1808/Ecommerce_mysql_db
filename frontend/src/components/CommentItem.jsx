@@ -1,9 +1,8 @@
 /**
  * Comment Item Component
  * Individual comment display with edit/delete functionality
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState } from 'react'
@@ -14,12 +13,36 @@ import Button from './Button'
 import { FaEdit, FaTrash, FaUser } from 'react-icons/fa'
 
 /**
+ * Format date to dd-MMM-yyyy, hh:mm AM/PM format
+ * @param {string|Date} date - Date to format
+ * @returns {string} Formatted date string
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+const formatDate = (date) => {
+  const d = new Date(date)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = months[d.getMonth()]
+  const year = d.getFullYear()
+  let hours = d.getHours()
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const ampm = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12
+  hours = hours ? hours : 12
+  const hoursStr = String(hours).padStart(2, '0')
+  return `${day}-${month}-${year}, ${hoursStr}:${minutes} ${ampm}`
+}
+
+/**
  * CommentItem component
  * @param {Object} props - Component props
  * @param {Object} props.comment - Comment object
  * @param {Function} props.onUpdate - Callback after comment update
  * @param {Function} props.onDelete - Callback after comment deletion
  * @returns {JSX.Element} Comment item component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const CommentItem = ({ comment, onUpdate, onDelete }) => {
   const { user } = useAuth()
@@ -29,6 +52,8 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
   /**
    * Handle edit button click
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleEdit = () => {
     setIsEditing(true)
@@ -37,6 +62,8 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
   /**
    * Handle cancel edit
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleCancel = () => {
     setIsEditing(false)
@@ -45,6 +72,8 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
   /**
    * Handle save edit
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleSave = async () => {
     if (!editText.trim()) {
@@ -74,6 +103,8 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
 
   /**
    * Handle delete comment
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this comment?')) {
@@ -98,8 +129,9 @@ const CommentItem = ({ comment, onUpdate, onDelete }) => {
   }
 
   const isOwner = user && user.id === comment.user_id
-  const date = new Date(comment.created_at).toLocaleDateString()
+  const date = formatDate(comment.created_at)
 
+  /* Comment item layout */
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
       {/* Comment header */}

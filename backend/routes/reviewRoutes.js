@@ -35,6 +35,46 @@ router.get('/products/:productId/reviews', async (req, res) => {
 })
 
 /**
+ * GET /api/products/:productId/reviews/my
+ * Get current user's review for a product (protected)
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/products/:productId/reviews/my', protect, async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId)
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).json({ message: 'Invalid product ID' })
+    }
+    const userId = req.user.id
+    const review = await reviewModel.getUserReview(userId, productId)
+    res.json(review)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/products/:productId/reviews/eligibility
+ * Check if current user is eligible to review (has purchased product)
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/products/:productId/reviews/eligibility', protect, async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId)
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).json({ message: 'Invalid product ID' })
+    }
+    const userId = req.user.id
+    const hasPurchased = await reviewModel.hasUserPurchasedProduct(userId, productId)
+    res.json({ eligible: hasPurchased })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
  * POST /api/products/:productId/reviews
  * Create review for a product (only if user purchased it)
  * @author Thang Truong
@@ -95,7 +135,7 @@ router.post(
  * @date 2025-12-12
  */
 router.put(
-  '/:id',
+  '/reviews/:id',
   protect,
   [
     body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
@@ -141,7 +181,7 @@ router.put(
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/:id', protect, async (req, res) => {
+router.delete('/reviews/:id', protect, async (req, res) => {
   try {
     const reviewId = parseInt(req.params.id)
     if (isNaN(reviewId) || reviewId <= 0) {

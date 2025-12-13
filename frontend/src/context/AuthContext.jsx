@@ -92,23 +92,24 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Handle automatic logout when refresh token expires
-   * Only redirects if on a protected route
+   * Only redirects and clears user if on a protected route
    * @author Thang Truong
    * @date 2025-12-12
    */
   const handleTokenExpiration = async () => {
     if (isRedirectingRef.current) return
     isRedirectingRef.current = true
-    setUser(null)
-    setError(null)
     const path = window.location.pathname
     const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
     
-    // Only redirect if on a protected route and not already on auth page
+    // Only clear user and redirect if on a protected route and not already on auth page
     if (!isAuthPage && isProtectedRoute()) {
+      setUser(null)
+      setError(null)
       toast.info('Your session has expired. Please login again.')
       setTimeout(() => { window.location.href = '/login' }, 100)
     } else {
+      // Public route - don't clear user state, just reset redirect flag
       isRedirectingRef.current = false
     }
   }
@@ -428,25 +429,57 @@ export const AuthProvider = ({ children }) => {
   // Axios interceptor for automatic token refresh and auto-logout
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Success responses - don't interfere, just return
+        return response
+      },
       async (error) => {
         const originalRequest = error.config
-        if (error.response?.status === 401 && 
-            (originalRequest.url?.includes('/api/auth/login') || 
-             originalRequest.url?.includes('/api/auth/profile'))) {
+        // Only handle 401 errors
+        if (!error.response || error.response.status !== 401) {
           return Promise.reject(error)
         }
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Don't intercept 401 errors from auth endpoints
+        if (originalRequest.url?.includes('/api/auth/login') || 
+            originalRequest.url?.includes('/api/auth/profile') ||
+            originalRequest.url?.includes('/api/auth/register')) {
+          return Promise.reject(error)
+        }
+        // Handle 401 errors on protected endpoints
+        if (!originalRequest._retry) {
           originalRequest._retry = true
+          // If refresh endpoint returns 401, refresh token expired
           if (originalRequest.url?.includes('/api/auth/refresh')) {
-            await handleTokenExpiration()
+            // Only clear user and redirect if on protected route
+            if (isProtectedRoute()) {
+              await handleTokenExpiration()
+            }
             return Promise.reject(error)
           }
-          const refreshed = await refreshToken()
-          if (refreshed) {
-            return axios(originalRequest)
-          } else {
-            await handleTokenExpiration()
+          // Try to refresh token
+          try {
+            const refreshResponse = await axios.post('/api/auth/refresh', {}, {
+              validateStatus: (status) => status === 200 || status === 401
+            })
+            if (refreshResponse.status === 200) {
+              // Token refreshed successfully - retry original request
+              return axios(originalRequest)
+            } else {
+              // Refresh token expired - only logout if on protected route
+              if (isProtectedRoute()) {
+                await handleTokenExpiration()
+              }
+              return Promise.reject(error)
+            }
+          } catch (refreshError) {
+            // Refresh failed - check if it's 401 (expired) or other error
+            if (refreshError.response?.status === 401) {
+              // Refresh token expired - only logout if on protected route
+              if (isProtectedRoute()) {
+                await handleTokenExpiration()
+              }
+            }
+            return Promise.reject(error)
           }
         }
         return Promise.reject(error)

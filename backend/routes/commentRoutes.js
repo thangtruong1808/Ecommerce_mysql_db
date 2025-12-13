@@ -1,9 +1,8 @@
 /**
  * Comment Routes
  * Handles all product comment related API endpoints
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import express from 'express'
@@ -54,6 +53,23 @@ router.get('/products/:productId/comments', async (req, res) => {
     
     const comments = await commentModel.getProductComments(productId, includePending)
     res.json(comments)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/products/:productId/comments/my
+ * Get current user's comment for a product (protected)
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/products/:productId/comments/my', protect, async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId)
+    const userId = req.user.id
+    const comment = await commentModel.getUserComment(userId, productId)
+    res.json(comment)
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

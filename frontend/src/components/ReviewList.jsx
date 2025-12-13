@@ -14,11 +14,12 @@ import ReviewItem from './ReviewItem'
  * ReviewList component
  * @param {Object} props - Component props
  * @param {number} props.productId - Product ID
+ * @param {Function} props.onRefetch - Optional callback to trigger refetch
  * @returns {JSX.Element} Review list component
  * @author Thang Truong
  * @date 2025-12-12
  */
-const ReviewList = ({ productId }) => {
+const ReviewList = ({ productId, onRefetch }) => {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -27,22 +28,30 @@ const ReviewList = ({ productId }) => {
    * @author Thang Truong
    * @date 2025-12-12
    */
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        setLoading(true)
-        const response = await axios.get(`/api/products/${productId}/reviews`)
-        setReviews(response.data.reviews || [])
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to load reviews')
-      } finally {
-        setLoading(false)
-      }
+  const fetchReviews = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get(`/api/products/${productId}/reviews`)
+      setReviews(response.data.reviews || [])
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load reviews')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     if (productId) {
       fetchReviews()
     }
   }, [productId])
+
+  // Expose refetch function to parent
+  useEffect(() => {
+    if (onRefetch) {
+      onRefetch.current = fetchReviews
+    }
+  }, [onRefetch])
 
   if (loading) {
     return (

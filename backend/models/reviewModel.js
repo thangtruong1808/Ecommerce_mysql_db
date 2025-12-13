@@ -190,3 +190,24 @@ export const hasUserReviewedProduct = async (userId, productId) => {
   return rows[0].count > 0
 }
 
+/**
+ * Get user's review for a product
+ * @param {number} userId - User ID
+ * @param {number} productId - Product ID
+ * @returns {Promise<Object|null>} - Review object or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getUserReview = async (userId, productId) => {
+  const [rows] = await db.execute(
+    `SELECT r.*, 
+            u.name as user_name,
+            u.email as user_email
+     FROM reviews r
+     JOIN users u ON r.user_id = u.id
+     WHERE r.user_id = ? AND r.product_id = ?`,
+    [userId, productId]
+  )
+  return rows[0] || null
+}
+

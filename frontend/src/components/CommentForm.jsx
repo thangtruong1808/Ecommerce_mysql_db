@@ -1,9 +1,8 @@
 /**
  * Comment Form Component
  * Form for submitting product comments
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState } from 'react'
@@ -12,7 +11,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import Button from './Button'
-import { FaComment } from 'react-icons/fa'
+import { FaComment, FaSmile } from 'react-icons/fa'
 
 /**
  * CommentForm component
@@ -20,6 +19,8 @@ import { FaComment } from 'react-icons/fa'
  * @param {number} props.productId - Product ID
  * @param {Function} props.onCommentSubmitted - Callback after comment submission
  * @returns {JSX.Element} Comment form component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const CommentForm = ({ productId, onCommentSubmitted }) => {
   const { isAuthenticated } = useAuth()
@@ -29,11 +30,28 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm()
+  const watchedComment = watch('comment', '')
+
+  /**
+   * Insert emoji into comment text
+   * @param {string} emoji - Emoji to insert
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const insertEmoji = (emoji) => {
+    const currentText = watchedComment || ''
+    const newText = currentText + emoji
+    setValue('comment', newText, { shouldValidate: true })
+  }
 
   /**
    * Handle form submission
    * @param {Object} data - Form data
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const onSubmit = async (data) => {
     if (!isAuthenticated) {
@@ -54,12 +72,19 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
         onCommentSubmitted()
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to submit comment'
-      toast.error(message)
+      // Handle 401 errors
+      if (error.response?.status === 401) {
+        toast.error('Your session expired. Please try again.')
+      } else {
+        const message = error.response?.data?.message || 'Failed to submit comment'
+        toast.error(message)
+      }
     } finally {
       setLoading(false)
     }
   }
+
+  const emojis = ['😀', '😃', '😄', '😁', '😊', '😍', '🤔', '👍', '❤️', '🎉', '🔥', '💯']
 
   if (!isAuthenticated) {
     return (
@@ -70,6 +95,7 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
     )
   }
 
+  /* Comment form layout */
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       {/* Comment form */}
@@ -89,6 +115,23 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
           {errors.comment && (
             <p className="mt-1 text-sm text-red-600">{errors.comment.message}</p>
           )}
+          {/* Emoji picker */}
+          <div className="mt-2 flex items-center space-x-2">
+            <FaSmile className="text-gray-400" />
+            <div className="flex flex-wrap gap-2">
+              {emojis.map((emoji, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => insertEmoji(emoji)}
+                  className="text-xl hover:scale-125 transition-transform cursor-pointer"
+                  title={`Insert ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Submit button */}

@@ -1,9 +1,8 @@
 /**
  * Comment Model
  * Handles all database operations related to product comments
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import db from '../config/db.js'
@@ -162,5 +161,28 @@ export const getPendingComments = async () => {
     [false]
   )
   return rows
+}
+
+/**
+ * Get user's comment for a product
+ * @param {number} userId - User ID
+ * @param {number} productId - Product ID
+ * @returns {Promise<Object|null>} - Comment object or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getUserComment = async (userId, productId) => {
+  const [rows] = await db.execute(
+    `SELECT c.*, 
+            u.name as user_name,
+            u.email as user_email
+     FROM product_comments c
+     JOIN users u ON c.user_id = u.id
+     WHERE c.user_id = ? AND c.product_id = ? AND c.is_approved = 1
+     ORDER BY c.created_at DESC
+     LIMIT 1`,
+    [userId, productId]
+  )
+  return rows[0] || null
 }
 

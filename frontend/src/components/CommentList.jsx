@@ -1,9 +1,8 @@
 /**
  * Comment List Component
  * Display list of approved comments for a product
- * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -16,14 +15,19 @@ import { FaComments } from 'react-icons/fa'
  * CommentList component
  * @param {Object} props - Component props
  * @param {number} props.productId - Product ID
+ * @param {Function} props.onRefetch - Optional callback to trigger refetch
  * @returns {JSX.Element} Comment list component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
-const CommentList = ({ productId }) => {
+const CommentList = ({ productId, onRefetch }) => {
   const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
 
   /**
    * Fetch comments for the product
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const fetchComments = async () => {
     try {
@@ -33,7 +37,7 @@ const CommentList = ({ productId }) => {
       })
       setComments(response.data)
     } catch (error) {
-      console.error('Failed to fetch comments:', error)
+      // Silent fail for comments
     } finally {
       setLoading(false)
     }
@@ -45,8 +49,17 @@ const CommentList = ({ productId }) => {
     }
   }, [productId])
 
+  // Expose refetch function to parent
+  useEffect(() => {
+    if (onRefetch) {
+      onRefetch.current = fetchComments
+    }
+  }, [onRefetch])
+
   /**
    * Handle comment update
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleUpdate = () => {
     fetchComments()
@@ -54,6 +67,8 @@ const CommentList = ({ productId }) => {
 
   /**
    * Handle comment deletion
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleDelete = () => {
     fetchComments()
@@ -68,6 +83,7 @@ const CommentList = ({ productId }) => {
     )
   }
 
+  /* Comment list layout */
   return (
     <div className="space-y-4">
       {/* Comments header */}
