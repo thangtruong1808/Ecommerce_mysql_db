@@ -167,7 +167,7 @@ const OrderManagement = () => {
   if (loading && orders.length === 0) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Order Management</h1>
           <SkeletonLoader type="table" />
         </div>
@@ -178,7 +178,7 @@ const OrderManagement = () => {
   /* Order management page */
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Order Management</h1>
 
         {/* Filters and search */}

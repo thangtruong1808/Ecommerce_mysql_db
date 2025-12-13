@@ -135,7 +135,7 @@ const UserManagement = () => {
   if (loading && users.length === 0) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">User Management</h1>
           <SkeletonLoader type="table" />
         </div>
@@ -146,7 +146,7 @@ const UserManagement = () => {
   /* User management page */
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         {/* Page header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>

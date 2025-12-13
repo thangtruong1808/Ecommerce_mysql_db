@@ -108,7 +108,7 @@ const CommentModeration = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Loading skeleton */}
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Comment Moderation</h1>
           <SkeletonLoader type="table" />
@@ -121,7 +121,7 @@ const CommentModeration = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Page header */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-2">

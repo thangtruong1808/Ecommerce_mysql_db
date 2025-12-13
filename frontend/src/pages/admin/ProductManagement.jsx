@@ -167,7 +167,7 @@ const ProductManagement = () => {
   if (loading && products.length === 0) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Product Management</h1>
           <SkeletonLoader type="table" />
         </div>
@@ -178,7 +178,7 @@ const ProductManagement = () => {
   /* Product management page */
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         {/* Page header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>

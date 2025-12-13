@@ -124,7 +124,7 @@ const Dashboard = () => {
   if (loading && !stats) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto">
           {/* Loading skeleton */}
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -168,7 +168,7 @@ const Dashboard = () => {
   /* Admin dashboard overview */
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
