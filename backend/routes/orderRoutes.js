@@ -12,12 +12,15 @@ import * as cartModel from '../models/cartModel.js'
 import * as invoiceModel from '../models/invoiceModel.js'
 import * as voucherModel from '../models/voucherModel.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
+import { sendInvoiceEmail } from '../utils/emailService.js'
 
 const router = express.Router()
 
 /**
  * POST /api/orders
  * Create new order from cart
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.post('/', protect, async (req, res) => {
   try {
@@ -113,6 +116,8 @@ router.get('/', protect, async (req, res) => {
 /**
  * GET /api/orders/:id
  * Get order details
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/:id', protect, async (req, res) => {
   try {
@@ -128,7 +133,9 @@ router.get('/:id', protect, async (req, res) => {
 
 /**
  * PUT /api/orders/:id/pay
- * Update order payment status (mock payment)
+ * Update order payment status (mock payment) and send invoice email
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.put('/:id/pay', protect, async (req, res) => {
   try {
@@ -177,7 +184,22 @@ router.put('/:id/pay', protect, async (req, res) => {
       },
     }
 
-    await invoiceModel.createInvoice(invoiceData)
+    const invoiceId = await invoiceModel.createInvoice(invoiceData)
+    
+    // Get created invoice with full details for email
+    const createdInvoice = await invoiceModel.getInvoiceById(invoiceId, req.user.id)
+    
+    // Send invoice email to buyer
+    if (createdInvoice && req.user.email) {
+      try {
+        await sendInvoiceEmail(req.user.email, req.user.name || 'Customer', createdInvoice)
+        // Mark invoice email as sent
+        await invoiceModel.markInvoiceEmailSent(invoiceId)
+      } catch (emailError) {
+        // Don't fail the request if email fails - just log silently
+        // Email sending is optional and shouldn't block order completion
+      }
+    }
 
     res.json({ message: 'Payment processed successfully' })
   } catch (error) {

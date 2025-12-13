@@ -45,12 +45,37 @@ const OrderManagement = () => {
   }, [statusFilter])
 
   /**
-   * Format date
+   * Format date to dd-MMM-yyyy format (e.g., 13-Dec-2025)
    * @param {string} dateString - Date string
    * @returns {string} Formatted date
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString()
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const month = months[date.getMonth()]
+    const year = date.getFullYear()
+    return `${day}-${month}-${year}`
+  }
+
+  /**
+   * Format order number for display
+   * @param {Object} order - Order object
+   * @returns {string} Formatted order number
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const formatOrderNumber = (order) => {
+    if (order.order_number) {
+      return order.order_number
+    }
+    // Fallback for existing orders without order_number
+    const date = new Date(order.created_at)
+    const datePart = date.toISOString().slice(0, 10).replace(/-/g, '')
+    return `ORD-${datePart}-${String(order.id).padStart(5, '0')}`
   }
 
   /**
@@ -118,7 +143,7 @@ const OrderManagement = () => {
               {/* Table rows */}
               {orders.map((order) => (
                 <tr key={order.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">#{order.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{formatOrderNumber(order)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.user_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${parseFloat(order.total_price).toFixed(2)}

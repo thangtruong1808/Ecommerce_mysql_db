@@ -135,13 +135,13 @@ const ProductDetail = () => {
           )}
           <div className="mb-4">
             {product.has_discount && product.discounted_price ? (
-              <div className="flex items-center space-x-2 mb-2">
+                <div className="flex items-center space-x-2 mb-2">
                 <span className="text-3xl font-semibold text-blue-600">${(Number(product.discounted_price) || 0).toFixed(2)}</span>
                 <span className="text-xl text-gray-400 line-through">${(Number(product.price) || 0).toFixed(2)}</span>
-                <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
-                  <FaTag />
+                  <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
+                    <FaTag />
                   <span>{product.discount_type === 'percentage' ? `${product.discount_value}% OFF` : `$${product.discount_value} OFF`}</span>
-                </span>
+                  </span>
               </div>
             ) : (
               <p className="text-3xl font-semibold text-blue-600">${(Number(product.price) || 0).toFixed(2)}</p>
@@ -165,7 +165,7 @@ const ProductDetail = () => {
                 <button onClick={() => handleQuantityChange(quantity + 1)} className="w-10 h-10 rounded border border-gray-300 hover:bg-gray-100" disabled={quantity >= product.stock}>+</button>
               </div>
               <Button onClick={handleAddToCart} disabled={product.stock === 0} loading={addingToCart} icon="cart" className="w-full py-3">Add to Cart</Button>
-            </div>
+              </div>
           )}
           {product.stock === 0 && (
             <div className="mb-6">

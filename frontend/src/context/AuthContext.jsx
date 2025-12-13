@@ -213,12 +213,12 @@ export const AuthProvider = ({ children }) => {
               // If retry fails, check if it's 401 (expired) or other error
               if (retryError.response?.status === 401) {
                 if (isProtectedRoute()) {
-                  await handleTokenExpiration()
-                } else {
-                  setUser(null)
-                  setError(null)
-                }
-              } else {
+            await handleTokenExpiration()
+          } else {
+            setUser(null)
+            setError(null)
+          }
+        } else {
                 setUser(null)
                 setError(null)
               }

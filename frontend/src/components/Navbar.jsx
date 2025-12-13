@@ -1,7 +1,7 @@
 /**
  * Navigation Bar Component - Responsive navbar with mobile menu
  * @author Thang Truong
- * @date 2025-01-09
+ * @date 2025-12-12
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -44,6 +44,8 @@ const Navbar = () => {
 
   /**
    * Handle logout click with toast notification
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleLogout = async () => {
     try {
@@ -56,6 +58,8 @@ const Navbar = () => {
 
   /**
    * Fetch categories with nested subcategories/child categories
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const fetchCategories = async () => {
     if (isLoadingCategories || categories.length) return
@@ -72,6 +76,8 @@ const Navbar = () => {
 
   /**
    * Open mega menu (clears pending close)
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleOpenMega = () => {
     if (closeTimerRef.current) {
@@ -83,6 +89,8 @@ const Navbar = () => {
 
   /**
    * Close mega menu with slight delay for pointer transitions
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleCloseMega = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
@@ -94,6 +102,8 @@ const Navbar = () => {
 
   /**
    * Open filters drawer on products page
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const openFilterDrawer = () => {
     if (location.pathname.startsWith('/products')) {
@@ -105,26 +115,36 @@ const Navbar = () => {
 
   /**
    * Toggle user menu dropdown
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const toggleUserMenu = () => setIsUserMenuOpen((prev) => !prev)
 
   /**
    * Close user menu
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const closeUserMenu = () => setIsUserMenuOpen(false)
 
   /**
    * Toggle mobile menu
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev)
 
   /**
    * Close mobile menu
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
   /**
    * Handle click outside user menu and mobile menu to close them
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -221,24 +241,24 @@ const Navbar = () => {
                   <span className="text-xs text-gray-500">{isUserMenuOpen ? '▲' : '▼'}</span>
                 </button>
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     {menuItems.map((item) => (
-                      <Link key={item.to} to={item.to} onClick={closeUserMenu} className={`flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${isActive(item.to) ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      <Link key={item.to} to={item.to} onClick={closeUserMenu} className={`flex items-center space-x-2 px-4 py-3 text-sm transition-colors ${isActive(item.to) ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}>
                         <item.icon className={isActive(item.to) ? 'text-blue-500' : 'text-gray-400'} />
                         <span>{item.label}</span>
                       </Link>
                     ))}
                     {user?.role === 'admin' && (
-                      <Link to="/admin/dashboard" onClick={closeUserMenu} className={`flex items-center space-x-2 px-4 py-2 text-sm border-t border-gray-100 transition-colors ${isActive('/admin') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      <Link to="/admin/dashboard" onClick={closeUserMenu} className={`flex items-center space-x-2 px-4 py-3 text-sm border-t border-gray-100 transition-colors ${isActive('/admin') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}>
                         <FaCog className={isActive('/admin') ? 'text-blue-500' : 'text-gray-400'} />
                         <span>Admin Dashboard</span>
                       </Link>
                     )}
-                    <button onClick={() => { closeUserMenu(); handleLogout(); }} className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100">
+                    <button onClick={() => { closeUserMenu(); handleLogout(); }} className="w-full flex items-center space-x-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100">
                       <FaSignOutAlt className="text-red-400" />
                       <span>Logout</span>
                     </button>
@@ -246,10 +266,7 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <>
-                <Link to="/login" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/login') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}>Login</Link>
-                <Link to="/register" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/register') ? 'bg-blue-700 text-white font-semibold' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>Register</Link>
-              </>
+              <Link to="/login" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/login') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}>Login</Link>
             )}
           </div>
 
@@ -331,9 +348,8 @@ const Navbar = () => {
                   </button>
                 </div>
               ) : (
-                <div className="border-t border-gray-200 pt-4 space-y-2">
+                <div className="border-t border-gray-200 pt-4">
                   <Link to="/login" onClick={closeMobileMenu} className={`block py-2 text-base font-medium transition-colors ${isActive('/login') ? 'text-blue-600 bg-blue-50 px-2 rounded font-semibold' : 'text-gray-600 hover:text-gray-900'}`}>Login</Link>
-                  <Link to="/register" onClick={closeMobileMenu} className={`block py-2 px-4 rounded-md text-base font-medium text-center transition-colors ${isActive('/register') ? 'bg-blue-700 text-white font-semibold' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>Register</Link>
                 </div>
               )}
             </div>

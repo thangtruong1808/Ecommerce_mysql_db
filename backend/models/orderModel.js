@@ -35,11 +35,15 @@ export const createOrder = async (orderData) => {
     const voucherId = orderData.voucher_id || null
     const voucherDiscount = orderData.voucher_discount || 0
     
+    // Generate order number
+    const [orderNumResult] = await connection.execute('SELECT generate_order_number() as order_number')
+    const orderNumber = orderNumResult[0].order_number
+    
     const [orderResult] = await connection.execute(
       `INSERT INTO orders 
-       (user_id, voucher_id, voucher_discount, payment_method, tax_price, shipping_price, total_price) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [user_id, voucherId, voucherDiscount, paymentMethod, taxPrice, shippingPrice, totalPrice]
+       (order_number, user_id, voucher_id, voucher_discount, payment_method, tax_price, shipping_price, total_price) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [orderNumber, user_id, voucherId, voucherDiscount, paymentMethod, taxPrice, shippingPrice, totalPrice]
     )
     const orderId = orderResult.insertId
 
@@ -107,7 +111,7 @@ export const getOrderById = async (orderId, userId = null) => {
   if (orderRows.length === 0) return null
 
   const order = orderRows[0]
-
+  if (!order.order_number) { const date = new Date(order.created_at); const datePart = date.toISOString().slice(0, 10).replace(/-/g, ''); order.order_number = `ORD-${datePart}-${String(order.id).padStart(5, '0')}` }
   // Get order items
   const [itemRows] = await db.execute(
     'SELECT * FROM order_items WHERE order_id = ?',
@@ -123,19 +127,13 @@ export const getOrderById = async (orderId, userId = null) => {
  * @param {number} userId - User ID
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Orders and pagination info
- */
-/**
- * Get all orders for a user
- * @param {number} userId - User ID
- * @param {Object} filters - Filter options
- * @returns {Promise<Object>} - Orders and pagination info
  * @author Thang Truong
  * @date 2025-12-12
  */
 export const getUserOrders = async (userId, filters = {}) => {
   const { page = 1, limit = 10 } = filters
   const offset = (page - 1) * limit
-  
+
   // Validate and convert to integers to avoid MySQL prepared statement issues
   const limitInt = parseInt(limit, 10)
   const offsetInt = parseInt(offset, 10)
@@ -143,34 +141,10 @@ export const getUserOrders = async (userId, filters = {}) => {
     throw new Error('Invalid pagination parameters')
   }
 
-  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
-  const [rows] = await db.execute(
-    `SELECT o.*, 
-            COUNT(oi.id) as item_count
-     FROM orders o
-     LEFT JOIN order_items oi ON o.id = oi.order_id
-     WHERE o.user_id = ?
-     GROUP BY o.id
-     ORDER BY o.created_at DESC
-     LIMIT ${limitInt} OFFSET ${offsetInt}`,
-    [userId]
-  )
-
-  const [countResult] = await db.execute(
-    'SELECT COUNT(*) as total FROM orders WHERE user_id = ?',
-    [userId]
-  )
-  const total = countResult[0].total
-
-  return {
-    orders: rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    }
-  }
+  const [rows] = await db.execute(`SELECT o.*, COUNT(oi.id) as item_count FROM orders o LEFT JOIN order_items oi ON o.id = oi.order_id WHERE o.user_id = ? GROUP BY o.id ORDER BY o.created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`, [userId])
+  for (const order of rows) { if (!order.order_number) { const date = new Date(order.created_at); const datePart = date.toISOString().slice(0, 10).replace(/-/g, ''); order.order_number = `ORD-${datePart}-${String(order.id).padStart(5, '0')}` } }
+  const [countResult] = await db.execute('SELECT COUNT(*) as total FROM orders WHERE user_id = ?', [userId])
+  return { orders: rows, pagination: { page, limit, total: countResult[0].total, pages: Math.ceil(countResult[0].total / limit) } }
 }
 
 /**
@@ -198,45 +172,12 @@ export const getAllOrders = async (filters = {}) => {
   else if (status === 'delivered') whereClause = 'WHERE o.is_delivered = 1'
   else if (status === 'pending') whereClause = 'WHERE o.is_paid = 0'
 
-  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
-  const [rows] = await db.execute(
-    `SELECT o.*, 
-            u.name as user_name, 
-            u.email as user_email,
-            COUNT(oi.id) as item_count
-     FROM orders o
-     JOIN users u ON o.user_id = u.id
-     LEFT JOIN order_items oi ON o.id = oi.order_id
-     ${whereClause}
-     GROUP BY o.id
-     ORDER BY o.created_at DESC
-     LIMIT ${limitInt} OFFSET ${offsetInt}`,
-    params
-  )
-
-  const [countResult] = await db.execute(
-    `SELECT COUNT(*) as total FROM orders o ${whereClause}`,
-    params
-  )
-  const total = countResult[0].total
-
-  return {
-    orders: rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    }
-  }
+  const [rows] = await db.execute(`SELECT o.*, u.name as user_name, u.email as user_email, COUNT(oi.id) as item_count FROM orders o JOIN users u ON o.user_id = u.id LEFT JOIN order_items oi ON o.id = oi.order_id ${whereClause} GROUP BY o.id ORDER BY o.created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`, params)
+  for (const order of rows) { if (!order.order_number) { const date = new Date(order.created_at); const datePart = date.toISOString().slice(0, 10).replace(/-/g, ''); order.order_number = `ORD-${datePart}-${String(order.id).padStart(5, '0')}` } }
+  const [countResult] = await db.execute(`SELECT COUNT(*) as total FROM orders o ${whereClause}`, params)
+  return { orders: rows, pagination: { page, limit, total: countResult[0].total, pages: Math.ceil(countResult[0].total / limit) } }
 }
 
-/**
- * Update order payment status
- * @param {number} orderId - Order ID
- * @param {Object} paymentData - Payment information
- * @returns {Promise<boolean>} - True if updated, false otherwise
- */
 /**
  * Update order payment information
  * @param {number} orderId - Order ID
@@ -246,32 +187,11 @@ export const getAllOrders = async (filters = {}) => {
  * @date 2025-12-12
  */
 export const updateOrderPayment = async (orderId, paymentData) => {
-  const {
-    payment_result_id,
-    payment_status,
-    payment_update_time,
-    payment_email
-  } = paymentData
-
-  const [result] = await db.execute(
-    `UPDATE orders 
-     SET is_paid = 1, 
-         paid_at = NOW(),
-         payment_result_id = ?,
-         payment_status = ?,
-         payment_update_time = ?,
-         payment_email = ?
-     WHERE id = ?`,
-    [payment_result_id, payment_status, payment_update_time, payment_email, orderId]
-  )
+  const { payment_result_id, payment_status, payment_update_time, payment_email } = paymentData
+  const [result] = await db.execute(`UPDATE orders SET is_paid = 1, paid_at = NOW(), payment_result_id = ?, payment_status = ?, payment_update_time = ?, payment_email = ? WHERE id = ?`, [payment_result_id, payment_status, payment_update_time, payment_email, orderId])
   return result.affectedRows > 0
 }
 
-/**
- * Update order delivery status
- * @param {number} orderId - Order ID
- * @returns {Promise<boolean>} - True if updated
- */
 /**
  * Update order delivery status
  * @param {number} orderId - Order ID
@@ -280,10 +200,7 @@ export const updateOrderPayment = async (orderId, paymentData) => {
  * @date 2025-12-12
  */
 export const updateOrderDelivery = async (orderId) => {
-  const [result] = await db.execute(
-    'UPDATE orders SET is_delivered = 1, delivered_at = NOW() WHERE id = ?',
-    [orderId]
-  )
+  const [result] = await db.execute('UPDATE orders SET is_delivered = 1, delivered_at = NOW() WHERE id = ?', [orderId])
   return result.affectedRows > 0
 }
 

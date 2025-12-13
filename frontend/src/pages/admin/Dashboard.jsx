@@ -86,7 +86,7 @@ const Dashboard = () => {
                 >
                   <div className="flex justify-between">
                     <div>
-                      <p className="font-medium">Order #{order.id}</p>
+                      <p className="font-medium">Order {order.order_number || `ORD-${new Date(order.created_at).toISOString().slice(0, 10).replace(/-/g, '')}-${String(order.id).padStart(5, '0')}`}</p>
                       <p className="text-sm text-gray-600">{order.user_name}</p>
                     </div>
                     <p className="font-semibold">${parseFloat(order.total_price).toFixed(2)}</p>

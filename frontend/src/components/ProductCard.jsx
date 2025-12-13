@@ -70,24 +70,24 @@ const ProductCard = ({ product, onAddToCart }) => {
       {/* Product info */}
       <div className="p-2">
         <div className="flex items-center justify-between">
-          <Link to={`/products/${product.id}`}>
+        <Link to={`/products/${product.id}`}>
             <h3 className="font-semibold text-sm leading-5 hover:text-blue-600 line-clamp-2">{product.name}</h3>
-          </Link>
+        </Link>
           <div className="text-right">
-            {product.has_discount && product.discounted_price ? (
+        {product.has_discount && product.discounted_price ? (
               <div className="flex flex-col items-end">
                 <span className="text-sm font-semibold text-blue-600">
-                  ${(Number(product.discounted_price) || 0).toFixed(2)}
-                </span>
+                ${(Number(product.discounted_price) || 0).toFixed(2)}
+              </span>
                 <span className="text-xs text-gray-400 line-through">
-                  ${(Number(product.price) || 0).toFixed(2)}
-                </span>
-              </div>
-            ) : (
-              <span className="text-base font-semibold text-blue-600">
                 ${(Number(product.price) || 0).toFixed(2)}
               </span>
-            )}
+          </div>
+        ) : (
+              <span className="text-base font-semibold text-blue-600">
+            ${(Number(product.price) || 0).toFixed(2)}
+              </span>
+        )}
           </div>
         </div>
 

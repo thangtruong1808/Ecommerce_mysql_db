@@ -10,14 +10,10 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaArrowLeft } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
 import ProtectedRoute from '../components/ProtectedRoute'
 import SkeletonLoader from '../components/SkeletonLoader'
-
-/**
- * OrderDetails component
- * @returns {JSX.Element} Order details page
- */
 
 /**
  * OrderDetails component
@@ -32,6 +28,8 @@ const OrderDetails = () => {
 
   /**
    * Fetch invoice for order
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -52,6 +50,8 @@ const OrderDetails = () => {
 
   /**
    * Fetch order details
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchOrder = async () => {
@@ -72,19 +72,49 @@ const OrderDetails = () => {
   }, [id, isAuthenticated])
 
   /**
-   * Format date
+   * Format date to dd-MMM-yyyy, hh:mm AM/PM format (e.g., 13-Dec-2025, 2:30 PM)
    * @param {string} dateString - Date string
-   * @returns {string} Formatted date
+   * @returns {string} Formatted date with time in 12-hour format
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleString()
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const month = months[date.getMonth()]
+    const year = date.getFullYear()
+    let hours = date.getHours()
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    hours = hours % 12 || 12
+    return `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`
+  }
+
+  /**
+   * Format order number for display
+   * @param {Object} order - Order object
+   * @returns {string} Formatted order number
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const formatOrderNumber = (order) => {
+    if (order.order_number) {
+      return order.order_number
+    }
+    // Fallback for existing orders without order_number
+    const date = new Date(order.created_at)
+    const datePart = date.toISOString().slice(0, 10).replace(/-/g, '')
+    return `ORD-${datePart}-${String(order.id).padStart(5, '0')}`
   }
 
   /**
    * Get order status badge
    * @param {Object} order - Order object
    * @returns {JSX.Element} Status badge
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const getStatusBadge = (order) => {
     if (order.is_delivered) {
@@ -118,10 +148,7 @@ const OrderDetails = () => {
         {/* Order not found */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Order not found</h1>
-          <Link
-            to="/orders"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-          >
+          <Link to="/orders" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
             Back to Orders
           </Link>
         </div>
@@ -129,12 +156,19 @@ const OrderDetails = () => {
     )
   }
 
+  /* Order details page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Back to orders link */}
+      <Link to="/orders" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4 transition">
+        <FaArrowLeft className="mr-2" />
+        <span>Back to Orders</span>
+      </Link>
+
       {/* Order header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Order #{order.id}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Order {formatOrderNumber(order)}</h1>
           <p className="text-gray-600 mt-2">Placed on {formatDate(order.created_at)}</p>
         </div>
         {getStatusBadge(order)}
@@ -148,21 +182,14 @@ const OrderDetails = () => {
             <div className="space-y-4">
               {order.items && order.items.map((item) => (
                 <div key={item.id} className="flex items-center border-b pb-4 last:border-0">
-                  {/* Item image */}
                   <div className="w-20 h-20 bg-gray-200 rounded-lg mr-4"></div>
-                  
-                  {/* Item details */}
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.name}</h3>
                     <p className="text-gray-600 text-sm">Quantity: {item.quantity}</p>
                     <p className="text-gray-600">${(Number(item.price) || 0).toFixed(2)} each</p>
                   </div>
-
-                  {/* Item total */}
                   <div className="text-right">
-                    <p className="font-semibold">
-                      ${((Number(item.price) || 0) * item.quantity).toFixed(2)}
-                    </p>
+                    <p className="font-semibold">${((Number(item.price) || 0) * item.quantity).toFixed(2)}</p>
                   </div>
                 </div>
               ))}
@@ -173,55 +200,24 @@ const OrderDetails = () => {
         {/* Order summary */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-            {/* Shipping address */}
             <div>
               <h3 className="font-semibold mb-2">Shipping Address</h3>
-              <p className="text-gray-600 text-sm">
-                {order.address}<br />
-                {order.city}, {order.postal_code}<br />
-                {order.country}
-              </p>
+              <p className="text-gray-600 text-sm">{order.address}<br />{order.city}, {order.postal_code}<br />{order.country}</p>
             </div>
-
-            {/* Payment info */}
             <div>
               <h3 className="font-semibold mb-2">Payment</h3>
-              <p className="text-gray-600 text-sm">
-                Method: {order.payment_method}<br />
-                Status: {order.is_paid ? 'Paid' : 'Pending'}<br />
-                {order.paid_at && `Paid on: ${formatDate(order.paid_at)}`}
-              </p>
+              <p className="text-gray-600 text-sm">Method: {order.payment_method}<br />Status: {order.is_paid ? 'Paid' : 'Pending'}<br />{order.paid_at && `Paid on: ${formatDate(order.paid_at)}`}</p>
             </div>
-
-            {/* Order totals */}
             <div className="border-t pt-4">
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-600">Subtotal</span>
-                <span>${(order.total_price - order.tax_price - order.shipping_price).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-600">Tax</span>
-                <span>${parseFloat(order.tax_price).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-600">Shipping</span>
-                <span>${parseFloat(order.shipping_price).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
-                <span>Total</span>
-                <span>${parseFloat(order.total_price).toFixed(2)}</span>
-              </div>
+              <div className="flex justify-between mb-2"><span className="text-gray-600">Subtotal</span><span>${(order.total_price - order.tax_price - order.shipping_price).toFixed(2)}</span></div>
+              <div className="flex justify-between mb-2"><span className="text-gray-600">Tax</span><span>${parseFloat(order.tax_price).toFixed(2)}</span></div>
+              <div className="flex justify-between mb-2"><span className="text-gray-600">Shipping</span><span>${parseFloat(order.shipping_price).toFixed(2)}</span></div>
+              <div className="flex justify-between font-bold text-lg border-t pt-2"><span>Total</span><span>${parseFloat(order.total_price).toFixed(2)}</span></div>
             </div>
 
-            {/* Invoice link */}
             {invoice && (
               <div className="mt-4 pt-4 border-t">
-                <Link
-                  to={`/invoices/${invoice.id}`}
-                  className="block text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                >
-                  View Invoice
-                </Link>
+                <Link to={`/invoices/${invoice.id}`} className="block text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">View Invoice</Link>
               </div>
             )}
           </div>

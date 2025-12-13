@@ -1,9 +1,10 @@
 /**
  * Cart Page Component
  * Displays shopping cart with items and checkout functionality
+ * Allows unauthenticated users to view cart but requires login for checkout
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState } from 'react'
@@ -28,6 +29,8 @@ const Cart = () => {
    * Handle quantity change
    * @param {number} itemId - Cart item ID
    * @param {number} newQuantity - New quantity
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleQuantityChange = async (itemId, newQuantity) => {
     if (newQuantity < 1) {
@@ -49,6 +52,8 @@ const Cart = () => {
   /**
    * Handle remove item
    * @param {number} itemId - Cart item ID
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleRemoveItem = async (itemId) => {
     setProcessingItems(prev => ({ ...prev, [itemId]: true }))
@@ -65,11 +70,12 @@ const Cart = () => {
   }
 
   /**
-   * Handle proceed to checkout
+   * Handle proceed to checkout or login
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      toast.error('Please login to checkout')
       navigate('/login')
       return
     }
@@ -85,23 +91,6 @@ const Cart = () => {
         {/* Loading skeleton */}
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
         <SkeletonLoader type="list" count={3} />
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Not authenticated message */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please login to view your cart</h1>
-          <Link
-            to="/login"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-          >
-            Login
-          </Link>
-        </div>
       </div>
     )
   }
@@ -124,6 +113,7 @@ const Cart = () => {
     )
   }
 
+  /* Cart page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Cart header */}
@@ -216,14 +206,31 @@ const Cart = () => {
               </div>
             </div>
 
-            {/* Checkout button */}
-            <Button
-              onClick={handleCheckout}
-              icon="cart"
-              className="w-full py-3"
-            >
-              Proceed to Checkout
-            </Button>
+            {/* Checkout button or login prompt */}
+            {isAuthenticated ? (
+              <Button
+                onClick={handleCheckout}
+                icon="cart"
+                className="w-full py-3"
+              >
+                Proceed to Checkout
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
+                  <p className="text-sm text-gray-700 text-center">
+                    To complete your purchase, please sign in to your account. Don't have an account? You can create one during checkout.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleCheckout}
+                  icon="login"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Login to Checkout
+                </Button>
+              </div>
+            )}
 
             {/* Continue shopping link */}
             <Link

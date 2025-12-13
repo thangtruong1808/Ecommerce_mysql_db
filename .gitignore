@@ -48,3 +48,7 @@ coverage/
 # Uploaded files
 backend/uploads/
 
+# Temporary files
+backend/temp/
+temp/
+

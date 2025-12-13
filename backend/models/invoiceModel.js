@@ -27,40 +27,9 @@ export const generateInvoiceNumber = async () => {
  * @date 2025-12-12
  */
 export const createInvoice = async (invoiceData) => {
-  const {
-    order_id,
-    user_id,
-    subtotal,
-    tax_amount,
-    shipping_amount,
-    total_amount,
-    payment_method,
-    payment_status,
-    billing_address,
-    shipping_address
-  } = invoiceData
-
+  const { order_id, user_id, subtotal, tax_amount, shipping_amount, total_amount, payment_method, payment_status, billing_address, shipping_address } = invoiceData
   const invoice_number = await generateInvoiceNumber()
-
-  const [result] = await db.execute(
-    `INSERT INTO invoices 
-     (invoice_number, order_id, user_id, subtotal, tax_amount, shipping_amount, 
-      total_amount, payment_method, payment_status, billing_address, shipping_address) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      invoice_number,
-      order_id,
-      user_id,
-      subtotal,
-      tax_amount,
-      shipping_amount,
-      total_amount,
-      payment_method,
-      payment_status,
-      JSON.stringify(billing_address),
-      JSON.stringify(shipping_address)
-    ]
-  )
+  const [result] = await db.execute(`INSERT INTO invoices (invoice_number, order_id, user_id, subtotal, tax_amount, shipping_amount, total_amount, payment_method, payment_status, billing_address, shipping_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [invoice_number, order_id, user_id, subtotal, tax_amount, shipping_amount, total_amount, payment_method, payment_status, JSON.stringify(billing_address), JSON.stringify(shipping_address)])
   return result.insertId
 }
 
@@ -76,6 +45,7 @@ export const getInvoiceById = async (invoiceId, userId = null) => {
   let query = `
     SELECT i.*, 
            o.id as order_id,
+           o.order_number,
            u.name as user_name,
            u.email as user_email
     FROM invoices i
@@ -102,6 +72,10 @@ export const getInvoiceById = async (invoiceId, userId = null) => {
   } catch (e) {
     // If parsing fails, keep as string
   }
+
+  // Get order items for invoice
+  const [itemRows] = await db.execute('SELECT * FROM order_items WHERE order_id = ?', [invoice.order_id])
+  invoice.items = itemRows
 
   return invoice
 }
@@ -139,19 +113,13 @@ export const getInvoiceByOrderId = async (orderId) => {
  * @param {number} userId - User ID
  * @param {Object} filters - Filter options
  * @returns {Promise<Object>} - Invoices and pagination info
- */
-/**
- * Get all invoices for a user
- * @param {number} userId - User ID
- * @param {Object} filters - Filter options
- * @returns {Promise<Object>} - Invoices and pagination info
  * @author Thang Truong
  * @date 2025-12-12
  */
 export const getUserInvoices = async (userId, filters = {}) => {
   const { page = 1, limit = 10 } = filters
   const offset = (page - 1) * limit
-  
+
   // Validate and convert to integers to avoid MySQL prepared statement issues
   const limitInt = parseInt(limit, 10)
   const offsetInt = parseInt(offset, 10)
@@ -159,32 +127,9 @@ export const getUserInvoices = async (userId, filters = {}) => {
     throw new Error('Invalid pagination parameters')
   }
 
-  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
-  const [rows] = await db.execute(
-    `SELECT i.*, o.id as order_id
-     FROM invoices i
-     JOIN orders o ON i.order_id = o.id
-     WHERE i.user_id = ?
-     ORDER BY i.created_at DESC
-     LIMIT ${limitInt} OFFSET ${offsetInt}`,
-    [userId]
-  )
-
-  const [countResult] = await db.execute(
-    'SELECT COUNT(*) as total FROM invoices WHERE user_id = ?',
-    [userId]
-  )
-  const total = countResult[0].total
-
-  return {
-    invoices: rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    }
-  }
+  const [rows] = await db.execute(`SELECT i.*, o.id as order_id, o.order_number FROM invoices i JOIN orders o ON i.order_id = o.id WHERE i.user_id = ? ORDER BY i.created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`, [userId])
+  const [countResult] = await db.execute('SELECT COUNT(*) as total FROM invoices WHERE user_id = ?', [userId])
+  return { invoices: rows, pagination: { page, limit, total: countResult[0].total, pages: Math.ceil(countResult[0].total / limit) } }
 }
 
 /**
@@ -233,7 +178,7 @@ export const updateInvoicePdfPath = async (invoiceId, pdfPath) => {
 export const getAllInvoices = async (filters = {}) => {
   const { page = 1, limit = 20 } = filters
   const offset = (page - 1) * limit
-  
+
   // Validate and convert to integers to avoid MySQL prepared statement issues
   const limitInt = parseInt(limit, 10)
   const offsetInt = parseInt(offset, 10)
@@ -241,30 +186,8 @@ export const getAllInvoices = async (filters = {}) => {
     throw new Error('Invalid pagination parameters')
   }
 
-  // Use direct interpolation for LIMIT/OFFSET to avoid MySQL prepared statement issues
-  const [rows] = await db.execute(
-    `SELECT i.*, 
-            u.name as user_name,
-            u.email as user_email,
-            o.id as order_id
-     FROM invoices i
-     JOIN users u ON i.user_id = u.id
-     JOIN orders o ON i.order_id = o.id
-     ORDER BY i.created_at DESC
-     LIMIT ${limitInt} OFFSET ${offsetInt}`
-  )
-
+  const [rows] = await db.execute(`SELECT i.*, u.name as user_name, u.email as user_email, o.id as order_id, o.order_number FROM invoices i JOIN users u ON i.user_id = u.id JOIN orders o ON i.order_id = o.id ORDER BY i.created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`)
   const [countResult] = await db.execute('SELECT COUNT(*) as total FROM invoices')
-  const total = countResult[0].total
-
-  return {
-    invoices: rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    }
-  }
+  return { invoices: rows, pagination: { page, limit, total: countResult[0].total, pages: Math.ceil(countResult[0].total / limit) } }
 }
 

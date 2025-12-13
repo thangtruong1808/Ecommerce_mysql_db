@@ -219,6 +219,7 @@ CREATE TABLE vouchers (
 -- Orders table
 CREATE TABLE orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    order_number VARCHAR(50) UNIQUE,
     user_id INT NOT NULL,
     voucher_id INT NULL,
     voucher_discount DECIMAL(10, 2) DEFAULT 0.00,
@@ -241,7 +242,8 @@ CREATE TABLE orders (
     INDEX idx_user (user_id),
     INDEX idx_voucher (voucher_id),
     INDEX idx_created (created_at),
-    INDEX idx_status (is_paid, is_delivered)
+    INDEX idx_status (is_paid, is_delivered),
+    INDEX idx_order_number (order_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Order items table
@@ -448,6 +450,29 @@ BEGIN
     SET invoice_num = CONCAT('INV-', date_part, '-', LPAD(seq_num, 5, '0'));
     
     RETURN invoice_num;
+END//
+
+-- Function to generate order number (format: ORD-YYYYMMDD-XXXXX)
+CREATE FUNCTION generate_order_number() RETURNS VARCHAR(50)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE order_num VARCHAR(50);
+    DECLARE date_part VARCHAR(8);
+    DECLARE seq_num INT;
+    
+    SET date_part = DATE_FORMAT(NOW(), '%Y%m%d');
+    
+    -- Get the last sequence number for today
+    -- Use COLLATE to ensure consistent collation for LIKE operation
+    SELECT COALESCE(MAX(CAST(SUBSTRING(order_number, -5) AS UNSIGNED)), 0) + 1
+    INTO seq_num
+    FROM orders
+    WHERE order_number COLLATE utf8mb4_unicode_ci LIKE CONCAT('ORD-', date_part, '-%') COLLATE utf8mb4_unicode_ci;
+    
+    SET order_num = CONCAT('ORD-', date_part, '-', LPAD(seq_num, 5, '0'));
+    
+    RETURN order_num;
 END//
 
 DELIMITER ;

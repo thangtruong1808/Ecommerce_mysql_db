@@ -279,11 +279,11 @@ router.post('/:id/images', protect, admin, uploadImage.array('images', 10), asyn
       return res.status(400).json({ message: 'No images uploaded' })
     }
 
-    const imageUrls = []
+      const imageUrls = []
     const uploadsDir = path.join(__dirname, '../uploads/images')
     
-    for (let i = 0; i < req.files.length; i++) {
-      const file = req.files[i]
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i]
       const originalPath = file.path
       const resizedPath = path.join(uploadsDir, `resized-${file.filename}`)
       
@@ -295,12 +295,12 @@ router.post('/:id/images', protect, admin, uploadImage.array('images', 10), asyn
         fs.renameSync(resizedPath, originalPath)
       }
       
-      const imageUrl = `/uploads/images/${file.filename}`
-      const isPrimary = i === 0 && product.images.length === 0
-      
-      await productMediaModel.addProductImage(productId, imageUrl, isPrimary)
-      imageUrls.push(imageUrl)
-    }
+        const imageUrl = `/uploads/images/${file.filename}`
+        const isPrimary = i === 0 && product.images.length === 0
+        
+        await productMediaModel.addProductImage(productId, imageUrl, isPrimary)
+        imageUrls.push(imageUrl)
+      }
 
     res.status(201).json({ 
       message: 'Images uploaded and resized successfully',
