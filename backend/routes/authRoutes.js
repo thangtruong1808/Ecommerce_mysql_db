@@ -14,7 +14,7 @@ import * as userModel from '../models/userModel.js'
 import * as refreshTokenModel from '../models/refreshTokenModel.js'
 import * as passwordResetModel from '../models/passwordResetModel.js'
 import * as userAddressModel from '../models/userAddressModel.js'
-import { protect } from '../middleware/authMiddleware.js'
+import { protect, optionalAuth } from '../middleware/authMiddleware.js'
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, getTokenExpiration } from '../utils/tokenUtils.js'
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAllTokenCookies } from '../utils/cookieUtils.js'
 import { sendPasswordResetEmail } from '../utils/emailService.js'
@@ -193,8 +193,27 @@ router.post('/logout', protect, async (req, res) => {
 })
 
 /**
+ * GET /api/auth/me
+ * Silent auth check - returns user if authenticated, null if not
+ * Never returns 401, always returns 200 with user or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/me', optionalAuth, async (req, res) => {
+  try {
+    if (req.user) {
+      res.json({ user: req.user })
+    } else {
+      res.json({ user: null })
+    }
+  } catch (error) {
+    res.json({ user: null })
+  }
+})
+
+/**
  * GET /api/auth/profile
- * Get current user profile
+ * Get current user profile (protected)
  * @author Thang Truong
  * @date 2025-12-12
  */

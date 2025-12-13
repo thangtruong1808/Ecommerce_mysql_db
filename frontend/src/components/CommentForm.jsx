@@ -76,8 +76,8 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
       if (error.response?.status === 401) {
         toast.error('Your session expired. Please try again.')
       } else {
-        const message = error.response?.data?.message || 'Failed to submit comment'
-        toast.error(message)
+      const message = error.response?.data?.message || 'Failed to submit comment'
+      toast.error(message)
       }
     } finally {
       setLoading(false)

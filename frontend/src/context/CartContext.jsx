@@ -6,7 +6,7 @@
  * @date 2025-12-12
  */
 
-import { createContext, useState, useContext, useEffect } from 'react'
+import { createContext, useState, useContext, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useAuth } from './AuthContext'
@@ -34,10 +34,11 @@ export const CartProvider = ({ children }) => {
   const { isAuthenticated } = useAuth()
   const [cart, setCart] = useState({ items: [] })
   const [loading, setLoading] = useState(false)
+  const fetchingRef = useRef(false)
+  const lastFetchRef = useRef(0)
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
-
 
   /**
    * Fetch cart from server (works for both authenticated and guest users)
@@ -45,16 +46,33 @@ export const CartProvider = ({ children }) => {
    * @date 2025-12-12
    */
   const fetchCart = async () => {
+    // Prevent duplicate simultaneous requests
+    if (fetchingRef.current) return
+    // Debounce: don't fetch if last fetch was less than 500ms ago
+    const now = Date.now()
+    if (now - lastFetchRef.current < 500) return
+    
+    fetchingRef.current = true
+    lastFetchRef.current = now
     try {
       setLoading(true)
       const response = await axios.get('/api/cart', { withCredentials: true })
       setCart(response.data)
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to load cart'
-      toast.error(message)
+      // Handle 429 errors silently (rate limit)
+      if (error.response?.status === 429) {
+        // Silent fail for rate limit - don't show error
+        return
+      }
+      // Only show error for other failures, and only if cart is empty
+      if (cart.items.length === 0) {
+        const message = error.response?.data?.message || 'Failed to load cart'
+        toast.error(message)
+      }
       setCart({ items: [] })
     } finally {
       setLoading(false)
+      fetchingRef.current = false
     }
   }
 
@@ -68,8 +86,10 @@ export const CartProvider = ({ children }) => {
       await axios.post('/api/cart/transfer', {}, { withCredentials: true })
       await fetchCart()
     } catch (error) {
-      // If transfer fails, just fetch user cart
-      await fetchCart()
+      // If transfer fails (including 429), just fetch user cart
+      if (error.response?.status !== 429) {
+        await fetchCart()
+      }
     }
   }
 
@@ -79,11 +99,15 @@ export const CartProvider = ({ children }) => {
    * @date 2025-12-12
    */
   useEffect(() => {
-    if (isAuthenticated) {
-      transferGuestCart()
-    } else {
-      fetchCart()
-    }
+    // Only fetch if authentication status is stable (not during initial load)
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        transferGuestCart()
+      } else {
+        fetchCart()
+      }
+    }, 100)
+    return () => clearTimeout(timer)
   }, [isAuthenticated])
 
   /**
@@ -103,6 +127,10 @@ export const CartProvider = ({ children }) => {
       await fetchCart()
       return { success: true }
     } catch (error) {
+      // Handle 429 errors gracefully
+      if (error.response?.status === 429) {
+        return { success: false, error: 'Too many requests. Please wait a moment and try again.' }
+      }
       const message = error.response?.data?.message || 'Failed to add item to cart'
       return { success: false, error: message }
     }
@@ -119,6 +147,9 @@ export const CartProvider = ({ children }) => {
       await fetchCart()
       return { success: true }
     } catch (error) {
+      if (error.response?.status === 429) {
+        return { success: false, error: 'Too many requests. Please wait a moment and try again.' }
+      }
       return { success: false, error: error.response?.data?.message || 'Failed to update quantity' }
     }
   }
@@ -134,6 +165,9 @@ export const CartProvider = ({ children }) => {
       await fetchCart()
       return { success: true }
     } catch (error) {
+      if (error.response?.status === 429) {
+        return { success: false, error: 'Too many requests. Please wait a moment and try again.' }
+      }
       return { success: false, error: error.response?.data?.message || 'Failed to remove item' }
     }
   }
@@ -149,6 +183,9 @@ export const CartProvider = ({ children }) => {
       await fetchCart()
       return { success: true }
     } catch (error) {
+      if (error.response?.status === 429) {
+        return { success: false, error: 'Too many requests. Please wait a moment and try again.' }
+      }
       return { success: false, error: error.response?.data?.message || 'Failed to clear cart' }
     }
   }

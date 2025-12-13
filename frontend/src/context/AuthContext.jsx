@@ -36,39 +36,40 @@ export const AuthProvider = ({ children }) => {
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
 
-  // Suppress console errors for expected 401 responses from auth endpoints
+  // Suppress 401 errors in browser console for auth endpoints on public pages
   useEffect(() => {
     const originalError = console.error
-    const originalWarn = console.warn
     
-    const suppressAuth401Errors = (args) => {
-      const message = args[0]?.toString() || ''
-      const stack = args.join(' ') || ''
-      return (
-        (message.includes('401') || stack.includes('401')) &&
-        (message.includes('/api/auth/profile') || 
-         message.includes('/api/auth/refresh') ||
-         stack.includes('/api/auth/profile') ||
-         stack.includes('/api/auth/refresh') ||
-         message.includes('Unauthorized'))
-      )
-    }
-
+    // Axios response interceptor to silence expected 401 errors
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const path = window.location.pathname
+        const isProtected = isProtectedRoute()
+        const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
+        const isPublicPage = !isProtected && !isAuthPage
+        const isAuthEndpoint = error.config?.url?.includes('/api/auth/') || error.config?.url?.includes('/api/auth/refresh')
+        
+        // Silence 401 errors for auth endpoints on public pages
+        if (isPublicPage && isAuthEndpoint && error.response?.status === 401) {
+          error._silent = true
+        }
+        return Promise.reject(error)
+      }
+    )
+    
+    // Console.error override to suppress silent 401 errors
     console.error = (...args) => {
-      if (!suppressAuth401Errors(args)) {
-        originalError(...args)
+      const error = args[0]
+      if (error?._silent) {
+        return // Suppress silent errors
       }
-    }
-
-    console.warn = (...args) => {
-      if (!suppressAuth401Errors(args)) {
-        originalWarn(...args)
-      }
+      originalError(...args)
     }
 
     return () => {
+      axios.interceptors.response.eject(responseInterceptor)
       console.error = originalError
-      console.warn = originalWarn
     }
   }, [])
 
@@ -115,8 +116,18 @@ export const AuthProvider = ({ children }) => {
   }
 
   /**
-   * Fetch current user profile - silently handles 401 errors
-   * Only redirects to login if on protected route and refresh token expired
+   * Check if refresh token cookie exists
+   * @returns {boolean} True if refresh token cookie exists
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const hasRefreshToken = () => {
+    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('refreshToken='))
+  }
+
+  /**
+   * Fetch current user - silent auth check
+   * Uses /api/auth/me which never returns 401, always returns user or null
    * @author Thang Truong
    * @date 2025-12-12
    */
@@ -126,118 +137,19 @@ export const AuthProvider = ({ children }) => {
     isFetchingUserRef.current = true
 
     try {
-      // Suppress console errors for expected 401 responses
-      const originalError = console.error
-      console.error = (...args) => {
-        // Only suppress 401 errors from auth endpoints
-        const errorMessage = args[0]?.toString() || ''
-        if (errorMessage.includes('401') && (errorMessage.includes('/api/auth/profile') || errorMessage.includes('/api/auth/refresh'))) {
-          return
-        }
-        originalError(...args)
-      }
-
-      const response = await axios.get('/api/auth/profile', {
-        validateStatus: (status) => status === 200 || status === 401
-      }).finally(() => {
-        // Restore console.error
-        console.error = originalError
-      })
-      if (response.status === 200) {
-        setUser(response.data)
+      // Use silent auth check endpoint that never returns 401
+      const response = await axios.get('/api/auth/me')
+      if (response.data.user) {
+        setUser(response.data.user)
         setError(null)
       } else {
-        const path = window.location.pathname
-        const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
-        
-        if (!isAuthPage) {
-          // Suppress console errors for expected 401 responses
-          const originalError = console.error
-          console.error = (...args) => {
-            const errorMessage = args[0]?.toString() || ''
-            if (errorMessage.includes('401') && errorMessage.includes('/api/auth/refresh')) {
-              return
-            }
-            originalError(...args)
-          }
-
-          // Try to refresh the access token
-          const refreshResponse = await axios.post('/api/auth/refresh', {}, {
-            validateStatus: (status) => status === 200 || status === 401
-          }).catch(() => ({ status: 401 })).finally(() => {
-            // Restore console.error
-            console.error = originalError
-          })
-          
-          if (refreshResponse.status === 401) {
-            // Refresh token expired or doesn't exist
-            // Only redirect if on protected route, otherwise just set user to null
-            if (isProtectedRoute()) {
-              await handleTokenExpiration()
-            } else {
-              // Public route - just set user to null, don't redirect
-              setUser(null)
-              setError(null)
-            }
-          } else {
-            // Refresh token valid - retry fetching user profile with new access token
-            try {
-              // Suppress console errors for expected 401 responses
-              const originalError = console.error
-              console.error = (...args) => {
-                const errorMessage = args[0]?.toString() || ''
-                if (errorMessage.includes('401') && errorMessage.includes('/api/auth/profile')) {
-                  return
-                }
-                originalError(...args)
-              }
-
-              const retryResponse = await axios.get('/api/auth/profile', {
-                validateStatus: (status) => status === 200 || status === 401
-              }).finally(() => {
-                // Restore console.error
-                console.error = originalError
-              })
-              if (retryResponse.status === 200) {
-                setUser(retryResponse.data)
-                setError(null)
-              } else {
-                // Still 401 after refresh - only redirect if on protected route
-                if (isProtectedRoute()) {
-                  await handleTokenExpiration()
-                } else {
-                  setUser(null)
-                  setError(null)
-                }
-              }
-            } catch (retryError) {
-              // If retry fails, check if it's 401 (expired) or other error
-              if (retryError.response?.status === 401) {
-                if (isProtectedRoute()) {
-            await handleTokenExpiration()
-          } else {
-            setUser(null)
-            setError(null)
-          }
-        } else {
-                setUser(null)
-                setError(null)
-              }
-            }
-          }
-        } else {
-          // On auth pages, just set user to null
-          setUser(null)
-          setError(null)
-        }
+        setUser(null)
+        setError(null)
       }
     } catch (error) {
+      // Silent fail - /api/auth/me should never error, but handle gracefully
       setUser(null)
-      if (error.response?.status !== 401) {
-        setError(error.response?.data?.message || 'Failed to fetch user')
-      } else {
-        setError(null)
-      }
+      setError(null)
     } finally {
       setLoading(false)
       isFetchingUserRef.current = false
@@ -271,24 +183,16 @@ export const AuthProvider = ({ children }) => {
   }, [user])
 
   /**
-   * Initialize auth state on mount - only check auth on protected routes
+   * Initialize auth state on mount - always check auth to restore user state
+   * This ensures authenticated users stay logged in on refresh for all pages
    * @author Thang Truong
    * @date 2025-12-12
    */
   useEffect(() => {
-    const path = window.location.pathname
-    const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
-    
-    // Only fetch user if on protected route, otherwise skip authentication check
-    if (isProtectedRoute()) {
-      fetchUser()
-    } else if (isAuthPage) {
-      setLoading(false)
-    } else {
-      // Public page - no auth check needed, just set loading to false
-      setLoading(false)
-      // Don't clear user on public pages - keep it if user was logged in
-    }
+    // Always fetch user on mount to restore authentication state
+    // This ensures authenticated users stay logged in after page refresh on all pages
+    // 401 errors on public pages for unauthenticated users are suppressed
+    fetchUser()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -435,6 +339,11 @@ export const AuthProvider = ({ children }) => {
       },
       async (error) => {
         const originalRequest = error.config
+        // Handle 429 errors (rate limit) - don't retry, just reject silently
+        if (error.response?.status === 429) {
+          // Don't show toast for rate limit errors - they're expected during rapid refreshes
+          return Promise.reject(error)
+        }
         // Only handle 401 errors
         if (!error.response || error.response.status !== 401) {
           return Promise.reject(error)
