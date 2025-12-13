@@ -510,7 +510,11 @@ export const getTopProducts = async (period = 'month', limit = 10, startDate = n
       params.push(end)
     }
 
-    params.push(limit)
+    // Validate limit as integer for safe interpolation
+    const limitInt = parseInt(limit, 10) || 10
+    if (isNaN(limitInt) || limitInt < 1) {
+      throw new Error('Invalid limit parameter')
+    }
 
     const [results] = await db.execute(
       `SELECT 
@@ -524,7 +528,7 @@ export const getTopProducts = async (period = 'month', limit = 10, startDate = n
        ${whereClause}
        GROUP BY p.id, p.name
        ORDER BY revenue DESC
-       LIMIT ?`,
+       LIMIT ${limitInt}`,
       params
     )
 
@@ -546,6 +550,17 @@ export const getTopProducts = async (period = 'month', limit = 10, startDate = n
  */
 export const getRecentActivity = async (limit = 15) => {
   try {
+    // Validate limit as integer
+    const limitInt = parseInt(limit, 10) || 15
+    if (isNaN(limitInt) || limitInt < 1) {
+      throw new Error('Invalid limit parameter')
+    }
+
+    const ordersLimit = Math.floor(limitInt * 0.4) || 1
+    const registrationsLimit = Math.floor(limitInt * 0.2) || 1
+    const reviewsLimit = Math.floor(limitInt * 0.2) || 1
+    const commentsLimit = Math.floor(limitInt * 0.2) || 1
+
     // Get recent orders
     const [orders] = await db.execute(
       `SELECT 
@@ -558,8 +573,7 @@ export const getRecentActivity = async (limit = 15) => {
        FROM orders o
        JOIN users u ON o.user_id = u.id
        ORDER BY o.created_at DESC
-       LIMIT ?`,
-      [Math.floor(limit * 0.4)]
+       LIMIT ${ordersLimit}`
     )
 
     // Get recent user registrations
@@ -572,8 +586,7 @@ export const getRecentActivity = async (limit = 15) => {
         'registration' as type
        FROM users
        ORDER BY created_at DESC
-       LIMIT ?`,
-      [Math.floor(limit * 0.2)]
+       LIMIT ${registrationsLimit}`
     )
 
     // Get recent reviews (if reviews table exists)
@@ -592,8 +605,7 @@ export const getRecentActivity = async (limit = 15) => {
          JOIN users u ON r.user_id = u.id
          JOIN products p ON r.product_id = p.id
          ORDER BY r.created_at DESC
-         LIMIT ?`,
-        [Math.floor(limit * 0.2)]
+         LIMIT ${reviewsLimit}`
       )
       reviews = reviewResults
     } catch (error) {
@@ -615,8 +627,7 @@ export const getRecentActivity = async (limit = 15) => {
          JOIN users u ON c.user_id = u.id
          JOIN products p ON c.product_id = p.id
          ORDER BY c.created_at DESC
-         LIMIT ?`,
-        [Math.floor(limit * 0.2)]
+         LIMIT ${commentsLimit}`
       )
       comments = commentResults
     } catch (error) {

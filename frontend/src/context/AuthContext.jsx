@@ -50,9 +50,11 @@ export const AuthProvider = ({ children }) => {
         const isPublicPage = !isProtected && !isAuthPage
         const isAuthEndpoint = error.config?.url?.includes('/api/auth/') || error.config?.url?.includes('/api/auth/refresh')
         
-        // Silence 401 errors for auth endpoints on public pages
-        if (isPublicPage && isAuthEndpoint && error.response?.status === 401) {
-          error._silent = true
+        // Silence 401 errors for auth endpoints on public pages or for refresh token checks
+        if ((isPublicPage && isAuthEndpoint) || error.config?._silent) {
+          if (error.response?.status === 401) {
+            error._silent = true
+          }
         }
         return Promise.reject(error)
       }
@@ -161,6 +163,12 @@ export const AuthProvider = ({ children }) => {
    * @author Thang Truong
    * @date 2025-12-12
    */
+  /**
+   * Check refresh token expiration periodically when user is authenticated
+   * Silently handles 401 errors to avoid console noise
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
   useEffect(() => {
     if (!user) return
     const checkTokenExpiration = async () => {
@@ -172,6 +180,10 @@ export const AuthProvider = ({ children }) => {
           await handleTokenExpiration()
         }
       } catch (error) {
+        // Mark as silent to avoid console errors
+        if (error.config) {
+          error.config._silent = true
+        }
         if (error.response?.status === 401) {
           await handleTokenExpiration()
         }

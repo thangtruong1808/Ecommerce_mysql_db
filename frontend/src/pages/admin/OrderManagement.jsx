@@ -39,8 +39,8 @@ const OrderManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [selectedOrders, setSelectedOrders] = useState(new Set())
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, order: null })
+  const { selected: selectedOrders, toggle, selectAll, clear, selectedCount } = useSelection(orders)
 
   /**
    * Fetch orders
