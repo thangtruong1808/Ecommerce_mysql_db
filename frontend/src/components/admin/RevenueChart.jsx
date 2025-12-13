@@ -80,11 +80,12 @@ const RevenueChart = ({ data = [], period = 'month' }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col">
       {/* Revenue chart container */}
-      <h2 className="text-xl font-semibold mb-4">Revenue Trend</h2>
+      <h2 className="text-lg font-semibold mb-2">Revenue Trend</h2>
       {chartData.length > 0 ? (
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
@@ -111,9 +112,10 @@ const RevenueChart = ({ data = [], period = 'month' }) => {
               activeDot={{ r: 6 }}
             />
           </LineChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center flex-1 text-gray-500">
           No revenue data available
         </div>
       )}

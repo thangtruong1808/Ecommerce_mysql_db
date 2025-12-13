@@ -263,7 +263,7 @@ const Navbar = () => {
                               <Link to="/clearance" className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-red-500 to-orange-500 hover:opacity-90 transition-opacity group">
                                 <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity"></div>
                                 <div className="relative h-full p-6 flex flex-col justify-between text-white">
-                                  <div><FaTag className="text-3xl mb-2" /><h4 className="text-xl font-bold mb-2">Clearance Sale</h4><p className="text-sm opacity-90">Up to 50% off selected items</p></div>
+                                  <div><FaTag className="text-3xl mb-2" /><h4 className="text-2xl font-bold mb-2">Clearance Sale</h4><p className="text-sm opacity-90">Up to 50% off selected items</p></div>
                                   <span className="text-sm font-semibold underline">Shop Now →</span>
                                 </div>
                               </Link>
@@ -277,13 +277,13 @@ const Navbar = () => {
               )}
             </div>
             <button type="button" onClick={openFilterDrawer} aria-controls="product-filters-drawer" aria-expanded="false" aria-haspopup="dialog" className="px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors text-gray-600 hover:text-gray-900" aria-label="Open product filters">
-              <FaSearch className="mr-1" /> Filters
+              <FaSearch className="mr-1" /> <span className="text-md">Filters</span>
             </button>
             <Link to="/clearance" className={`px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors ${isActive('/clearance') ? 'text-red-700 bg-red-50 font-bold' : 'text-red-600 hover:text-red-700 font-semibold'}`}>
-              <FaTag className="mr-1.5" /> Clearance
+              <FaTag className="mr-1.5" /> <span className="text-md">Clearance</span>
             </Link>
             <Link to="/cart" className={`px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center transition-colors ${isActive('/cart') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-600 hover:text-gray-900'}`}>
-              <FaShoppingCart className="mr-1.5" /> Cart
+              <FaShoppingCart className="mr-1.5" /> <span className="text-md">Cart</span>
               {getItemCount() > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{getItemCount()}</span>
               )}

@@ -6,7 +6,7 @@
  * @date 2025-12-12
  */
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './context/AuthContext'
@@ -40,27 +40,24 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 
 /**
- * Main App component
- * @returns {JSX.Element} Application root
+ * AppContent component - Handles conditional rendering of Navbar/Footer
+ * @returns {JSX.Element} Application content
+ * @author Thang Truong
+ * @date 2025-12-12
  */
-function App() {
+const AppContent = () => {
+  const location = useLocation()
+  const isAdminPage = location.pathname.startsWith('/admin')
+
+  /* Main application container */
   return (
-    <AuthProvider>
-      <CartProvider>
-        <Router
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          {/* Main application container with flex layout for sticky footer */}
-          <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Navigation bar */}
-            <Navbar />
-          
-            {/* Route definitions - flex-grow to push footer down */}
-            <div className="flex-grow">
-              <Routes>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Navigation bar - hidden on admin pages */}
+      {!isAdminPage && <Navbar />}
+    
+      {/* Route definitions - flex-grow to push footer down */}
+      <div className="flex-grow">
+        <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
@@ -200,13 +197,33 @@ function App() {
               theme="light"
             />
           
-            {/* Site footer - sticks to bottom */}
-            <Footer />
+            {/* Site footer - hidden on admin pages */}
+            {!isAdminPage && <Footer />}
           </div>
-      </Router>
-    </CartProvider>
-  </AuthProvider>
-)
+  )
+}
+
+/**
+ * Main App component
+ * @returns {JSX.Element} Application root
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+function App() {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
+          <AppContent />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
+  )
 }
 
 export default App

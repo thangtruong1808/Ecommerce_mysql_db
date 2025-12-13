@@ -56,10 +56,11 @@ const CustomerGrowthChart = ({ data = [] }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-4">Customer Growth</h2>
+    <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col">
+      <h2 className="text-lg font-semibold mb-2">Customer Growth</h2>
       {chartData.length > 0 ? (
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
             <defs>
               <linearGradient id="colorCustomers" x1="0" y1="0" x2="0" y2="1">
@@ -90,9 +91,10 @@ const CustomerGrowthChart = ({ data = [] }) => {
               activeDot={{ r: 6 }}
             />
           </AreaChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center flex-1 text-gray-500">
           No customer growth data available
         </div>
       )}
