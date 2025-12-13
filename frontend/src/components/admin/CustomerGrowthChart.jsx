@@ -61,7 +61,7 @@ const CustomerGrowthChart = ({ data = [] }) => {
       {chartData.length > 0 ? (
         <div className="flex-1 min-h-0">
           <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             <defs>
               <linearGradient id="colorCustomers" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
@@ -78,7 +78,7 @@ const CustomerGrowthChart = ({ data = [] }) => {
             />
             <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Legend wrapperStyle={{ paddingTop: '10px' }} formatter={(value) => <span style={{ fontSize: '12px' }}>{value}</span>} />
             <Area
               type="monotone"
               dataKey="customers"
