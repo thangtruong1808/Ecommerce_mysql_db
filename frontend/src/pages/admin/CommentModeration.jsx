@@ -34,7 +34,6 @@ const CommentModeration = () => {
       })
       setPendingComments(response.data || [])
     } catch (error) {
-      console.error('Error fetching pending comments:', error)
       toast.error(error.response?.data?.message || 'Failed to load pending comments')
     }
   }
@@ -48,7 +47,7 @@ const CommentModeration = () => {
       // For now, we'll use the pending comments endpoint
       await fetchPendingComments()
     } catch (error) {
-      console.error('Error fetching comments:', error)
+      // Error handled in fetchPendingComments
     }
   }
 

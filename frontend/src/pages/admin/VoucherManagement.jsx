@@ -35,7 +35,6 @@ const VoucherManagement = () => {
       })
       setVouchers(response.data || [])
     } catch (error) {
-      console.error('Error fetching vouchers:', error)
       toast.error(error.response?.data?.message || 'Failed to load vouchers')
     } finally {
       setLoading(false)

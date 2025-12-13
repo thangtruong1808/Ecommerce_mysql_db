@@ -95,8 +95,16 @@ export const getAllProducts = async (filters = {}) => {
     values.push(maxPrice)
   }
   if (search) {
-    conditions.push('MATCH(p.name, p.description) AGAINST(? IN NATURAL LANGUAGE MODE)')
-    values.push(search)
+    conditions.push('(p.name LIKE ? OR p.description LIKE ?)')
+    values.push(`%${search}%`, `%${search}%`)
+  }
+  if (filters.minStock !== undefined) {
+    conditions.push('p.stock >= ?')
+    values.push(filters.minStock)
+  }
+  if (filters.maxStock !== undefined) {
+    conditions.push('p.stock <= ?')
+    values.push(filters.maxStock)
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''

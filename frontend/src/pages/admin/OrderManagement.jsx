@@ -1,51 +1,154 @@
 /**
  * Order Management Page Component
- * Admin page for managing all orders
+ * Full CRUD operations for orders with filters, search, pagination, bulk actions
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaTrash } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
-import ProtectedRoute from '../../components/ProtectedRoute'
 import SkeletonLoader from '../../components/SkeletonLoader'
+import StatusBadge from '../../components/admin/StatusBadge'
+import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
+import BulkActionBar from '../../components/admin/BulkActionBar'
+import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
+import SearchFilterBar from '../../components/admin/SearchFilterBar'
+import Pagination from '../../components/admin/Pagination'
+import { useSelection } from '../../utils/useSelection'
+import {
+  updateOrderStatus,
+  bulkUpdateOrders,
+  deleteOrder,
+} from '../../utils/dashboardCrud'
 
 /**
  * OrderManagement component
  * @returns {JSX.Element} Order management page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const OrderManagement = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedOrders, setSelectedOrders] = useState(new Set())
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, order: null })
 
   /**
    * Fetch orders
+   * @author Thang Truong
+   * @date 2025-12-12
    */
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true)
-        const params = statusFilter ? `?status=${statusFilter}` : ''
-        const response = await axios.get(`/api/admin/orders${params}`)
-        setOrders(response.data.orders || [])
-      } catch (error) {
-        console.error('Error fetching orders:', error)
-        toast.error(error.response?.data?.message || 'Failed to load orders')
-      } finally {
-        setLoading(false)
-      }
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({ page, limit: 20 })
+      if (statusFilter) params.append('status', statusFilter)
+      if (searchTerm) params.append('search', searchTerm)
+      const response = await axios.get(`/api/admin/orders?${params}`)
+      setOrders(response.data.orders || [])
+      setTotalPages(response.data.pagination?.pages || 1)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load orders')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchOrders()
-  }, [statusFilter])
+  }, [page, statusFilter, searchTerm])
 
   /**
-   * Format date to dd-MMM-yyyy format (e.g., 13-Dec-2025)
+   * Format order number
+   * @param {Object} order - Order object
+   * @returns {string} Formatted order number
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const formatOrderNumber = (order) => {
+    if (order.order_number) return order.order_number
+    const date = new Date(order.created_at).toISOString().slice(0, 10).replace(/-/g, '')
+    return `ORD-${date}-${String(order.id).padStart(5, '0')}`
+  }
+
+  /**
+   * Get order status
+   * @param {Object} order - Order object
+   * @returns {string} Order status
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const getOrderStatus = (order) => {
+    if (order.is_delivered) return 'delivered'
+    if (order.is_paid) return 'paid'
+    return 'pending'
+  }
+
+  /**
+   * Handle status change
+   * @param {number} orderId - Order ID
+   * @param {string} newStatus - New status
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus)
+      fetchOrders()
+    } catch (error) {
+      // Error handled in utility
+    }
+  }
+
+  /**
+   * Handle delete confirm
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteOrder(deleteModal.order.id)
+      setDeleteModal({ isOpen: false, order: null })
+      fetchOrders()
+    } catch (error) {
+      // Error handled in utility
+    }
+  }
+
+  /**
+   * Handle bulk action
+   * @param {string} actionType - Action type
+   * @param {Object} data - Action data
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleBulkAction = async (actionType, data) => {
+    try {
+      if (actionType === 'update-status') {
+        await bulkUpdateOrders(Array.from(selectedOrders), { status: data.status })
+      } else if (actionType === 'delete') {
+        for (const id of selectedOrders) {
+          await deleteOrder(id)
+        }
+      }
+      clear()
+      fetchOrders()
+    } catch (error) {
+      // Error handled in utility
+    }
+  }
+
+  /**
+   * Format date
    * @param {string} dateString - Date string
    * @returns {string} Formatted date
    * @author Thang Truong
@@ -61,43 +164,10 @@ const OrderManagement = () => {
     return `${day}-${month}-${year}`
   }
 
-  /**
-   * Format order number for display
-   * @param {Object} order - Order object
-   * @returns {string} Formatted order number
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const formatOrderNumber = (order) => {
-    if (order.order_number) {
-      return order.order_number
-    }
-    // Fallback for existing orders without order_number
-    const date = new Date(order.created_at)
-    const datePart = date.toISOString().slice(0, 10).replace(/-/g, '')
-    return `ORD-${datePart}-${String(order.id).padStart(5, '0')}`
-  }
-
-  /**
-   * Get status badge
-   * @param {Object} order - Order object
-   * @returns {JSX.Element} Status badge
-   */
-  const getStatusBadge = (order) => {
-    if (order.is_delivered) {
-      return <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Delivered</span>
-    }
-    if (order.is_paid) {
-      return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Processing</span>
-    }
-    return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Pending</span>
-  }
-
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <AdminLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Loading skeleton */}
+        <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Order Management</h1>
           <SkeletonLoader type="table" />
         </div>
@@ -105,32 +175,46 @@ const OrderManagement = () => {
     )
   }
 
+  /* Order management page */
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Page header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-          
-          {/* Status filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md"
-          >
-            <option value="">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="delivered">Delivered</option>
-          </select>
-        </div>
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Order Management</h1>
+
+        {/* Filters and search */}
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(value) => {
+            setSearchTerm(value)
+            setPage(1)
+          }}
+          filterValue={statusFilter}
+          onFilterChange={(value) => {
+            setStatusFilter(value)
+            setPage(1)
+          }}
+          filterOptions={[
+            { value: '', label: 'All Orders' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'paid', label: 'Paid' },
+            { value: 'delivered', label: 'Delivered' }
+          ]}
+          searchPlaceholder="Search orders..."
+        />
 
         {/* Orders table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
-              {/* Table header */}
               <tr>
+                <th className="px-6 py-3 text-left">
+                  <BulkSelectCheckbox
+                    isSelectAll
+                    totalItems={orders.length}
+                    selectedCount={selectedCount}
+                    onSelectAll={selectAll}
+                  />
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
@@ -140,35 +224,82 @@ const OrderManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* Table rows */}
               {orders.map((order) => (
-                <tr key={order.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{formatOrderNumber(order)}</td>
+                <tr key={order.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <BulkSelectCheckbox
+                      itemId={order.id}
+                      isSelected={selectedOrders.has(order.id)}
+                      onToggle={toggle}
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <Link to={`/admin/orders/${order.id}`} className="text-blue-600 hover:text-blue-800">
+                      {formatOrderNumber(order)}
+                    </Link>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.user_name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${parseFloat(order.total_price).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(order)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge
+                      currentStatus={getOrderStatus(order)}
+                      availableStatuses={['pending', 'processing', 'paid', 'delivered']}
+                      onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
+                      entityType="order"
+                    />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(order.created_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Link
-                      to={`/admin/orders/${order.id}`}
-                      className="text-blue-600 hover:text-blue-800"
+                    <button
+                      onClick={() => setDeleteModal({ isOpen: true, order })}
+                      className="text-red-600 hover:text-red-800"
+                      aria-label="Delete order"
                     >
-                      View
-                    </Link>
+                      <FaTrash />
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+
+        {/* Modals */}
+        <ConfirmDeleteModal
+          entity={deleteModal.order}
+          entityType="order"
+          isOpen={deleteModal.isOpen}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteModal({ isOpen: false, order: null })}
+        />
+
+        {/* Bulk action bar */}
+        {selectedCount > 0 && (
+          <BulkActionBar
+            selectedCount={selectedCount}
+            actions={[
+              { type: 'update-status', label: 'Mark as Paid', data: { status: 'paid' } },
+              { type: 'update-status', label: 'Mark as Delivered', data: { status: 'delivered' } },
+              { type: 'delete', label: 'Delete Selected' },
+            ]}
+            onAction={handleBulkAction}
+            onCancel={clear}
+          />
+        )}
       </div>
     </AdminLayout>
   )
 }
 
 export default OrderManagement
-

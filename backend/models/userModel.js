@@ -85,20 +85,39 @@ export const updateUser = async (id, updateData) => {
 }
 
 /**
- * Get all users with pagination (for admin)
+ * Get all users with pagination, search, and filters (for admin)
  * @param {number} page - Page number
  * @param {number} limit - Items per page
+ * @param {string} search - Search term
+ * @param {string} role - Role filter
  * @returns {Promise<Object>} - Users and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
  */
-export const getAllUsers = async (page = 1, limit = 10) => {
+export const getAllUsers = async (page = 1, limit = 10, search = null, role = null) => {
   const offset = (page - 1) * limit
+  const conditions = []
+  const params = []
+  
+  if (search) {
+    conditions.push('(name LIKE ? OR email LIKE ?)')
+    params.push(`%${search}%`, `%${search}%`)
+  }
+  if (role) {
+    conditions.push('role = ?')
+    params.push(role)
+  }
+  
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+  const limitInt = parseInt(limit, 10)
+  const offsetInt = parseInt(offset, 10)
   
   const [rows] = await db.execute(
-    'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?',
-    [limit, offset]
+    `SELECT id, name, email, role, created_at FROM users ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
+    params
   )
 
-  const [countResult] = await db.execute('SELECT COUNT(*) as total FROM users')
+  const [countResult] = await db.execute(`SELECT COUNT(*) as total FROM users ${whereClause}`, params)
   const total = countResult[0].total
 
   return {

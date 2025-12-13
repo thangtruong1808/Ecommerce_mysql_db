@@ -155,7 +155,7 @@ export const getUserOrders = async (userId, filters = {}) => {
  * @date 2025-12-12
  */
 export const getAllOrders = async (filters = {}) => {
-  const { page = 1, limit = 20, status = null } = filters
+  const { page = 1, limit = 20, status = null, search = null } = filters
   const offset = (page - 1) * limit
   
   // Validate and convert to integers to avoid MySQL prepared statement issues
@@ -165,16 +165,23 @@ export const getAllOrders = async (filters = {}) => {
     throw new Error('Invalid pagination parameters')
   }
   
-  let whereClause = ''
+  const conditions = []
   const params = []
 
-  if (status === 'paid') whereClause = 'WHERE o.is_paid = 1'
-  else if (status === 'delivered') whereClause = 'WHERE o.is_delivered = 1'
-  else if (status === 'pending') whereClause = 'WHERE o.is_paid = 0'
+  if (status === 'paid') conditions.push('o.is_paid = 1')
+  else if (status === 'delivered') conditions.push('o.is_delivered = 1')
+  else if (status === 'pending') conditions.push('o.is_paid = 0')
+  
+  if (search) {
+    conditions.push('(o.order_number LIKE ? OR u.name LIKE ? OR u.email LIKE ?)')
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`)
+  }
+  
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   const [rows] = await db.execute(`SELECT o.*, u.name as user_name, u.email as user_email, COUNT(oi.id) as item_count FROM orders o JOIN users u ON o.user_id = u.id LEFT JOIN order_items oi ON o.id = oi.order_id ${whereClause} GROUP BY o.id ORDER BY o.created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`, params)
   for (const order of rows) { if (!order.order_number) { const date = new Date(order.created_at); const datePart = date.toISOString().slice(0, 10).replace(/-/g, ''); order.order_number = `ORD-${datePart}-${String(order.id).padStart(5, '0')}` } }
-  const [countResult] = await db.execute(`SELECT COUNT(*) as total FROM orders o ${whereClause}`, params)
+  const [countResult] = await db.execute(`SELECT COUNT(DISTINCT o.id) as total FROM orders o JOIN users u ON o.user_id = u.id ${whereClause}`, params)
   return { orders: rows, pagination: { page, limit, total: countResult[0].total, pages: Math.ceil(countResult[0].total / limit) } }
 }
 

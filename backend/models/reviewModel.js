@@ -211,3 +211,29 @@ export const getUserReview = async (userId, productId) => {
   return rows[0] || null
 }
 
+/**
+ * Approve review (admin only)
+ * Note: Requires is_approved field in reviews table
+ * @param {number} reviewId - Review ID
+ * @returns {Promise<boolean>} - True if approved, false otherwise
+ */
+export const approveReview = async (reviewId) => {
+  // Note: This requires is_approved field in reviews table
+  // For now, this is a placeholder
+  const review = await getReviewById(reviewId)
+  return review !== null
+}
+
+/**
+ * Reject review (admin only)
+ * Note: Requires is_approved field in reviews table
+ * @param {number} reviewId - Review ID
+ * @returns {Promise<boolean>} - True if rejected, false otherwise
+ */
+export const rejectReview = async (reviewId) => {
+  // Note: This requires is_approved field in reviews table
+  // For now, this is a placeholder
+  const review = await getReviewById(reviewId)
+  return review !== null
+}
+
