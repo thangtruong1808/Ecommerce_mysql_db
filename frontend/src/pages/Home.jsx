@@ -1,11 +1,19 @@
 /**
  * Home Page Component
- * Landing page with featured content
+ * Landing page with featured content, products, and categories
  * @author Thang Truong
  * @date 2025-12-12
  */
 
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import axios from 'axios'
+import { FaShippingFast, FaShieldAlt, FaUndo, FaArrowRight, FaTag } from 'react-icons/fa'
+import ProductCard from '../components/ProductCard'
+import SkeletonLoader from '../components/SkeletonLoader'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { loadCategories } from '../utils/categoryCache'
 
 /**
  * Home component
@@ -14,53 +22,162 @@ import { Link } from 'react-router-dom'
  * @date 2025-12-12
  */
 const Home = () => {
+  const { addToCart } = useCart()
+  const { isAuthenticated } = useAuth()
+  const [featuredProducts, setFeaturedProducts] = useState([])
+  const [clearanceProducts, setClearanceProducts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  /**
+   * Fetch featured products and categories
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [productsRes, clearanceRes, categoriesData] = await Promise.all([
+          axios.get('/api/products?limit=10&sortBy=created_at&sortOrder=DESC'),
+          axios.get('/api/products/clearance?limit=4'),
+          loadCategories()
+        ])
+        setFeaturedProducts(productsRes.data.products || [])
+        setClearanceProducts(clearanceRes.data.products || [])
+        setCategories((categoriesData || []).slice(0, 6))
+      } catch (error) {
+        // Silent fail for home page
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  /**
+   * Handle add to cart
+   * @param {Object} product - Product object
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleAddToCart = async (product) => {
+    if (!isAuthenticated) {
+      window.location.href = '/login'
+      return
+    }
+    await addToCart(product.id, 1)
+  }
+
+  /* Home page layout */
   return (
-    /* Home page layout */
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Hero section */}
-      <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to Our Store
-        </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Discover amazing products at great prices
-        </p>
-        <Link
-          to="/products"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-        >
-          Shop Now
-        </Link>
+    <div className="min-h-screen">
+      {/* Hero banner section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 mb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
+          <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices. Quality you can trust, delivered to your door.</p>
+          <div className="flex gap-4 justify-center">
+            <Link to="/products" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+              Shop Now
+            </Link>
+            <Link to="/clearance" className="bg-red-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-600 transition">
+              View Clearance
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Features section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-        {/* Feature 1 */}
-        <div className="text-center">
-          <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🚚</span>
-          </div>
-          <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
-          <p className="text-gray-600">Free shipping on orders over $100</p>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {/* Categories section */}
+        {categories.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">Shop by Category</h2>
+              <Link to="/products" className="text-blue-600 hover:text-blue-800 flex items-center">
+                View All <FaArrowRight className="ml-2" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {categories.map((category) => (
+                <Link key={category.id} to={`/products?category=${category.id}`} className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition group">
+                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📦</div>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">{category.name}</h3>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Feature 2 */}
-        <div className="text-center">
-          <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">🔒</span>
-          </div>
-          <h3 className="text-xl font-semibold mb-2">Secure Payment</h3>
-          <p className="text-gray-600">Safe and secure checkout process</p>
-        </div>
+        {/* Clearance deals section */}
+        {clearanceProducts.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <FaTag className="text-red-500 text-2xl" />
+                <h2 className="text-3xl font-bold text-gray-900">Clearance Deals</h2>
+              </div>
+              <Link to="/clearance" className="text-blue-600 hover:text-blue-800 flex items-center">
+                View All <FaArrowRight className="ml-2" />
+              </Link>
+            </div>
+            {loading ? (
+              <SkeletonLoader type="card" count={4} />
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {clearanceProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
-        {/* Feature 3 */}
-        <div className="text-center">
-          <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">↩️</span>
+        {/* Featured products section */}
+        <section className="mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
+            <Link to="/products" className="text-blue-600 hover:text-blue-800 flex items-center">
+              View All <FaArrowRight className="ml-2" />
+            </Link>
           </div>
-          <h3 className="text-xl font-semibold mb-2">Easy Returns</h3>
-          <p className="text-gray-600">Hassle-free return policy</p>
-        </div>
+          {loading ? (
+            <SkeletonLoader type="card" count={10} />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Features section */}
+        <section className="bg-gray-50 rounded-lg p-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <FaShippingFast className="text-blue-600 text-2xl" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
+              <p className="text-gray-600">Free shipping on orders over $100</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <FaShieldAlt className="text-green-600 text-2xl" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Secure Payment</h3>
+              <p className="text-gray-600">Safe and secure checkout process</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <FaUndo className="text-purple-600 text-2xl" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Easy Returns</h3>
+              <p className="text-gray-600">Hassle-free return policy</p>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )

@@ -239,6 +239,16 @@ const InvoiceDetail = () => {
           <p className="text-sm text-gray-600"><strong>Payment Method:</strong> {invoice.payment_method}</p>
           <p className="text-sm text-gray-600"><strong>Payment Status:</strong> {invoice.payment_status}</p>
         </div>
+
+        {/* Delivery information */}
+        <div className="mt-8 pt-8 border-t">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-semibold text-blue-900 mb-2">Estimated Delivery</h3>
+            <p className="text-sm text-blue-800">
+              Your order will be delivered within <strong>3-5 business days</strong> from the date of shipment. We will integrate shipping tracking with our provider soon, and you'll receive tracking information via email once your order ships.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

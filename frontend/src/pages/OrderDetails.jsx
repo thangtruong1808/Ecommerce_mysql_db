@@ -215,6 +215,16 @@ const OrderDetails = () => {
               <div className="flex justify-between font-bold text-lg border-t pt-2"><span>Total</span><span>${parseFloat(order.total_price).toFixed(2)}</span></div>
             </div>
 
+            {/* Delivery information */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2">Estimated Delivery</h3>
+                <p className="text-sm text-blue-800">
+                  Your order will be delivered within <strong>3-5 business days</strong> from the date of shipment. We will integrate shipping tracking with our provider soon, and you'll receive tracking information via email once your order ships.
+                </p>
+              </div>
+            </div>
+
             {invoice && (
               <div className="mt-4 pt-4 border-t">
                 <Link to={`/invoices/${invoice.id}`} className="block text-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">View Invoice</Link>

@@ -155,6 +155,15 @@ export const generateInvoicePDF = async (invoice, outputPath) => {
       yPos += 15
       doc.text(`Payment Status: ${invoice.payment_status || 'N/A'}`, 50, yPos)
 
+      // Delivery information
+      yPos += 30
+      doc.font('Helvetica-Bold').fontSize(11).text('Estimated Delivery', 50, yPos)
+      yPos += 15
+      doc.font('Helvetica').fontSize(10)
+      doc.text('Your order will be delivered within 3-5 business days from the date of shipment.', 50, yPos, { width: 500 })
+      yPos += 15
+      doc.text('We will integrate shipping tracking with our provider soon, and you\'ll receive tracking information via email once your order ships.', 50, yPos, { width: 500 })
+
       // Footer - position after content with spacing, but ensure it's on first page if there's space
       const pageHeight = doc.page.height
       const bottomMargin = 50

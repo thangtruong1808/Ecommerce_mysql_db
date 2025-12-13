@@ -209,6 +209,13 @@ export const sendInvoiceEmail = async (email, userName, invoice) => {
             <a href="${invoiceUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Invoice</a>
           </div>
 
+          <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 15px; margin: 20px 0;">
+            <h3 style="color: #1e40af; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">Estimated Delivery</h3>
+            <p style="color: #1e3a8a; font-size: 14px; margin: 0; line-height: 1.6;">
+              Your order will be delivered within <strong>3-5 business days</strong> from the date of shipment. We will integrate shipping tracking with our provider soon, and you'll receive tracking information via email once your order ships.
+            </p>
+          </div>
+
           <p style="color: #666; font-size: 14px; margin-top: 30px; line-height: 1.6;">
             If you have any questions about your order, please contact our support team. We're here to help!
           </p>

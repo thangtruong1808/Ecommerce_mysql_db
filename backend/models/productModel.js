@@ -132,7 +132,11 @@ export const getAllProducts = async (filters = {}) => {
             s.name as subcategory_name,
             s.id as subcategory_id,
             c.name as category_name,
-            c.id as category_id
+            c.id as category_id,
+            (SELECT COUNT(*) FROM product_likes WHERE product_id = p.id) as likes_count,
+            (SELECT COUNT(*) FROM product_comments WHERE product_id = p.id AND is_approved = 1) as comments_count,
+            (SELECT COUNT(*) FROM reviews WHERE product_id = p.id) as num_reviews,
+            (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE product_id = p.id) as rating
      FROM products p 
      JOIN child_categories cc ON p.child_category_id = cc.id
      JOIN subcategories s ON cc.subcategory_id = s.id
@@ -196,7 +200,11 @@ export const getAllProducts = async (filters = {}) => {
       price: price, // Ensure price is a number
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
-      has_discount: isActive && product.is_on_clearance
+      has_discount: isActive && product.is_on_clearance,
+      likes_count: parseInt(product.likes_count) || 0,
+      comments_count: parseInt(product.comments_count) || 0,
+      num_reviews: parseInt(product.num_reviews) || 0,
+      rating: parseFloat(product.rating) || 0
     }
   })
 
@@ -448,7 +456,11 @@ export const getClearanceProducts = async (filters = {}) => {
             s.name as subcategory_name,
             s.id as subcategory_id,
             c.name as category_name,
-            c.id as category_id
+            c.id as category_id,
+            (SELECT COUNT(*) FROM product_likes WHERE product_id = p.id) as likes_count,
+            (SELECT COUNT(*) FROM product_comments WHERE product_id = p.id AND is_approved = 1) as comments_count,
+            (SELECT COUNT(*) FROM reviews WHERE product_id = p.id) as num_reviews,
+            (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE product_id = p.id) as rating
      FROM products p 
      JOIN child_categories cc ON p.child_category_id = cc.id
      JOIN subcategories s ON cc.subcategory_id = s.id
@@ -499,7 +511,11 @@ export const getClearanceProducts = async (filters = {}) => {
       price: price, // Ensure price is a number
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
-      has_discount: isActive && hasDiscountFields
+      has_discount: isActive && hasDiscountFields,
+      likes_count: parseInt(product.likes_count) || 0,
+      comments_count: parseInt(product.comments_count) || 0,
+      num_reviews: parseInt(product.num_reviews) || 0,
+      rating: parseFloat(product.rating) || 0
     }
   })
 
