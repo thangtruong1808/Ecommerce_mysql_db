@@ -25,6 +25,70 @@ export const getAllChildCategories = async () => {
 }
 
 /**
+ * Get all child categories with pagination and filters
+ * @param {Object} filters - Filter options (page, limit, search, subcategoryId)
+ * @returns {Promise<Object>} - Child categories with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllChildCategoriesPaginated = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  const search = filters.search || ''
+  const subcategoryId = filters.subcategoryId ? parseInt(filters.subcategoryId) : null
+  
+  let query = `
+    SELECT cc.*, s.name as subcategory_name, s.id as subcategory_id,
+            c.name as category_name, c.id as category_id
+    FROM child_categories cc
+    JOIN subcategories s ON cc.subcategory_id = s.id
+    JOIN categories c ON s.category_id = c.id
+  `
+  const params = []
+  
+  const conditions = []
+  if (subcategoryId && !isNaN(subcategoryId)) {
+    conditions.push('cc.subcategory_id = ?')
+    params.push(subcategoryId)
+  }
+  if (search) {
+    conditions.push('(cc.name LIKE ? OR cc.description LIKE ? OR s.name LIKE ? OR c.name LIKE ?)')
+    const searchPattern = `%${search}%`
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+  }
+  
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
+  }
+  
+  query += ' ORDER BY c.name, s.name, cc.name ASC'
+  
+  // Get total count
+  const countQuery = query.replace(
+    'SELECT cc.*, s.name as subcategory_name, s.id as subcategory_id, c.name as category_name, c.id as category_id',
+    'SELECT COUNT(*) as total'
+  )
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  // Get paginated results
+  query += ` LIMIT ${limit} OFFSET ${offset}`
+  
+  const [rows] = await db.execute(query, params)
+  
+  return {
+    childCategories: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  }
+}
+
+/**
  * Get child categories by subcategory ID
  * @param {number} subcategoryId - Subcategory ID
  * @returns {Promise<Array>} - Array of child category objects

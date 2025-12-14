@@ -469,13 +469,316 @@ router.get('/products', async (req, res) => {
 
 /**
  * GET /api/admin/invoices
- * Get all invoices
+ * Get all invoices with pagination, search, and filters
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/invoices', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-    const result = await invoiceModel.getAllInvoices({ page })
+    const filters = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 20,
+      search: req.query.search || '',
+      paymentStatus: req.query.paymentStatus || null
+    }
+    const result = await invoiceModel.getAllInvoices(filters)
     res.json(result)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/admin/invoices/:id
+ * Get invoice details
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/invoices/:id', async (req, res) => {
+  try {
+    const invoiceId = parseInt(req.params.id)
+    
+    if (isNaN(invoiceId) || invoiceId <= 0) {
+      return res.status(400).json({ message: 'Invalid invoice ID' })
+    }
+    
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' })
+    }
+    
+    res.json(invoice)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * PUT /api/admin/invoices/:id
+ * Update invoice (payment status, email sent status)
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.put('/invoices/:id', async (req, res) => {
+  try {
+    const invoiceId = parseInt(req.params.id)
+    const { payment_status, email_sent } = req.body
+    
+    if (isNaN(invoiceId) || invoiceId <= 0) {
+      return res.status(400).json({ message: 'Invalid invoice ID' })
+    }
+    
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' })
+    }
+    
+    const updateData = {}
+    if (payment_status !== undefined) updateData.payment_status = payment_status
+    if (email_sent !== undefined) updateData.email_sent = email_sent === true || email_sent === 'true'
+    
+    const updated = await invoiceModel.updateInvoice(invoiceId, updateData)
+    if (!updated) {
+      return res.status(400).json({ message: 'Failed to update invoice' })
+    }
+    
+    res.json(updated)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * DELETE /api/admin/invoices/:id
+ * Delete invoice (with validation)
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.delete('/invoices/:id', async (req, res) => {
+  try {
+    const invoiceId = parseInt(req.params.id)
+    
+    if (isNaN(invoiceId) || invoiceId <= 0) {
+      return res.status(400).json({ message: 'Invalid invoice ID' })
+    }
+    
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' })
+    }
+    
+    // Note: Invoices are linked to orders with RESTRICT, so deletion should be careful
+    // In a real scenario, you might want to archive instead of delete
+    const deleted = await invoiceModel.deleteInvoice(invoiceId)
+    if (!deleted) {
+      return res.status(400).json({ message: 'Failed to delete invoice' })
+    }
+    
+    res.json({ message: 'Invoice deleted successfully' })
+  } catch (error) {
+    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+      return res.status(400).json({ message: 'Cannot delete invoice. It is referenced by an order.' })
+    }
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * POST /api/admin/invoices/:id/resend-email
+ * Resend invoice email
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.post('/invoices/:id/resend-email', async (req, res) => {
+  try {
+    const invoiceId = parseInt(req.params.id)
+    
+    if (isNaN(invoiceId) || invoiceId <= 0) {
+      return res.status(400).json({ message: 'Invalid invoice ID' })
+    }
+    
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' })
+    }
+    
+    // Send invoice email
+    const { sendInvoiceEmail } = await import('../utils/emailService.js')
+    const emailResult = await sendInvoiceEmail(
+      invoice.user_email,
+      invoice.user_name || 'Customer',
+      invoice
+    )
+    
+    if (emailResult.success) {
+      await invoiceModel.markInvoiceEmailSent(invoiceId)
+      res.json({ message: 'Invoice email sent successfully', invoice: await invoiceModel.getInvoiceById(invoiceId, null) })
+    } else {
+      res.status(500).json({ message: emailResult.message || 'Failed to send invoice email' })
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * POST /api/admin/invoices/bulk-delete
+ * Bulk delete invoices
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.post('/invoices/bulk-delete', async (req, res) => {
+  try {
+    const { invoiceIds } = req.body
+    
+    if (!Array.isArray(invoiceIds) || invoiceIds.length === 0) {
+      return res.status(400).json({ message: 'Invoice IDs array is required' })
+    }
+    
+    const deleted = []
+    const errors = []
+    
+    for (const invoiceId of invoiceIds) {
+      try {
+        const id = parseInt(invoiceId)
+        if (isNaN(id) || id <= 0) {
+          errors.push({ id: invoiceId, error: 'Invalid invoice ID' })
+          continue
+        }
+        
+        const result = await invoiceModel.deleteInvoice(id)
+        if (result) {
+          deleted.push(id)
+        } else {
+          errors.push({ id, error: 'Invoice not found' })
+        }
+      } catch (error) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+          errors.push({ id: invoiceId, error: 'Referenced by order' })
+        } else {
+          errors.push({ id: invoiceId, error: error.message })
+        }
+      }
+    }
+    
+    res.json({
+      message: `${deleted.length} invoice(s) deleted successfully`,
+      deleted,
+      errors
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/admin/order-items
+ * Get all order items with pagination and filters
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/order-items', async (req, res) => {
+  try {
+    const db = (await import('../config/db.js')).default
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 20
+    const offset = (page - 1) * limit
+    const orderId = req.query.orderId ? parseInt(req.query.orderId) : null
+    const productId = req.query.productId ? parseInt(req.query.productId) : null
+    
+    let query = `
+      SELECT oi.*, 
+             o.order_number,
+             o.user_id,
+             u.name as user_name,
+             u.email as user_email,
+             p.name as product_name
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      JOIN users u ON o.user_id = u.id
+      JOIN products p ON oi.product_id = p.id
+    `
+    const params = []
+    
+    const conditions = []
+    if (orderId && !isNaN(orderId)) {
+      conditions.push('oi.order_id = ?')
+      params.push(orderId)
+    }
+    if (productId && !isNaN(productId)) {
+      conditions.push('oi.product_id = ?')
+      params.push(productId)
+    }
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ')
+    }
+    
+    query += ' ORDER BY oi.created_at DESC'
+    
+    // Get total count
+    const countQuery = query.replace(
+      'SELECT oi.*, o.order_number, o.user_id, u.name as user_name, u.email as user_email, p.name as product_name',
+      'SELECT COUNT(*) as total'
+    )
+    const [countResult] = await db.execute(countQuery, params)
+    const total = countResult[0].total
+    
+    // Get paginated results
+    query += ` LIMIT ${limit} OFFSET ${offset}`
+    
+    const [rows] = await db.execute(query, params)
+    
+    res.json({
+      orderItems: rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/admin/order-items/:id
+ * Get order item details
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/order-items/:id', async (req, res) => {
+  try {
+    const db = (await import('../config/db.js')).default
+    const itemId = parseInt(req.params.id)
+    
+    if (isNaN(itemId) || itemId <= 0) {
+      return res.status(400).json({ message: 'Invalid order item ID' })
+    }
+    
+    const [rows] = await db.execute(
+      `SELECT oi.*, 
+              o.order_number,
+              o.user_id,
+              u.name as user_name,
+              u.email as user_email,
+              p.name as product_name,
+              p.price as current_price
+       FROM order_items oi
+       JOIN orders o ON oi.order_id = o.id
+       JOIN users u ON o.user_id = u.id
+       JOIN products p ON oi.product_id = p.id
+       WHERE oi.id = ?`,
+      [itemId]
+    )
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Order item not found' })
+    }
+    
+    res.json(rows[0])
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
@@ -1088,6 +1391,68 @@ router.post('/users/bulk-update', async (req, res) => {
 // ============================================
 // REVIEWS CRUD OPERATIONS
 // ============================================
+
+/**
+ * GET /api/admin/reviews
+ * Get all reviews with pagination, search, and filters
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/reviews', async (req, res) => {
+  try {
+    const filters = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 20,
+      search: req.query.search || '',
+      productId: req.query.productId ? parseInt(req.query.productId) : null,
+      userId: req.query.userId ? parseInt(req.query.userId) : null,
+      rating: req.query.rating ? parseInt(req.query.rating) : null
+    }
+    const result = await reviewModel.getAllReviews(filters)
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * PUT /api/admin/reviews/:id
+ * Update review (rating, comment)
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.put('/reviews/:id', async (req, res) => {
+  try {
+    const reviewId = parseInt(req.params.id)
+    const { rating, comment } = req.body
+    
+    if (isNaN(reviewId) || reviewId <= 0) {
+      return res.status(400).json({ message: 'Invalid review ID' })
+    }
+    
+    const review = await reviewModel.getReviewById(reviewId)
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' })
+    }
+    
+    if (rating !== undefined && (rating < 1 || rating > 5)) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' })
+    }
+    
+    const updateData = {}
+    if (rating !== undefined) updateData.rating = rating
+    if (comment !== undefined) updateData.comment = comment
+    
+    const updated = await reviewModel.updateReview(reviewId, updateData)
+    if (!updated) {
+      return res.status(400).json({ message: 'Failed to update review' })
+    }
+    
+    res.json(updated)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
 /**
  * PUT /api/admin/reviews/:id/approve

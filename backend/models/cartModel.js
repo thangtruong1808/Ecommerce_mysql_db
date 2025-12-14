@@ -182,3 +182,129 @@ export const clearCart = async (userId, sessionId = null, cartId = null) => {
   return result.affectedRows >= 0
 }
 
+/**
+ * Get all carts with pagination and filters (admin only)
+ * @param {Object} filters - Filter options (page, limit, userId)
+ * @returns {Promise<Object>} - Carts with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllCarts = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  const userId = filters.userId ? parseInt(filters.userId) : null
+  
+  let query = `
+    SELECT c.*, 
+           u.name as user_name,
+           u.email as user_email,
+           COUNT(ci.id) as item_count,
+           COALESCE(SUM(ci.quantity * p.price), 0) as total_value
+    FROM carts c
+    LEFT JOIN users u ON c.user_id = u.id
+    LEFT JOIN cart_items ci ON c.id = ci.cart_id
+    LEFT JOIN products p ON ci.product_id = p.id
+  `
+  const params = []
+  
+  if (userId && !isNaN(userId)) {
+    query += ' WHERE c.user_id = ?'
+    params.push(userId)
+  } else {
+    query += ' WHERE 1=1'
+  }
+  
+  query += ' GROUP BY c.id'
+  
+  // Get total count
+  const countQuery = query.replace(
+    'SELECT c.*, u.name as user_name, u.email as user_email, COUNT(ci.id) as item_count, COALESCE(SUM(ci.quantity * p.price), 0) as total_value',
+    'SELECT COUNT(DISTINCT c.id) as total'
+  )
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  query += ' ORDER BY c.created_at DESC'
+  query += ` LIMIT ${limit} OFFSET ${offset}`
+  
+  const [rows] = await db.execute(query, params)
+  
+  return {
+    carts: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  }
+}
+
+/**
+ * Get cart by ID with items (admin only)
+ * @param {number} cartId - Cart ID
+ * @returns {Promise<Object|null>} - Cart with items or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getCartById = async (cartId) => {
+  const id = parseInt(cartId)
+  if (isNaN(id) || id <= 0) {
+    return null
+  }
+  
+  const [cartRows] = await db.execute(
+    `SELECT c.*, u.name as user_name, u.email as user_email
+     FROM carts c
+     LEFT JOIN users u ON c.user_id = u.id
+     WHERE c.id = ?`,
+    [id]
+  )
+  
+  if (cartRows.length === 0) {
+    return null
+  }
+  
+  const cart = cartRows[0]
+  
+  const [itemRows] = await db.execute(
+    `SELECT ci.*, 
+            p.name as product_name,
+            p.price,
+            pi.image_url as product_image
+     FROM cart_items ci
+     JOIN products p ON ci.product_id = p.id
+     LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+     WHERE ci.cart_id = ?
+     ORDER BY ci.created_at DESC`,
+    [id]
+  )
+  
+  return {
+    ...cart,
+    items: itemRows
+  }
+}
+
+/**
+ * Delete cart (admin only)
+ * @param {number} cartId - Cart ID
+ * @returns {Promise<boolean>} - True if deleted, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const deleteCart = async (cartId) => {
+  const id = parseInt(cartId)
+  if (isNaN(id) || id <= 0) {
+    return false
+  }
+  
+  // Cart items will be deleted via CASCADE
+  const [result] = await db.execute(
+    'DELETE FROM carts WHERE id = ?',
+    [id]
+  )
+  return result.affectedRows > 0
+}
+

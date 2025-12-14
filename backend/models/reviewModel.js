@@ -237,3 +237,81 @@ export const rejectReview = async (reviewId) => {
   return review !== null
 }
 
+/**
+ * Get all reviews with pagination and filters (admin only)
+ * @param {Object} filters - Filter options (page, limit, search, productId, userId, rating)
+ * @returns {Promise<Object>} - Reviews with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllReviews = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  const search = filters.search || ''
+  const productId = filters.productId ? parseInt(filters.productId) : null
+  const userId = filters.userId ? parseInt(filters.userId) : null
+  const rating = filters.rating ? parseInt(filters.rating) : null
+  
+  let query = `
+    SELECT r.*, 
+           u.name as user_name,
+           u.email as user_email,
+           p.name as product_name
+    FROM reviews r
+    JOIN users u ON r.user_id = u.id
+    JOIN products p ON r.product_id = p.id
+  `
+  const params = []
+  
+  const conditions = []
+  if (productId && !isNaN(productId)) {
+    conditions.push('r.product_id = ?')
+    params.push(productId)
+  }
+  if (userId && !isNaN(userId)) {
+    conditions.push('r.user_id = ?')
+    params.push(userId)
+  }
+  if (rating && !isNaN(rating) && rating >= 1 && rating <= 5) {
+    conditions.push('r.rating = ?')
+    params.push(rating)
+  }
+  if (search) {
+    conditions.push('(u.name LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR r.comment LIKE ?)')
+    const searchPattern = `%${search}%`
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+  }
+  
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
+  }
+  
+  query += ' ORDER BY r.created_at DESC'
+  
+  // Get total count
+  const countQuery = query.replace(
+    'SELECT r.*, u.name as user_name, u.email as user_email, p.name as product_name',
+    'SELECT COUNT(*) as total'
+  )
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  // Get paginated results
+  const limitInt = Math.floor(Number(limit))
+  const offsetInt = Math.floor(Number(offset))
+  query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
+  
+  const [rows] = await db.execute(query, params)
+  
+  return {
+    reviews: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  }
+}
+

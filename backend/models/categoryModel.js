@@ -20,6 +20,51 @@ export const getAllCategories = async () => {
 }
 
 /**
+ * Get all categories with pagination and filters
+ * @param {Object} filters - Filter options (page, limit, search)
+ * @returns {Promise<Object>} - Categories with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllCategoriesPaginated = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  const search = filters.search || ''
+  
+  let query = 'SELECT * FROM categories'
+  const params = []
+  
+  if (search) {
+    query += ' WHERE name LIKE ? OR description LIKE ?'
+    const searchPattern = `%${search}%`
+    params.push(searchPattern, searchPattern)
+  }
+  
+  query += ' ORDER BY name ASC'
+  
+  // Get total count
+  const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total')
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  // Get paginated results
+  query += ` LIMIT ${limit} OFFSET ${offset}`
+  
+  const [rows] = await db.execute(query, params)
+  
+  return {
+    categories: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  }
+}
+
+/**
  * Get categories with their subcategories and child categories (3-level hierarchy)
  * @returns {Promise<Array>} - Array of categories with nested subcategories and child categories
  */

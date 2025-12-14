@@ -170,13 +170,13 @@ export const updateInvoicePdfPath = async (invoiceId, pdfPath) => {
  */
 /**
  * Get all invoices (admin only)
- * @param {Object} filters - Filter options
+ * @param {Object} filters - Filter options (page, limit, search, paymentStatus)
  * @returns {Promise<Object>} - Invoices and pagination info
  * @author Thang Truong
  * @date 2025-12-12
  */
 export const getAllInvoices = async (filters = {}) => {
-  const { page = 1, limit = 20 } = filters
+  const { page = 1, limit = 20, search = '', paymentStatus = null } = filters
   const offset = (page - 1) * limit
 
   // Validate and convert to integers to avoid MySQL prepared statement issues
@@ -186,8 +186,100 @@ export const getAllInvoices = async (filters = {}) => {
     throw new Error('Invalid pagination parameters')
   }
 
-  const [rows] = await db.execute(`SELECT i.*, u.name as user_name, u.email as user_email, o.id as order_id, o.order_number FROM invoices i JOIN users u ON i.user_id = u.id JOIN orders o ON i.order_id = o.id ORDER BY i.created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`)
-  const [countResult] = await db.execute('SELECT COUNT(*) as total FROM invoices')
-  return { invoices: rows, pagination: { page, limit, total: countResult[0].total, pages: Math.ceil(countResult[0].total / limit) } }
+  let query = `
+    SELECT i.*, 
+           u.name as user_name, 
+           u.email as user_email, 
+           o.id as order_id, 
+           o.order_number
+    FROM invoices i
+    JOIN users u ON i.user_id = u.id
+    JOIN orders o ON i.order_id = o.id
+  `
+  const params = []
+  
+  const conditions = []
+  if (paymentStatus) {
+    conditions.push('i.payment_status = ?')
+    params.push(paymentStatus)
+  }
+  if (search) {
+    conditions.push('(i.invoice_number LIKE ? OR o.order_number LIKE ? OR u.name LIKE ? OR u.email LIKE ?)')
+    const searchPattern = `%${search}%`
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+  }
+  
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
+  }
+  
+  query += ' ORDER BY i.created_at DESC'
+  
+  // Get total count
+  const countQuery = query.replace(
+    'SELECT i.*, u.name as user_name, u.email as user_email, o.id as order_id, o.order_number',
+    'SELECT COUNT(*) as total'
+  )
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  // Get paginated results
+  query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
+  
+  const [rows] = await db.execute(query, params)
+  return { invoices: rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } }
+}
+
+/**
+ * Update invoice
+ * @param {number} invoiceId - Invoice ID
+ * @param {Object} updateData - Data to update
+ * @returns {Promise<Object|null>} - Updated invoice or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const updateInvoice = async (invoiceId, updateData) => {
+  const fields = []
+  const values = []
+  
+  if (updateData.payment_status !== undefined) {
+    fields.push('payment_status = ?')
+    values.push(updateData.payment_status)
+  }
+  if (updateData.email_sent !== undefined) {
+    fields.push('email_sent = ?')
+    values.push(updateData.email_sent)
+    if (updateData.email_sent) {
+      fields.push('email_sent_at = NOW()')
+    } else {
+      fields.push('email_sent_at = NULL')
+    }
+  }
+  
+  if (fields.length === 0) return null
+  
+  values.push(invoiceId)
+  const [result] = await db.execute(
+    `UPDATE invoices SET ${fields.join(', ')} WHERE id = ?`,
+    values
+  )
+  
+  if (result.affectedRows === 0) return null
+  return getInvoiceById(invoiceId, null)
+}
+
+/**
+ * Delete invoice
+ * @param {number} invoiceId - Invoice ID
+ * @returns {Promise<boolean>} - True if deleted, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const deleteInvoice = async (invoiceId) => {
+  const [result] = await db.execute(
+    'DELETE FROM invoices WHERE id = ?',
+    [invoiceId]
+  )
+  return result.affectedRows > 0
 }
 

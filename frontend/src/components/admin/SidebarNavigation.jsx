@@ -21,7 +21,14 @@ import {
   FaBars,
   FaTimes,
   FaImages,
-  FaVideo
+  FaVideo,
+  FaFolder,
+  FaFolderOpen,
+  FaFolderTree,
+  FaShoppingBag,
+  FaList,
+  FaStar,
+  FaFileInvoice
 } from 'react-icons/fa'
 
 /**
@@ -68,8 +75,15 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
   const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: FaTachometerAlt },
     { path: '/admin/products', label: 'Products', icon: FaBox },
+    { path: '/admin/categories', label: 'Categories', icon: FaFolder },
+    { path: '/admin/subcategories', label: 'Subcategories', icon: FaFolderOpen },
+    { path: '/admin/child-categories', label: 'Child Categories', icon: FaFolderTree },
     { path: '/admin/orders', label: 'Orders', icon: FaShoppingCart },
+    { path: '/admin/order-items', label: 'Order Items', icon: FaList },
+    { path: '/admin/carts', label: 'Carts', icon: FaShoppingBag },
     { path: '/admin/users', label: 'Users', icon: FaUsers },
+    { path: '/admin/reviews', label: 'Reviews', icon: FaStar },
+    { path: '/admin/invoices', label: 'Invoices', icon: FaFileInvoice },
     { path: '/admin/vouchers', label: 'Vouchers', icon: FaTag },
     { path: '/admin/comments', label: 'Comments', icon: FaComment },
     { path: '/admin/images', label: 'Images', icon: FaImages },

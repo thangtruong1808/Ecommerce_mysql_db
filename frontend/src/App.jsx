@@ -34,6 +34,13 @@ import CommentModeration from './pages/admin/CommentModeration'
 import MediaManagement from './pages/admin/MediaManagement'
 import ImageManagement from './pages/admin/ImageManagement'
 import VideoManagement from './pages/admin/VideoManagement'
+import CategoryManagement from './pages/admin/CategoryManagement'
+import SubcategoryManagement from './pages/admin/SubcategoryManagement'
+import ChildCategoryManagement from './pages/admin/ChildCategoryManagement'
+import CartManagement from './pages/admin/CartManagement'
+import OrderItemManagement from './pages/admin/OrderItemManagement'
+import ReviewManagement from './pages/admin/ReviewManagement'
+import InvoiceManagement from './pages/admin/InvoiceManagement'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
 import NotFound from './pages/NotFound'
@@ -187,6 +194,62 @@ const AppContent = () => {
               element={
                 <ProtectedRoute adminOnly>
                   <VideoManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <ProtectedRoute adminOnly>
+                  <CategoryManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/subcategories"
+              element={
+                <ProtectedRoute adminOnly>
+                  <SubcategoryManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/child-categories"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ChildCategoryManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/carts"
+              element={
+                <ProtectedRoute adminOnly>
+                  <CartManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/order-items"
+              element={
+                <ProtectedRoute adminOnly>
+                  <OrderItemManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/reviews"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ReviewManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/invoices"
+              element={
+                <ProtectedRoute adminOnly>
+                  <InvoiceManagement />
                 </ProtectedRoute>
               }
             />

@@ -23,6 +23,65 @@ export const getAllSubcategories = async () => {
 }
 
 /**
+ * Get all subcategories with pagination and filters
+ * @param {Object} filters - Filter options (page, limit, search, categoryId)
+ * @returns {Promise<Object>} - Subcategories with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllSubcategoriesPaginated = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  const search = filters.search || ''
+  const categoryId = filters.categoryId ? parseInt(filters.categoryId) : null
+  
+  let query = `
+    SELECT s.*, c.name as category_name 
+    FROM subcategories s
+    JOIN categories c ON s.category_id = c.id
+  `
+  const params = []
+  
+  const conditions = []
+  if (categoryId && !isNaN(categoryId)) {
+    conditions.push('s.category_id = ?')
+    params.push(categoryId)
+  }
+  if (search) {
+    conditions.push('(s.name LIKE ? OR s.description LIKE ? OR c.name LIKE ?)')
+    const searchPattern = `%${search}%`
+    params.push(searchPattern, searchPattern, searchPattern)
+  }
+  
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
+  }
+  
+  query += ' ORDER BY c.name, s.name ASC'
+  
+  // Get total count
+  const countQuery = query.replace('SELECT s.*, c.name as category_name', 'SELECT COUNT(*) as total')
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  // Get paginated results
+  query += ` LIMIT ${limit} OFFSET ${offset}`
+  
+  const [rows] = await db.execute(query, params)
+  
+  return {
+    subcategories: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  }
+}
+
+/**
  * Get subcategories by category ID
  * @param {number} categoryId - Category ID
  * @returns {Promise<Array>} - Array of subcategory objects
