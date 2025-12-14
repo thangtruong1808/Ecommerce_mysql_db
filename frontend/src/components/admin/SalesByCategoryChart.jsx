@@ -77,7 +77,7 @@ const SalesByCategoryChart = ({ data = [] }) => {
               label={({ name, percent }) =>
                 percent > 0.05 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''
               }
-              outerRadius={82}
+              outerRadius={80}
               fill="#8884d8"
               dataKey="value"
               paddingAngle={1}

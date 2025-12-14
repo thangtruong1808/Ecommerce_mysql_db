@@ -13,6 +13,7 @@ import ProductCard from '../components/ProductCard'
 import SkeletonLoader from '../components/SkeletonLoader'
 import RecentlyViewed from '../components/RecentlyViewed'
 import Recommendations from '../components/Recommendations'
+import CategoryCarousel from '../components/CategoryCarousel'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { loadCategories } from '../utils/categoryCache'
@@ -47,7 +48,7 @@ const Home = () => {
         ])
         setFeaturedProducts(productsRes.data.products || [])
         setClearanceProducts(clearanceRes.data.products || [])
-        setCategories((categoriesData || []).slice(0, 6))
+        setCategories(categoriesData || [])
       } catch (error) {
         // Silent fail for home page
       } finally {
@@ -128,14 +129,11 @@ const Home = () => {
                 View All <FaArrowRight className="ml-2" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {categories.map((category) => (
-                <Link key={category.id} to={`/products?category=${category.id}`} className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition group">
-                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">📦</div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">{category.name}</h3>
-                </Link>
-              ))}
-            </div>
+            {loading ? (
+              <SkeletonLoader type="card" count={1} />
+            ) : (
+              <CategoryCarousel categories={categories} />
+            )}
           </section>
         )}
 

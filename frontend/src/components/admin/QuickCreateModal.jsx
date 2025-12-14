@@ -13,13 +13,18 @@ import Button from '../Button'
 /**
  * QuickCreateModal component
  * @param {Object} props - Component props
- * @param {string} props.type - Entity type (product, user, voucher)
+ * @param {string} props.type - Entity type (product, user, voucher) - optional if fields provided
  * @param {boolean} props.isOpen - Modal open state
  * @param {Function} props.onClose - Close callback
- * @param {Function} props.onSuccess - Success callback
+ * @param {Function} props.onSuccess - Success callback (alternative to onSubmit)
+ * @param {Function} props.onSubmit - Submit callback (alternative to onSuccess)
+ * @param {string} props.title - Custom modal title (optional)
+ * @param {Array} props.fields - Custom form fields (optional)
  * @returns {JSX.Element} Quick create modal component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
-const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess }) => {
+const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess, onSubmit, title, fields: customFields }) => {
   const [formData, setFormData] = useState({})
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -37,12 +42,18 @@ const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess }) => {
   }, [isOpen])
 
   /**
-   * Get form fields based on type
+   * Get form fields based on type or custom fields
    * @returns {Array} Form fields configuration
    * @author Thang Truong
    * @date 2025-12-12
    */
   const getFormFields = () => {
+    // If custom fields provided, use them
+    if (customFields && customFields.length > 0) {
+      return customFields
+    }
+    
+    // Otherwise use predefined fields based on type
     const fields = {
       product: [
         { name: 'name', label: 'Product Name', type: 'text', required: true },
@@ -66,6 +77,22 @@ const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess }) => {
       ]
     }
     return fields[type] || []
+  }
+
+  /**
+   * Get modal title
+   * @returns {string} Modal title
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const getModalTitle = () => {
+    if (title) {
+      return title
+    }
+    if (type) {
+      return `Create New ${type.charAt(0).toUpperCase() + type.slice(1)}`
+    }
+    return 'Create New'
   }
 
   /**
@@ -94,8 +121,10 @@ const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess }) => {
     setErrors({})
 
     try {
-      if (onSuccess) {
-        await onSuccess(formData)
+      // Support both onSuccess and onSubmit props
+      const callback = onSubmit || onSuccess
+      if (callback) {
+        await callback(formData)
       }
       onClose()
     } catch (error) {
@@ -116,7 +145,7 @@ const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess }) => {
         {/* Modal header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h3 className="text-lg font-semibold text-gray-900">
-            Create New {type.charAt(0).toUpperCase() + type.slice(1)}
+            {getModalTitle()}
           </h3>
           <button
             type="button"
