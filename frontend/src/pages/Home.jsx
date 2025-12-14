@@ -11,6 +11,8 @@ import axios from 'axios'
 import { FaShippingFast, FaShieldAlt, FaUndo, FaArrowRight, FaTag } from 'react-icons/fa'
 import ProductCard from '../components/ProductCard'
 import SkeletonLoader from '../components/SkeletonLoader'
+import RecentlyViewed from '../components/RecentlyViewed'
+import Recommendations from '../components/Recommendations'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { loadCategories } from '../utils/categoryCache'
@@ -72,18 +74,46 @@ const Home = () => {
   /* Home page layout */
   return (
     <div className="min-h-screen">
-      {/* Hero banner section */}
+      {/* Hero banner section with features */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 mb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
-          <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices. Quality you can trust, delivered to your door.</p>
-          <div className="flex gap-4 justify-center">
-            <Link to="/products" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
-              Shop Now
-            </Link>
-            <Link to="/clearance" className="bg-red-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-600 transition">
-              View Clearance
-            </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Hero content */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
+            <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices. Quality you can trust, delivered to your door.</p>
+            <div className="flex gap-4 justify-center">
+              <Link to="/products" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                Shop Now
+              </Link>
+              <Link to="/clearance" className="bg-red-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-600 transition">
+                View Clearance
+              </Link>
+            </div>
+          </div>
+
+          {/* Features section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 pt-12 border-t border-blue-400/30">
+            <div className="text-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <FaShippingFast className="text-white text-2xl" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
+              <p className="text-blue-100">Free shipping on orders over $100</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <FaShieldAlt className="text-white text-2xl" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Secure Payment</h3>
+              <p className="text-blue-100">Safe and secure checkout process</p>
+            </div>
+            <div className="text-center">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <FaUndo className="text-white text-2xl" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Easy Returns</h3>
+              <p className="text-blue-100">Hassle-free return policy</p>
+            </div>
           </div>
         </div>
       </div>
@@ -152,32 +182,11 @@ const Home = () => {
           )}
         </section>
 
-        {/* Features section */}
-        <section className="bg-gray-50 rounded-lg p-8 mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <FaShippingFast className="text-blue-600 text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
-              <p className="text-gray-600">Free shipping on orders over $100</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <FaShieldAlt className="text-green-600 text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Secure Payment</h3>
-              <p className="text-gray-600">Safe and secure checkout process</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <FaUndo className="text-purple-600 text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Easy Returns</h3>
-              <p className="text-gray-600">Hassle-free return policy</p>
-            </div>
-          </div>
-        </section>
+        {/* Recently viewed section */}
+        <RecentlyViewed limit={15} onAddToCart={handleAddToCart} />
+
+        {/* Recommendations section */}
+        <Recommendations limit={15} onAddToCart={handleAddToCart} />
       </div>
     </div>
   )

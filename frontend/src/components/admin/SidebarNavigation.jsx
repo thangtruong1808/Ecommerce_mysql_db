@@ -28,7 +28,8 @@ import {
   FaShoppingBag,
   FaList,
   FaStar,
-  FaFileInvoice
+  FaFileInvoice,
+  FaEye
 } from 'react-icons/fa'
 
 /**
@@ -82,6 +83,7 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
     { path: '/admin/carts', label: 'Carts', icon: FaShoppingBag },
     { path: '/admin/users', label: 'Users', icon: FaUsers },
     { path: '/admin/reviews', label: 'Reviews', icon: FaStar },
+    { path: '/admin/product-views', label: 'Product Views', icon: FaEye },
     { path: '/admin/invoices', label: 'Invoices', icon: FaFileInvoice },
     { path: '/admin/vouchers', label: 'Vouchers', icon: FaTag },
     { path: '/admin/comments', label: 'Comments', icon: FaComment },

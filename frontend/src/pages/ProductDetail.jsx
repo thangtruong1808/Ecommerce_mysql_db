@@ -21,7 +21,9 @@ import ImageGallery from '../components/ImageGallery'
 import VideoPlayer from '../components/VideoPlayer'
 import SkeletonLoader from '../components/SkeletonLoader'
 import Button from '../components/Button'
-import { FaTag } from 'react-icons/fa'
+import RecentlyViewed from '../components/RecentlyViewed'
+import Recommendations from '../components/Recommendations'
+import { FaTag, FaArrowLeft } from 'react-icons/fa'
 
 /**
  * ProductDetail component
@@ -34,6 +36,25 @@ const ProductDetail = () => {
   const navigate = useNavigate()
   const { addToCart } = useCart()
   const { isAuthenticated } = useAuth()
+  
+  /**
+   * Handle add to cart from product card
+   * @param {Object} product - Product object
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleProductCardAddToCart = async (product) => {
+    try {
+      const result = await addToCart(product.id, 1)
+      if (result.success) {
+        toast.success('Item added to cart!')
+      } else {
+        toast.error(result.error || 'Failed to add item to cart')
+      }
+    } catch (error) {
+      toast.error('Failed to add item to cart')
+    }
+  }
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [addingToCart, setAddingToCart] = useState(false)
@@ -114,6 +135,15 @@ const ProductDetail = () => {
   return (
     /* Product detail page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <FaArrowLeft className="mr-2" />
+        <span>Back</span>
+      </button>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product image section */}
         <div>
@@ -207,6 +237,16 @@ const ProductDetail = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <CommentList productId={product.id} onRefetch={commentListRef} />
         </div>
+      </div>
+
+      {/* Recommendations section */}
+      <div className="mt-12">
+        <Recommendations productId={product.id} limit={15} onAddToCart={handleProductCardAddToCart} />
+      </div>
+
+      {/* Recently viewed section */}
+      <div className="mt-12">
+        <RecentlyViewed limit={15} onAddToCart={handleProductCardAddToCart} />
       </div>
     </div>
   )

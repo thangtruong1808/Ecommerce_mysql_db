@@ -11,7 +11,9 @@ import * as productMediaModel from '../models/productMediaModel.js'
 import * as categoryModel from '../models/categoryModel.js'
 import * as subcategoryModel from '../models/subcategoryModel.js'
 import * as childCategoryModel from '../models/childCategoryModel.js'
-import { protect, admin } from '../middleware/authMiddleware.js'
+import { protect, admin, optionalAuth } from '../middleware/authMiddleware.js'
+import * as productViewModel from '../models/productViewModel.js'
+import { getSessionId } from '../middleware/sessionMiddleware.js'
 import { uploadImage, uploadVideo, resizeImage } from '../middleware/uploadMiddleware.js'
 import { uploadImageWithResize, uploadVideo as uploadVideoToS3 } from '../utils/s3Service.js'
 import path from 'path'
@@ -151,10 +153,11 @@ router.get('/child-category/:id', async (req, res) => {
 /**
  * GET /api/products/:id
  * Get single product by ID with images and videos
+ * Also records product view for tracking
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', getSessionId, optionalAuth, async (req, res) => {
   try {
     const productId = parseInt(req.params.id)
     if (isNaN(productId) || productId <= 0) {
@@ -164,6 +167,14 @@ router.get('/:id', async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found' })
     }
+    
+    // Record product view (non-blocking - don't wait for it)
+    const userId = req.user?.id || null
+    const sessionId = req.user ? null : req.guestSessionId
+    productViewModel.recordProductView(productId, userId, sessionId).catch(() => {
+      // Silently fail - don't break product retrieval
+    })
+    
     res.json(product)
   } catch (error) {
     res.status(500).json({ message: error.message })

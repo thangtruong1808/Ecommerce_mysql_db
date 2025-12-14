@@ -16,6 +16,7 @@ import * as reviewModel from '../models/reviewModel.js'
 import * as commentModel from '../models/commentModel.js'
 import * as voucherModel from '../models/voucherModel.js'
 import * as bulkOperationsModel from '../models/bulkOperationsModel.js'
+import * as productViewModel from '../models/productViewModel.js'
 import { validateBulkOperation, validateOrderStatusTransition, validateProductDeletion, validateUserDeletion } from '../middleware/validationMiddleware.js'
 import bcrypt from 'bcryptjs'
 import { protect, admin } from '../middleware/authMiddleware.js'
@@ -1821,6 +1822,219 @@ router.post('/vouchers/bulk-update', validateBulkOperation, async (req, res) => 
     res.json({ message: `${voucherIds.length} vouchers updated successfully` })
   } catch (error) {
     res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * GET /api/admin/product-views
+ * Get all product views with filters, search, pagination
+ * Query params: page, limit, search, userId, productId, userType, sortBy, sortOrder, startDate, endDate
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/product-views', async (req, res) => {
+  try {
+    const filters = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 20,
+      search: req.query.search || null,
+      userId: req.query.userId ? parseInt(req.query.userId) : null,
+      productId: req.query.productId ? parseInt(req.query.productId) : null,
+      userType: req.query.userType || null,
+      sortBy: req.query.sortBy || 'viewed_at',
+      sortOrder: req.query.sortOrder || 'DESC',
+      startDate: req.query.startDate || null,
+      endDate: req.query.endDate || null
+    }
+
+    const result = await productViewModel.getAllProductViews(filters)
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to fetch product views',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * GET /api/admin/product-views/:id
+ * Get single product view by ID
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/product-views/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid view ID' })
+    }
+
+    const view = await productViewModel.getProductViewById(id)
+    if (!view) {
+      return res.status(404).json({ message: 'Product view not found' })
+    }
+
+    res.json(view)
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to fetch product view',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * DELETE /api/admin/product-views/:id
+ * Delete single product view
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.delete('/product-views/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id)
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid view ID' })
+    }
+
+    const deleted = await productViewModel.deleteProductView(id)
+    if (!deleted) {
+      return res.status(404).json({ message: 'Product view not found' })
+    }
+
+    res.json({ message: 'Product view deleted successfully' })
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to delete product view',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * DELETE /api/admin/product-views
+ * Bulk delete product views
+ * Body: { ids: [1, 2, 3] }
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.delete('/product-views', async (req, res) => {
+  try {
+    const { ids } = req.body
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'ids array is required' })
+    }
+
+    const deletedCount = await productViewModel.bulkDeleteProductViews(ids)
+    res.json({ 
+      message: `${deletedCount} product view(s) deleted successfully`,
+      deletedCount
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to delete product views',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * DELETE /api/admin/product-views/user/:userId
+ * Delete all views for a user
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.delete('/product-views/user/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId)
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' })
+    }
+
+    const deletedCount = await productViewModel.deleteViewsByUserId(userId)
+    res.json({ 
+      message: `${deletedCount} product view(s) deleted successfully`,
+      deletedCount
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to delete user views',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * DELETE /api/admin/product-views/session/:sessionId
+ * Delete all views for a guest session
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.delete('/product-views/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params
+
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID is required' })
+    }
+
+    const deletedCount = await productViewModel.deleteViewsBySessionId(sessionId)
+    res.json({ 
+      message: `${deletedCount} product view(s) deleted successfully`,
+      deletedCount
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to delete session views',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * GET /api/admin/product-views/analytics
+ * Get product view analytics
+ * Query params: period (today, week, month, year, all), startDate, endDate
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/product-views/analytics', async (req, res) => {
+  try {
+    const period = req.query.period || 'month'
+    const startDate = req.query.startDate || null
+    const endDate = req.query.endDate || null
+
+    const analytics = await productViewModel.getProductViewAnalytics(period, startDate, endDate)
+    res.json(analytics)
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to fetch analytics',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
+  }
+})
+
+/**
+ * GET /api/admin/product-views/statistics
+ * Get product view statistics
+ * Query params: period (today, week, month, year, all), startDate, endDate
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/product-views/statistics', async (req, res) => {
+  try {
+    const period = req.query.period || 'month'
+    const startDate = req.query.startDate || null
+    const endDate = req.query.endDate || null
+
+    const statistics = await productViewModel.getProductViewStatistics(period, startDate, endDate)
+    res.json(statistics)
+  } catch (error) {
+    res.status(500).json({ 
+      message: error.message || 'Failed to fetch statistics',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
   }
 })
 

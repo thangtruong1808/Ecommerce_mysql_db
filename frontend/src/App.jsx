@@ -39,6 +39,7 @@ import SubcategoryManagement from './pages/admin/SubcategoryManagement'
 import ChildCategoryManagement from './pages/admin/ChildCategoryManagement'
 import CartManagement from './pages/admin/CartManagement'
 import ReviewManagement from './pages/admin/ReviewManagement'
+import ProductViewManagement from './pages/admin/ProductViewManagement'
 import InvoiceManagement from './pages/admin/InvoiceManagement'
 import InvoiceList from './pages/InvoiceList'
 import InvoiceDetail from './pages/InvoiceDetail'
@@ -233,6 +234,14 @@ const AppContent = () => {
               element={
                 <ProtectedRoute adminOnly>
                   <ReviewManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/product-views"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ProductViewManagement />
                 </ProtectedRoute>
               }
             />
