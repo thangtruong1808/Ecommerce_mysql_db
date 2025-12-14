@@ -1,188 +1,325 @@
 /**
  * Comment Moderation Page Component
- * Admin page for moderating product comments
+ * Admin page for managing product comments with full CRUD operations
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaCheck, FaTimes, FaComments } from 'react-icons/fa'
+import { FaComments, FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
-import Button from '../../components/Button'
+import SearchFilterBar from '../../components/admin/SearchFilterBar'
+import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
+import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
+import BulkActionBar from '../../components/admin/BulkActionBar'
+import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
+import { useSelection } from '../../utils/useSelection'
+import { formatDate } from '../../utils/dateUtils'
 
 /**
  * CommentModeration component
  * @returns {JSX.Element} Comment moderation page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const CommentModeration = () => {
-  const [pendingComments, setPendingComments] = useState([])
-  const [allComments, setAllComments] = useState([])
+  const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showPending, setShowPending] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isApprovedFilter, setIsApprovedFilter] = useState('')
+  const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, comment: null })
+  const [actionLoading, setActionLoading] = useState({})
+
+  const { selected: selectedComments, toggle, selectAll, clear, selectedCount } = useSelection(comments)
 
   /**
-   * Fetch pending comments
+   * Fetch comments
+   * @author Thang Truong
+   * @date 2025-12-12
    */
-  const fetchPendingComments = async () => {
+  const fetchComments = async () => {
     try {
-      const response = await axios.get('/api/comments/pending', {
-        withCredentials: true
+      setLoading(true)
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
       })
-      setPendingComments(response.data || [])
+      if (searchTerm) params.append('search', searchTerm)
+      if (isApprovedFilter !== '') params.append('isApproved', isApprovedFilter)
+      
+      const response = await axios.get(`/api/admin/comments?${params}`)
+      setComments(response.data.comments || [])
+      setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load pending comments')
-    }
-  }
-
-  /**
-   * Fetch all comments (for admin view)
-   */
-  const fetchAllComments = async () => {
-    try {
-      // This would need a new endpoint to get all comments
-      // For now, we'll use the pending comments endpoint
-      await fetchPendingComments()
-    } catch (error) {
-      // Error handled in fetchPendingComments
+      toast.error(error.response?.data?.message || 'Failed to load comments')
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      if (showPending) {
-        await fetchPendingComments()
-      } else {
-        await fetchAllComments()
-      }
-      setLoading(false)
-    }
-    fetchData()
-  }, [showPending])
+    fetchComments()
+  }, [page, entriesPerPage, searchTerm, isApprovedFilter, sortBy, sortOrder])
+
+  /**
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
+  }
 
   /**
    * Handle approve comment
    * @param {number} commentId - Comment ID
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleApprove = async (commentId) => {
     try {
+      setActionLoading({ ...actionLoading, [commentId]: true })
       await axios.post(`/api/comments/${commentId}/approve`, {}, {
         withCredentials: true
       })
       toast.success('Comment approved')
-      fetchPendingComments()
+      fetchComments()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to approve comment')
+    } finally {
+      setActionLoading({ ...actionLoading, [commentId]: false })
     }
   }
 
   /**
    * Handle reject comment
    * @param {number} commentId - Comment ID
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const handleReject = async (commentId) => {
     try {
+      setActionLoading({ ...actionLoading, [commentId]: true })
       await axios.post(`/api/comments/${commentId}/reject`, {}, {
         withCredentials: true
       })
       toast.success('Comment rejected')
-      fetchPendingComments()
+      fetchComments()
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to reject comment')
+    } finally {
+      setActionLoading({ ...actionLoading, [commentId]: false })
     }
   }
 
   /**
-   * Format date for display
-   * @param {string} dateString - Date string
-   * @returns {string} Formatted date
+   * Handle delete confirm
+   * @author Thang Truong
+   * @date 2025-12-12
    */
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString()
+  const handleDeleteConfirm = async () => {
+    try {
+      setActionLoading({ ...actionLoading, [deleteModal.comment.id]: true })
+      await axios.delete(`/api/admin/comments/${deleteModal.comment.id}`)
+      toast.success('Comment deleted successfully')
+      setDeleteModal({ isOpen: false, comment: null })
+      fetchComments()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete comment')
+    } finally {
+      setActionLoading({ ...actionLoading, [deleteModal.comment?.id]: false })
+    }
   }
 
-  if (loading) {
+  /**
+   * Handle bulk approve
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleBulkApprove = async () => {
+    try {
+      const ids = Array.from(selectedComments)
+      await axios.post('/api/admin/comments/bulk-approve', { commentIds: ids })
+      toast.success(`${ids.length} comment(s) approved successfully`)
+      clear()
+      fetchComments()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve comments')
+    }
+  }
+
+  if (loading && comments.length === 0) {
     return (
       <AdminLayout>
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Loading skeleton */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Comment Moderation</h1>
+        <div className="max-w-full mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Comment Management</h1>
           <SkeletonLoader type="table" />
         </div>
       </AdminLayout>
     )
   }
 
-  const comments = showPending ? pendingComments : allComments
-
+  /* Comment management page */
   return (
     <AdminLayout>
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Page header */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-2">
+      <div className="max-w-full mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
             <FaComments className="text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Comment Moderation</h1>
-          </div>
-          <div className="flex space-x-2">
-            <Button
-              variant={showPending ? 'primary' : 'ghost'}
-              onClick={() => setShowPending(true)}
-            >
-              Pending ({pendingComments.length})
-            </Button>
-            <Button
-              variant={!showPending ? 'primary' : 'ghost'}
-              onClick={() => setShowPending(false)}
-            >
-              All Comments
-            </Button>
+            <h1 className="text-3xl font-bold text-gray-900">Comment Management</h1>
           </div>
         </div>
 
+        {/* Filters and search */}
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(value) => {
+            setSearchTerm(value)
+            setPage(1)
+          }}
+          filterValue={isApprovedFilter}
+          onFilterChange={(value) => {
+            setIsApprovedFilter(value)
+            setPage(1)
+          }}
+          filterOptions={[
+            { value: '', label: 'All Comments' },
+            { value: 'true', label: 'Approved' },
+            { value: 'false', label: 'Pending' }
+          ]}
+          searchPlaceholder="Search comments by user, product, or comment text..."
+        />
+
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Comments table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
-              {/* Table header */}
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left">
+                  <BulkSelectCheckbox
+                    isSelectAll
+                    totalItems={comments.length}
+                    selectedCount={selectedCount}
+                    onSelectAll={selectAll}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Comment"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Product"
+                  field="product_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User"
+                  field="user_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Comment"
+                  field="comment"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Approved"
+                  field="is_approved"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* Comment rows */}
               {comments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                    {showPending ? 'No pending comments' : 'No comments found'}
+                  <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
+                    No comments found
                   </td>
                 </tr>
               ) : (
-                comments.map((comment) => (
-                  <tr key={comment.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                comments.map((comment, index) => (
+                  <tr key={comment.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <BulkSelectCheckbox
+                        itemId={comment.id}
+                        isSelected={selectedComments.has(comment.id)}
+                        onToggle={toggle}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {(page - 1) * entriesPerPage + index + 1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{comment.id}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{comment.product_name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
                       <div>
-                        <p className="font-medium">{comment.user_name}</p>
-                        <p className="text-sm text-gray-500">{comment.user_email}</p>
+                        <div className="font-medium">{comment.user_name}</div>
+                        <div className="text-gray-500 text-xs">{comment.user_email}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm">{comment.product_name}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-700 line-clamp-2">{comment.comment}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(comment.created_at)}
+                    <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                      <p className="line-clamp-2">{comment.comment}</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -195,38 +332,90 @@ const CommentModeration = () => {
                         {comment.is_approved ? 'Approved' : 'Pending'}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(comment.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(comment.updated_at)}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {!comment.is_approved && (
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                      <div className="flex items-center gap-2">
+                        {!comment.is_approved && (
+                          <button
                             onClick={() => handleApprove(comment.id)}
-                            icon={<FaCheck />}
+                            disabled={actionLoading[comment.id]}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                            aria-label="Approve comment"
                           >
+                            <FaCheck className="w-3 h-3" />
                             Approve
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          </button>
+                        )}
+                        {comment.is_approved && (
+                          <button
                             onClick={() => handleReject(comment.id)}
-                            icon={<FaTimes />}
+                            disabled={actionLoading[comment.id]}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
+                            aria-label="Reject comment"
                           >
+                            <FaTimes className="w-3 h-3" />
                             Reject
-                          </Button>
-                        </div>
-                      )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDeleteModal({ isOpen: true, comment })}
+                          disabled={actionLoading[comment.id]}
+                          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                          aria-label="Delete comment"
+                        >
+                          <FaTrash className="w-3 h-3" />
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
+
+        {/* Pagination bottom */}
+        <Pagination
+          position="bottom"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
+        {/* Delete modal */}
+        <ConfirmDeleteModal
+          entity={deleteModal.comment}
+          entityType="comment"
+          isOpen={deleteModal.isOpen}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteModal({ isOpen: false, comment: null })}
+        />
+
+        {/* Bulk action bar */}
+        {selectedCount > 0 && (
+          <BulkActionBar
+            selectedCount={selectedCount}
+            actions={[{ type: 'approve', label: 'Approve Selected' }]}
+            onAction={(actionType) => actionType === 'approve' && handleBulkApprove()}
+            onCancel={clear}
+          />
+        )}
       </div>
     </AdminLayout>
   )
 }
 
 export default CommentModeration
-

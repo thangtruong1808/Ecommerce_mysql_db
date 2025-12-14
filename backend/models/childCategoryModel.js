@@ -26,7 +26,7 @@ export const getAllChildCategories = async () => {
 
 /**
  * Get all child categories with pagination and filters
- * @param {Object} filters - Filter options (page, limit, search, subcategoryId)
+ * @param {Object} filters - Filter options (page, limit, search, subcategoryId, sortBy, sortOrder)
  * @returns {Promise<Object>} - Child categories with pagination info
  * @author Thang Truong
  * @date 2025-12-12
@@ -37,6 +37,13 @@ export const getAllChildCategoriesPaginated = async (filters = {}) => {
   const offset = (page - 1) * limit
   const search = filters.search || ''
   const subcategoryId = filters.subcategoryId ? parseInt(filters.subcategoryId) : null
+  const sortBy = filters.sortBy || 'name'
+  const sortOrder = filters.sortOrder || 'asc'
+  
+  // Allowed sort columns
+  const allowedSortColumns = ['id', 'name', 'description', 'subcategory_id', 'subcategory_name', 'category_name', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'name'
+  const validSortOrder = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC'
   
   let query = `
     SELECT cc.*, s.name as subcategory_name, s.id as subcategory_id,
@@ -62,7 +69,13 @@ export const getAllChildCategoriesPaginated = async (filters = {}) => {
     query += ' WHERE ' + conditions.join(' AND ')
   }
   
-  query += ' ORDER BY c.name, s.name, cc.name ASC'
+  // Handle sorting - map joined table fields
+  let sortColumn = `cc.${validSortBy}`
+  if (validSortBy === 'subcategory_name') sortColumn = 's.name'
+  else if (validSortBy === 'category_name') sortColumn = 'c.name'
+  else if (validSortBy === 'subcategory_id') sortColumn = 'cc.subcategory_id'
+  
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
   
   // Get total count
   const countQuery = query.replace(

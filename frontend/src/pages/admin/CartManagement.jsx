@@ -14,6 +14,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
@@ -32,7 +33,11 @@ const CartManagement = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, cart: null })
   const [viewModal, setViewModal] = useState({ isOpen: false, cart: null })
   const { selected: selectedCarts, toggle, selectAll, clear, selectedCount } = useSelection(carts)
@@ -45,11 +50,17 @@ const CartManagement = () => {
   const fetchCarts = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
       if (searchTerm) params.append('userId', searchTerm)
       const response = await axios.get(`/api/admin/carts?${params}`)
       setCarts(response.data.carts || [])
       setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load carts')
     } finally {
@@ -59,7 +70,20 @@ const CartManagement = () => {
 
   useEffect(() => {
     fetchCarts()
-  }, [page, searchTerm])
+  }, [page, entriesPerPage, searchTerm, sortBy, sortOrder])
+
+  /**
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
+  }
 
   /**
    * Handle view cart details
@@ -138,9 +162,24 @@ const CartManagement = () => {
           searchPlaceholder="Search by user ID..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Carts table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -151,19 +190,65 @@ const CartManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Value</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Cart"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User ID"
+                  field="user_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User"
+                  field="user_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Items"
+                  field="item_count"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Total Value"
+                  field="total_value"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {carts.map((cart) => (
+              {carts.map((cart, index) => (
                 <CartTableRow
                   key={cart.id}
                   cart={cart}
+                  index={(page - 1) * entriesPerPage + index + 1}
                   isSelected={selectedCarts.has(cart.id)}
                   onToggle={toggle}
                   onView={() => handleView(cart.id)}
@@ -171,14 +256,22 @@ const CartManagement = () => {
                 />
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* View modal */}

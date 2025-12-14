@@ -53,7 +53,7 @@ const ChildCategoryEditModal = ({ childCategory, subcategories, isOpen, onClose,
             >
               {subcategories.map(sub => (
                 <option key={sub.id} value={sub.id}>
-                  {sub.category_name} > {sub.name}
+                  {sub.category_name} - {sub.name}
                 </option>
               ))}
             </select>

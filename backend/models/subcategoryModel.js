@@ -24,7 +24,7 @@ export const getAllSubcategories = async () => {
 
 /**
  * Get all subcategories with pagination and filters
- * @param {Object} filters - Filter options (page, limit, search, categoryId)
+ * @param {Object} filters - Filter options (page, limit, search, categoryId, sortBy, sortOrder)
  * @returns {Promise<Object>} - Subcategories with pagination info
  * @author Thang Truong
  * @date 2025-12-12
@@ -35,6 +35,13 @@ export const getAllSubcategoriesPaginated = async (filters = {}) => {
   const offset = (page - 1) * limit
   const search = filters.search || ''
   const categoryId = filters.categoryId ? parseInt(filters.categoryId) : null
+  const sortBy = filters.sortBy || 'name'
+  const sortOrder = filters.sortOrder || 'asc'
+  
+  // Allowed sort columns (can sort by subcategory or category fields)
+  const allowedSortColumns = ['id', 'name', 'description', 'category_id', 'category_name', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'name'
+  const validSortOrder = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC'
   
   let query = `
     SELECT s.*, c.name as category_name 
@@ -58,7 +65,9 @@ export const getAllSubcategoriesPaginated = async (filters = {}) => {
     query += ' WHERE ' + conditions.join(' AND ')
   }
   
-  query += ' ORDER BY c.name, s.name ASC'
+  // Handle sorting - map category_name to c.name for sorting
+  const sortColumn = validSortBy === 'category_name' ? 'c.name' : `s.${validSortBy}`
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
   
   // Get total count
   const countQuery = query.replace('SELECT s.*, c.name as category_name', 'SELECT COUNT(*) as total')

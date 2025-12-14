@@ -19,7 +19,9 @@ import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import { useSelection } from '../../utils/useSelection'
+import { formatDate } from '../../utils/dateUtils'
 import {
   updateOrderStatus,
   bulkUpdateOrders,
@@ -38,7 +40,11 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, order: null })
   const { selected: selectedOrders, toggle, selectAll, clear, selectedCount } = useSelection(orders)
 
@@ -50,12 +56,18 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
       if (statusFilter) params.append('status', statusFilter)
       if (searchTerm) params.append('search', searchTerm)
       const response = await axios.get(`/api/admin/orders?${params}`)
       setOrders(response.data.orders || [])
       setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load orders')
     } finally {
@@ -65,7 +77,20 @@ const OrderManagement = () => {
 
   useEffect(() => {
     fetchOrders()
-  }, [page, statusFilter, searchTerm])
+  }, [page, entriesPerPage, statusFilter, searchTerm, sortBy, sortOrder])
+
+  /**
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
+  }
 
   /**
    * Format order number
@@ -147,22 +172,6 @@ const OrderManagement = () => {
     }
   }
 
-  /**
-   * Format date
-   * @param {string} dateString - Date string
-   * @returns {string} Formatted date
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const month = months[date.getMonth()]
-    const year = date.getFullYear()
-    return `${day}-${month}-${year}`
-  }
 
   if (loading && orders.length === 0) {
     return (
@@ -202,9 +211,24 @@ const OrderManagement = () => {
           searchPlaceholder="Search orders..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Orders table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -215,16 +239,131 @@ const OrderManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Order"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Order Number"
+                  field="order_number"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User ID"
+                  field="user_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User"
+                  field="user_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Voucher ID"
+                  field="voucher_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Voucher Discount"
+                  field="voucher_discount"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Payment Method"
+                  field="payment_method"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Payment Status"
+                  field="payment_status"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Tax"
+                  field="tax_price"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Shipping"
+                  field="shipping_price"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Total"
+                  field="total_price"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Paid"
+                  field="is_paid"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Paid At"
+                  field="paid_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Delivered"
+                  field="is_delivered"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Delivered At"
+                  field="delivered_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
+              {orders.map((order, index) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <BulkSelectCheckbox
@@ -233,46 +372,95 @@ const OrderManagement = () => {
                       onToggle={toggle}
                     />
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(page - 1) * entriesPerPage + index + 1}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link to={`/admin/orders/${order.id}`} className="text-blue-600 hover:text-blue-800">
+                    <Link to={`/orders/${order.id}`} className="text-blue-600 hover:text-blue-800">
                       {formatOrderNumber(order)}
                     </Link>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.user_id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.user_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${parseFloat(order.total_price).toFixed(2)}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.voucher_id || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${parseFloat(order.voucher_discount || 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge
-                      currentStatus={getOrderStatus(order)}
-                      availableStatuses={['pending', 'processing', 'paid', 'delivered']}
-                      onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
-                      entityType="order"
-                    />
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.payment_method || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.payment_status || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${parseFloat(order.tax_price || 0).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${parseFloat(order.shipping_price || 0).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${parseFloat(order.total_price || 0).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {order.is_paid ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Yes</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">No</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {order.paid_at ? formatDate(order.paid_at) : 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {order.is_delivered ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Yes</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">No</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {order.delivered_at ? formatDate(order.delivered_at) : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(order.created_at)}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(order.updated_at)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => setDeleteModal({ isOpen: true, order })}
-                      className="text-red-600 hover:text-red-800"
-                      aria-label="Delete order"
-                    >
-                      <FaTrash />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge
+                        currentStatus={getOrderStatus(order)}
+                        availableStatuses={['pending', 'processing', 'paid', 'delivered']}
+                        onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
+                        entityType="order"
+                      />
+                      <button
+                        onClick={() => setDeleteModal({ isOpen: true, order })}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                        aria-label="Delete order"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Modals */}

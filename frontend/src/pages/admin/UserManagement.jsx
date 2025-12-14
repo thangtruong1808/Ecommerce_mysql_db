@@ -9,17 +9,20 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTrash, FaPlus } from 'react-icons/fa'
+import { FaTrash, FaPlus, FaEdit } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
 import QuickCreateModal from '../../components/admin/QuickCreateModal'
+import UserEditModal from '../../components/admin/UserEditModal'
 import InlineEditCell from '../../components/admin/InlineEditCell'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import { useSelection } from '../../utils/useSelection'
+import { formatDate } from '../../utils/dateUtils'
 import {
   quickCreateUser,
   updateUserRole,
@@ -38,8 +41,13 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, user: null })
+  const [editModal, setEditModal] = useState({ isOpen: false, user: null })
   const [createModal, setCreateModal] = useState({ isOpen: false })
   const { selected: selectedUsers, toggle, selectAll, clear, selectedCount } = useSelection(users)
 
@@ -51,12 +59,18 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
       if (searchTerm) params.append('search', searchTerm)
       if (roleFilter) params.append('role', roleFilter)
       const response = await axios.get(`/api/admin/users?${params}`)
       setUsers(response.data.users || [])
       setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load users')
     } finally {
@@ -66,7 +80,20 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers()
-  }, [page, searchTerm, roleFilter])
+  }, [page, entriesPerPage, searchTerm, roleFilter, sortBy, sortOrder])
+
+  /**
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
+  }
 
   /**
    * Handle role change
@@ -101,6 +128,24 @@ const UserManagement = () => {
   }
 
   /**
+   * Handle update user
+   * @param {Object} data - User data
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleUpdate = async (data) => {
+    try {
+      if (!editModal.user) return
+      await axios.put(`/api/admin/users/${editModal.user.id}`, data)
+      toast.success('User updated successfully')
+      setEditModal({ isOpen: false, user: null })
+      fetchUsers()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update user')
+    }
+  }
+
+  /**
    * Handle delete confirm
    * @author Thang Truong
    * @date 2025-12-12
@@ -115,22 +160,6 @@ const UserManagement = () => {
     }
   }
 
-  /**
-   * Format date
-   * @param {string} dateString - Date string
-   * @returns {string} Formatted date
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const month = months[date.getMonth()]
-    const year = date.getFullYear()
-    return `${day}-${month}-${year}`
-  }
 
   if (loading && users.length === 0) {
     return (
@@ -179,9 +208,24 @@ const UserManagement = () => {
           searchPlaceholder="Search users..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Users table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -192,16 +236,54 @@ const UserManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID User"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Name"
+                  field="name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Email"
+                  field="email"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Role"
+                  field="role"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {users.map((user, index) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <BulkSelectCheckbox
@@ -209,6 +291,9 @@ const UserManagement = () => {
                       isSelected={selectedUsers.has(user.id)}
                       onToggle={toggle}
                     />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(page - 1) * entriesPerPage + index + 1}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{user.name}</td>
@@ -227,29 +312,58 @@ const UserManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(user.created_at)}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(user.updated_at)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => setDeleteModal({ isOpen: true, user })}
-                      className="text-red-600 hover:text-red-800"
-                      aria-label="Delete user"
-                    >
-                      <FaTrash />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditModal({ isOpen: true, user })}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        aria-label="Edit user"
+                      >
+                        <FaEdit className="w-3 h-3" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteModal({ isOpen: true, user })}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                        aria-label="Delete user"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Modals */}
+        <UserEditModal
+          user={editModal.user}
+          isOpen={editModal.isOpen}
+          onClose={() => setEditModal({ isOpen: false, user: null })}
+          onSave={handleUpdate}
+        />
+
         <ConfirmDeleteModal
           entity={deleteModal.user}
           entityType="user"

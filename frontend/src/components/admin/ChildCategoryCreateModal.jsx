@@ -52,7 +52,7 @@ const ChildCategoryCreateModal = ({ subcategories, isOpen, onClose, onSave }) =>
               <option value="">Select Subcategory</option>
               {subcategories.map(sub => (
                 <option key={sub.id} value={sub.id}>
-                  {sub.category_name} > {sub.name}
+                  {sub.category_name} - {sub.name}
                 </option>
               ))}
             </select>

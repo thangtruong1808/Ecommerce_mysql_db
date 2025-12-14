@@ -15,6 +15,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
@@ -34,7 +35,11 @@ const ReviewManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [ratingFilter, setRatingFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, review: null })
   const [editModal, setEditModal] = useState({ isOpen: false, review: null })
   const { selected: selectedReviews, toggle, selectAll, clear, selectedCount } = useSelection(reviews)
@@ -47,12 +52,18 @@ const ReviewManagement = () => {
   const fetchReviews = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
       if (searchTerm) params.append('search', searchTerm)
       if (ratingFilter) params.append('rating', ratingFilter)
       const response = await axios.get(`/api/admin/reviews?${params}`)
       setReviews(response.data.reviews || [])
       setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load reviews')
     } finally {
@@ -62,7 +73,20 @@ const ReviewManagement = () => {
 
   useEffect(() => {
     fetchReviews()
-  }, [page, searchTerm, ratingFilter])
+  }, [page, entriesPerPage, searchTerm, ratingFilter, sortBy, sortOrder])
+
+  /**
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
+  }
 
   /**
    * Handle update review
@@ -158,9 +182,24 @@ const ReviewManagement = () => {
           searchPlaceholder="Search by user, product, or comment..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Reviews table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -171,20 +210,79 @@ const ReviewManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Review"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Product"
+                  field="product_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Product ID"
+                  field="product_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User"
+                  field="user_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="User ID"
+                  field="user_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Rating"
+                  field="rating"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Comment"
+                  field="comment"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {reviews.map((review) => (
+              {reviews.map((review, index) => (
                 <ReviewTableRow
                   key={review.id}
                   review={review}
+                  index={(page - 1) * entriesPerPage + index + 1}
                   isSelected={selectedReviews.has(review.id)}
                   onToggle={toggle}
                   onEdit={() => setEditModal({ isOpen: true, review })}
@@ -192,14 +290,22 @@ const ReviewManagement = () => {
                 />
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Edit modal */}

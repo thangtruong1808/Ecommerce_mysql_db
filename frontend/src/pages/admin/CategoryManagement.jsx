@@ -14,11 +14,15 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
 import QuickCreateModal from '../../components/admin/QuickCreateModal'
+import CategoryEditModal from '../../components/admin/CategoryEditModal'
+import CategoryTableRow from '../../components/admin/CategoryTableRow'
 import { useSelection } from '../../utils/useSelection'
+import { useCrudOperations } from '../../utils/useCrudOperations'
 
 /**
  * CategoryManagement component
@@ -31,10 +35,11 @@ const CategoryManagement = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, category: null })
-  const [editModal, setEditModal] = useState({ isOpen: false, category: null })
-  const [createModal, setCreateModal] = useState({ isOpen: false })
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('name')
+  const [sortOrder, setSortOrder] = useState('asc')
   const { selected: selectedCategories, toggle, selectAll, clear, selectedCount } = useSelection(categories)
 
   /**
@@ -45,11 +50,17 @@ const CategoryManagement = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
       if (searchTerm) params.append('search', searchTerm)
       const response = await axios.get(`/api/admin/categories?${params}`)
       setCategories(response.data.categories || [])
       setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load categories')
     } finally {
@@ -57,25 +68,23 @@ const CategoryManagement = () => {
     }
   }
 
+  const crud = useCrudOperations('/api/admin/categories', fetchCategories)
+
   useEffect(() => {
     fetchCategories()
-  }, [page, searchTerm])
+  }, [page, entriesPerPage, searchTerm, sortBy, sortOrder])
 
   /**
-   * Handle create category
-   * @param {Object} data - Category data
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
    * @author Thang Truong
    * @date 2025-12-12
    */
-  const handleCreate = async (data) => {
-    try {
-      await axios.post('/api/admin/categories', data)
-      toast.success('Category created successfully')
-      setCreateModal({ isOpen: false })
-      fetchCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create category')
-    }
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
   }
 
   /**
@@ -85,30 +94,8 @@ const CategoryManagement = () => {
    * @date 2025-12-12
    */
   const handleUpdate = async (data) => {
-    try {
-      await axios.put(`/api/admin/categories/${editModal.category.id}`, data)
-      toast.success('Category updated successfully')
-      setEditModal({ isOpen: false, category: null })
-      fetchCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update category')
-    }
-  }
-
-  /**
-   * Handle delete confirm
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const handleDeleteConfirm = async () => {
-    try {
-      await axios.delete(`/api/admin/categories/${deleteModal.category.id}`)
-      toast.success('Category deleted successfully')
-      setDeleteModal({ isOpen: false, category: null })
-      fetchCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete category')
-    }
+    if (!crud.editModal.entity) return
+    await crud.handleUpdate(crud.editModal.entity.id, data)
   }
 
   /**
@@ -117,15 +104,9 @@ const CategoryManagement = () => {
    * @date 2025-12-12
    */
   const handleBulkDelete = async () => {
-    try {
-      const ids = Array.from(selectedCategories)
-      await axios.post('/api/admin/categories/bulk-delete', { categoryIds: ids })
-      toast.success(`${ids.length} category(ies) deleted successfully`)
-      clear()
-      fetchCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete categories')
-    }
+    const ids = Array.from(selectedCategories)
+    await crud.handleBulkDelete(ids, '/api/admin/categories/bulk-delete', 'categoryIds')
+    clear()
   }
 
   if (loading && categories.length === 0) {
@@ -147,7 +128,7 @@ const CategoryManagement = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Category Management</h1>
           <button
-            onClick={() => setCreateModal({ isOpen: true })}
+            onClick={() => crud.setCreateModal({ isOpen: true })}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             <FaPlus />
@@ -165,9 +146,24 @@ const CategoryManagement = () => {
           searchPlaceholder="Search categories by name or description..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Categories table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -178,40 +174,81 @@ const CategoryManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Category"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Name"
+                  field="name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Description"
+                  field="description"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {categories.map((category) => (
+              {categories.map((category, index) => (
                 <CategoryTableRow
                   key={category.id}
                   category={category}
+                  index={(page - 1) * entriesPerPage + index + 1}
                   isSelected={selectedCategories.has(category.id)}
                   onToggle={toggle}
-                  onEdit={() => setEditModal({ isOpen: true, category })}
-                  onDelete={() => setDeleteModal({ isOpen: true, category })}
+                  onEdit={() => crud.setEditModal({ isOpen: true, entity: category })}
+                  onDelete={() => crud.setDeleteModal({ isOpen: true, entity: category })}
                 />
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Create modal */}
         <QuickCreateModal
-          isOpen={createModal.isOpen}
-          onClose={() => setCreateModal({ isOpen: false })}
-          onSubmit={handleCreate}
+          isOpen={crud.createModal.isOpen}
+          onClose={() => crud.setCreateModal({ isOpen: false })}
+          onSubmit={crud.handleCreate}
           title="Create Category"
           fields={[
             { name: 'name', label: 'Name', type: 'text', required: true },
@@ -221,19 +258,19 @@ const CategoryManagement = () => {
 
         {/* Edit modal */}
         <CategoryEditModal
-          category={editModal.category}
-          isOpen={editModal.isOpen}
-          onClose={() => setEditModal({ isOpen: false, category: null })}
+          category={crud.editModal.entity}
+          isOpen={crud.editModal.isOpen}
+          onClose={() => crud.setEditModal({ isOpen: false, entity: null })}
           onSave={handleUpdate}
         />
 
         {/* Delete modal */}
         <ConfirmDeleteModal
-          entity={deleteModal.category}
+          entity={crud.deleteModal.entity}
           entityType="category"
-          isOpen={deleteModal.isOpen}
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setDeleteModal({ isOpen: false, category: null })}
+          isOpen={crud.deleteModal.isOpen}
+          onConfirm={crud.handleDeleteConfirm}
+          onCancel={() => crud.setDeleteModal({ isOpen: false, entity: null })}
         />
 
         {/* Bulk action bar */}

@@ -94,10 +94,15 @@ export const updateUser = async (id, updateData) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-export const getAllUsers = async (page = 1, limit = 10, search = null, role = null) => {
+export const getAllUsers = async (page = 1, limit = 10, search = null, role = null, sortBy = 'created_at', sortOrder = 'desc') => {
   const offset = (page - 1) * limit
   const conditions = []
   const params = []
+  
+  // Allowed sort columns
+  const allowedSortColumns = ['id', 'name', 'email', 'role', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
   
   if (search) {
     conditions.push('(name LIKE ? OR email LIKE ?)')
@@ -113,7 +118,7 @@ export const getAllUsers = async (page = 1, limit = 10, search = null, role = nu
   const offsetInt = parseInt(offset, 10)
   
   const [rows] = await db.execute(
-    `SELECT id, name, email, role, created_at FROM users ${whereClause} ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`,
+    `SELECT id, name, email, role, created_at, updated_at FROM users ${whereClause} ORDER BY ${validSortBy} ${validSortOrder} LIMIT ${limitInt} OFFSET ${offsetInt}`,
     params
   )
 

@@ -14,6 +14,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
@@ -21,6 +22,7 @@ import ChildCategoryCreateModal from '../../components/admin/ChildCategoryCreate
 import ChildCategoryEditModal from '../../components/admin/ChildCategoryEditModal'
 import ChildCategoryTableRow from '../../components/admin/ChildCategoryTableRow'
 import { useSelection } from '../../utils/useSelection'
+import { useCrudOperations } from '../../utils/useCrudOperations'
 
 /**
  * ChildCategoryManagement component
@@ -35,11 +37,41 @@ const ChildCategoryManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [subcategoryFilter, setSubcategoryFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, childCategory: null })
-  const [editModal, setEditModal] = useState({ isOpen: false, childCategory: null })
-  const [createModal, setCreateModal] = useState({ isOpen: false })
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('name')
+  const [sortOrder, setSortOrder] = useState('asc')
   const { selected: selectedChildCategories, toggle, selectAll, clear, selectedCount } = useSelection(childCategories)
+
+  /**
+   * Fetch child categories
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const fetchChildCategories = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
+      if (searchTerm) params.append('search', searchTerm)
+      if (subcategoryFilter) params.append('subcategoryId', subcategoryFilter)
+      const response = await axios.get(`/api/admin/child-categories?${params}`)
+      setChildCategories(response.data.childCategories || [])
+      setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load child categories')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const crud = useCrudOperations('/api/admin/child-categories', fetchChildCategories)
 
   /**
    * Fetch subcategories for filter dropdown
@@ -55,50 +87,25 @@ const ChildCategoryManagement = () => {
     }
   }
 
-  /**
-   * Fetch child categories
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const fetchChildCategories = async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
-      if (searchTerm) params.append('search', searchTerm)
-      if (subcategoryFilter) params.append('subcategoryId', subcategoryFilter)
-      const response = await axios.get(`/api/admin/child-categories?${params}`)
-      setChildCategories(response.data.childCategories || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load child categories')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
     fetchSubcategories()
   }, [])
 
   useEffect(() => {
     fetchChildCategories()
-  }, [page, searchTerm, subcategoryFilter])
+  }, [page, entriesPerPage, searchTerm, subcategoryFilter, sortBy, sortOrder])
 
   /**
-   * Handle create child category
-   * @param {Object} data - Child category data
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
    * @author Thang Truong
    * @date 2025-12-12
    */
-  const handleCreate = async (data) => {
-    try {
-      await axios.post('/api/admin/child-categories', data)
-      toast.success('Child category created successfully')
-      setCreateModal({ isOpen: false })
-      fetchChildCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create child category')
-    }
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
   }
 
   /**
@@ -108,30 +115,8 @@ const ChildCategoryManagement = () => {
    * @date 2025-12-12
    */
   const handleUpdate = async (data) => {
-    try {
-      await axios.put(`/api/admin/child-categories/${editModal.childCategory.id}`, data)
-      toast.success('Child category updated successfully')
-      setEditModal({ isOpen: false, childCategory: null })
-      fetchChildCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update child category')
-    }
-  }
-
-  /**
-   * Handle delete confirm
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const handleDeleteConfirm = async () => {
-    try {
-      await axios.delete(`/api/admin/child-categories/${deleteModal.childCategory.id}`)
-      toast.success('Child category deleted successfully')
-      setDeleteModal({ isOpen: false, childCategory: null })
-      fetchChildCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete child category')
-    }
+    if (!crud.editModal.entity) return
+    await crud.handleUpdate(crud.editModal.entity.id, data)
   }
 
   /**
@@ -140,15 +125,9 @@ const ChildCategoryManagement = () => {
    * @date 2025-12-12
    */
   const handleBulkDelete = async () => {
-    try {
-      const ids = Array.from(selectedChildCategories)
-      await axios.post('/api/admin/child-categories/bulk-delete', { childCategoryIds: ids })
-      toast.success(`${ids.length} child category(ies) deleted successfully`)
-      clear()
-      fetchChildCategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete child categories')
-    }
+    const ids = Array.from(selectedChildCategories)
+    await crud.handleBulkDelete(ids, '/api/admin/child-categories/bulk-delete', 'childCategoryIds')
+    clear()
   }
 
   if (loading && childCategories.length === 0) {
@@ -170,7 +149,7 @@ const ChildCategoryManagement = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Child Category Management</h1>
           <button
-            onClick={() => setCreateModal({ isOpen: true })}
+            onClick={() => crud.setCreateModal({ isOpen: true })}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             <FaPlus />
@@ -192,14 +171,29 @@ const ChildCategoryManagement = () => {
           }}
           filterOptions={[
             { value: '', label: 'All Subcategories' },
-            ...subcategories.map(sub => ({ value: sub.id.toString(), label: `${sub.category_name} > ${sub.name}` }))
+            ...subcategories.map(sub => ({ value: sub.id.toString(), label: `${sub.category_name} - ${sub.name}` }))
           ]}
           searchPlaceholder="Search child categories by name, description, category, or subcategory..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Child categories table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -210,61 +204,121 @@ const ChildCategoryManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subcategory</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Child Category"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Name"
+                  field="name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Category"
+                  field="category_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Subcategory"
+                  field="subcategory_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Subcategory ID"
+                  field="subcategory_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Description"
+                  field="description"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {childCategories.map((childCategory) => (
+              {childCategories.map((childCategory, index) => (
                 <ChildCategoryTableRow
                   key={childCategory.id}
                   childCategory={childCategory}
+                  index={(page - 1) * entriesPerPage + index + 1}
                   isSelected={selectedChildCategories.has(childCategory.id)}
                   onToggle={toggle}
-                  onEdit={() => setEditModal({ isOpen: true, childCategory })}
-                  onDelete={() => setDeleteModal({ isOpen: true, childCategory })}
+                  onEdit={() => crud.setEditModal({ isOpen: true, entity: childCategory })}
+                  onDelete={() => crud.setDeleteModal({ isOpen: true, entity: childCategory })}
                 />
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Create modal */}
         <ChildCategoryCreateModal
           subcategories={subcategories}
-          isOpen={createModal.isOpen}
-          onClose={() => setCreateModal({ isOpen: false })}
-          onSave={handleCreate}
+          isOpen={crud.createModal.isOpen}
+          onClose={() => crud.setCreateModal({ isOpen: false })}
+          onSave={crud.handleCreate}
         />
 
         {/* Edit modal */}
         <ChildCategoryEditModal
-          childCategory={editModal.childCategory}
+          childCategory={crud.editModal.entity}
           subcategories={subcategories}
-          isOpen={editModal.isOpen}
-          onClose={() => setEditModal({ isOpen: false, childCategory: null })}
+          isOpen={crud.editModal.isOpen}
+          onClose={() => crud.setEditModal({ isOpen: false, entity: null })}
           onSave={handleUpdate}
         />
 
         {/* Delete modal */}
         <ConfirmDeleteModal
-          entity={deleteModal.childCategory}
+          entity={crud.deleteModal.entity}
           entityType="child category"
-          isOpen={deleteModal.isOpen}
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setDeleteModal({ isOpen: false, childCategory: null })}
+          isOpen={crud.deleteModal.isOpen}
+          onConfirm={crud.handleDeleteConfirm}
+          onCancel={() => crud.setDeleteModal({ isOpen: false, entity: null })}
         />
 
         {/* Bulk action bar */}

@@ -38,7 +38,6 @@ import CategoryManagement from './pages/admin/CategoryManagement'
 import SubcategoryManagement from './pages/admin/SubcategoryManagement'
 import ChildCategoryManagement from './pages/admin/ChildCategoryManagement'
 import CartManagement from './pages/admin/CartManagement'
-import OrderItemManagement from './pages/admin/OrderItemManagement'
 import ReviewManagement from './pages/admin/ReviewManagement'
 import InvoiceManagement from './pages/admin/InvoiceManagement'
 import InvoiceList from './pages/InvoiceList'
@@ -226,14 +225,6 @@ const AppContent = () => {
               element={
                 <ProtectedRoute adminOnly>
                   <CartManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/order-items"
-              element={
-                <ProtectedRoute adminOnly>
-                  <OrderItemManagement />
                 </ProtectedRoute>
               }
             />

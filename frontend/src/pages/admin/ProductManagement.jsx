@@ -21,7 +21,9 @@ import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
 import QuickCreateModal from '../../components/admin/QuickCreateModal'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import { useSelection } from '../../utils/useSelection'
+import { formatDate } from '../../utils/dateUtils'
 import {
   quickCreateProduct,
   updateProductStock,
@@ -42,7 +44,11 @@ const ProductManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [stockFilter, setStockFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null })
   const [createModal, setCreateModal] = useState({ isOpen: false })
   const { selected: selectedProducts, toggle, selectAll, clear, selectedCount } = useSelection(products)
@@ -55,12 +61,18 @@ const ProductManagement = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
       if (searchTerm) params.append('search', searchTerm)
       if (stockFilter) params.append('stock', stockFilter)
       const response = await axios.get(`/api/admin/products?${params}`)
       setProducts(response.data.products || [])
       setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load products')
     } finally {
@@ -70,7 +82,20 @@ const ProductManagement = () => {
 
   useEffect(() => {
     fetchProducts()
-  }, [page, searchTerm, stockFilter])
+  }, [page, entriesPerPage, searchTerm, stockFilter, sortBy, sortOrder])
+
+  /**
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
+  }
 
   /**
    * Handle product stock update
@@ -206,9 +231,24 @@ const ProductManagement = () => {
           searchPlaceholder="Search products..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Products table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -219,15 +259,103 @@ const ProductManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Product"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Name"
+                  field="name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Description"
+                  field="description"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Price"
+                  field="price"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Child Category"
+                  field="child_category_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Stock"
+                  field="stock"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Rating"
+                  field="rating"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Reviews"
+                  field="num_reviews"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Discount Type"
+                  field="discount_type"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Discount Value"
+                  field="discount_value"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Clearance"
+                  field="is_on_clearance"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product) => (
+              {products.map((product, index) => (
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <BulkSelectCheckbox
@@ -236,11 +364,17 @@ const ProductManagement = () => {
                       onToggle={toggle}
                     />
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(page - 1) * entriesPerPage + index + 1}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 text-sm font-medium">
                     <Link to={`/admin/products/${product.id}/edit`} className="text-blue-600 hover:text-blue-800">
                       {product.name}
                     </Link>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={product.description}>
+                    {product.description || <span className="text-gray-400">No description</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <InlineEditCell
@@ -249,6 +383,7 @@ const ProductManagement = () => {
                       onSave={(newPrice) => handlePriceUpdate(product.id, newPrice)}
                     />
                   </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{product.child_category_name || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <InlineEditCell
                       value={product.stock || 0}
@@ -256,35 +391,64 @@ const ProductManagement = () => {
                       onSave={(newStock) => handleStockUpdate(product.id, newStock)}
                     />
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {product.rating ? product.rating.toFixed(2) : '0.00'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.num_reviews || 0}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.discount_type || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.discount_value || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex items-center gap-3">
+                    {product.is_on_clearance ? (
+                      <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs">Yes</span>
+                    ) : (
+                      <span className="text-gray-400">No</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(product.created_at)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(product.updated_at)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <div className="flex items-center gap-2">
                       <Link
                         to={`/admin/products/${product.id}/media`}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                         aria-label="Manage media"
                       >
-                        <FaImages />
+                        <FaImages className="w-3 h-3" />
+                        Media
                       </Link>
                       <button
                         onClick={() => setDeleteModal({ isOpen: true, product })}
-                        className="text-red-600 hover:text-red-800"
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                         aria-label="Delete product"
                       >
-                        <FaTrash />
+                        <FaTrash className="w-3 h-3" />
+                        Delete
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Modals */}

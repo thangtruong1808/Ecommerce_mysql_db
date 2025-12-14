@@ -21,7 +21,7 @@ export const getAllCategories = async () => {
 
 /**
  * Get all categories with pagination and filters
- * @param {Object} filters - Filter options (page, limit, search)
+ * @param {Object} filters - Filter options (page, limit, search, sortBy, sortOrder)
  * @returns {Promise<Object>} - Categories with pagination info
  * @author Thang Truong
  * @date 2025-12-12
@@ -31,6 +31,13 @@ export const getAllCategoriesPaginated = async (filters = {}) => {
   const limit = parseInt(filters.limit) || 20
   const offset = (page - 1) * limit
   const search = filters.search || ''
+  const sortBy = filters.sortBy || 'name'
+  const sortOrder = filters.sortOrder || 'asc'
+  
+  // Allowed sort columns
+  const allowedSortColumns = ['id', 'name', 'description', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'name'
+  const validSortOrder = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC'
   
   let query = 'SELECT * FROM categories'
   const params = []
@@ -41,7 +48,7 @@ export const getAllCategoriesPaginated = async (filters = {}) => {
     params.push(searchPattern, searchPattern)
   }
   
-  query += ' ORDER BY name ASC'
+  query += ` ORDER BY ${validSortBy} ${validSortOrder}`
   
   // Get total count
   const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total')

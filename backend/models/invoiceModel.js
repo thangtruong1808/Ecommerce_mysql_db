@@ -213,7 +213,19 @@ export const getAllInvoices = async (filters = {}) => {
     query += ' WHERE ' + conditions.join(' AND ')
   }
   
-  query += ' ORDER BY i.created_at DESC'
+  // Sorting support
+  const sortBy = filters.sortBy || 'created_at'
+  const sortOrder = filters.sortOrder || 'desc'
+  const allowedSortColumns = ['id', 'invoice_number', 'order_id', 'user_id', 'subtotal', 'tax_amount', 'shipping_amount', 'total_amount', 'payment_method', 'payment_status', 'email_sent', 'user_name', 'order_number', 'created_at', 'email_sent_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  
+  // Map sort column to actual table column
+  let sortColumn = `i.${validSortBy}`
+  if (validSortBy === 'user_name') sortColumn = 'u.name'
+  else if (validSortBy === 'order_number') sortColumn = 'o.order_number'
+  
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
   
   // Get total count
   const countQuery = query.replace(

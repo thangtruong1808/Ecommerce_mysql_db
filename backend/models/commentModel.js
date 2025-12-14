@@ -186,3 +186,93 @@ export const getUserComment = async (userId, productId) => {
   return rows[0] || null
 }
 
+/**
+ * Get all comments with pagination and filters (admin only)
+ * @param {Object} filters - Filter options (page, limit, search, productId, userId, isApproved, sortBy, sortOrder)
+ * @returns {Promise<Object>} - Comments with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllCommentsPaginated = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  const search = filters.search || ''
+  const productId = filters.productId ? parseInt(filters.productId) : null
+  const userId = filters.userId ? parseInt(filters.userId) : null
+  const isApproved = filters.isApproved !== undefined ? filters.isApproved : null
+  const sortBy = filters.sortBy || 'created_at'
+  const sortOrder = filters.sortOrder || 'desc'
+  
+  // Allowed sort columns
+  const allowedSortColumns = ['id', 'product_id', 'user_id', 'comment', 'is_approved', 'product_name', 'user_name', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  
+  let query = `
+    SELECT c.*, 
+           u.name as user_name,
+           u.email as user_email,
+           p.name as product_name
+    FROM product_comments c
+    JOIN users u ON c.user_id = u.id
+    JOIN products p ON c.product_id = p.id
+  `
+  const params = []
+  
+  const conditions = []
+  if (productId && !isNaN(productId)) {
+    conditions.push('c.product_id = ?')
+    params.push(productId)
+  }
+  if (userId && !isNaN(userId)) {
+    conditions.push('c.user_id = ?')
+    params.push(userId)
+  }
+  if (isApproved !== null) {
+    conditions.push('c.is_approved = ?')
+    params.push(isApproved ? 1 : 0)
+  }
+  if (search) {
+    conditions.push('(u.name LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR c.comment LIKE ?)')
+    const searchPattern = `%${search}%`
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+  }
+  
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
+  }
+  
+  // Map sort column to actual table column
+  let sortColumn = `c.${validSortBy}`
+  if (validSortBy === 'product_name') sortColumn = 'p.name'
+  else if (validSortBy === 'user_name') sortColumn = 'u.name'
+  
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
+  
+  // Get total count
+  const countQuery = query.replace(
+    'SELECT c.*, u.name as user_name, u.email as user_email, p.name as product_name',
+    'SELECT COUNT(*) as total'
+  )
+  const [countResult] = await db.execute(countQuery, params)
+  const total = countResult[0].total
+  
+  // Get paginated results
+  const limitInt = Math.floor(Number(limit))
+  const offsetInt = Math.floor(Number(offset))
+  query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
+  
+  const [rows] = await db.execute(query, params)
+  
+  return {
+    comments: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  }
+}
+

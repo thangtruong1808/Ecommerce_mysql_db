@@ -225,7 +225,20 @@ export const getAllCarts = async (filters = {}) => {
   const [countResult] = await db.execute(countQuery, params)
   const total = countResult[0].total
   
-  query += ' ORDER BY c.created_at DESC'
+  // Sorting support
+  const sortBy = filters.sortBy || 'created_at'
+  const sortOrder = filters.sortOrder || 'desc'
+  const allowedSortColumns = ['id', 'user_id', 'user_name', 'item_count', 'total_value', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  
+  // Map sort column to actual table column
+  let sortColumn = `c.${validSortBy}`
+  if (validSortBy === 'user_name') sortColumn = 'u.name'
+  else if (validSortBy === 'item_count') sortColumn = 'item_count'
+  else if (validSortBy === 'total_value') sortColumn = 'total_value'
+  
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
   query += ` LIMIT ${limit} OFFSET ${offset}`
   
   const [rows] = await db.execute(query, params)

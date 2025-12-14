@@ -361,7 +361,9 @@ router.get('/users', async (req, res) => {
     const limit = parseInt(req.query.limit) || 20
     const search = req.query.search || null
     const role = req.query.role || null
-    const result = await userModel.getAllUsers(page, limit, search, role)
+    const sortBy = req.query.sortBy || 'created_at'
+    const sortOrder = req.query.sortOrder || 'desc'
+    const result = await userModel.getAllUsers(page, limit, search, role, sortBy, sortOrder)
     res.json(result)
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -370,23 +372,47 @@ router.get('/users', async (req, res) => {
 
 /**
  * PUT /api/admin/users/:id
- * Update user (role, etc.)
+ * Update user (name, email, role)
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.put('/users/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id)
-    const { role } = req.body
+    const { name, email, role } = req.body
 
+    // Validate role if provided
     if (role && !['user', 'admin'].includes(role)) {
       return res.status(400).json({ message: 'Invalid role' })
     }
 
-    const updatedUser = await userModel.updateUserRole(userId, role)
-    if (!updatedUser) {
+    // Update name and email if provided
+    if (name || email) {
+      const updateData = {}
+      if (name) updateData.name = name
+      if (email) updateData.email = email
+      
+      const updatedUser = await userModel.updateUser(userId, updateData)
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' })
+      }
+    }
+
+    // Update role if provided
+    if (role) {
+      const updatedUser = await userModel.updateUserRole(userId, role)
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' })
+      }
+    }
+
+    // Return updated user
+    const user = await userModel.findUserById(userId)
+    if (!user) {
       return res.status(404).json({ message: 'User not found' })
     }
 
-    res.json(updatedUser)
+    res.json(user)
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
@@ -431,7 +457,9 @@ router.get('/orders', async (req, res) => {
     const limit = parseInt(req.query.limit) || 20
     const status = req.query.status || null
     const search = req.query.search || null
-    const result = await orderModel.getAllOrders({ page, limit, status, search })
+    const sortBy = req.query.sortBy || 'created_at'
+    const sortOrder = req.query.sortOrder || 'desc'
+    const result = await orderModel.getAllOrders({ page, limit, status, search, sortBy, sortOrder })
     res.json(result)
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -450,7 +478,9 @@ router.get('/products', async (req, res) => {
     const limit = parseInt(req.query.limit) || 20
     const search = req.query.search || null
     const stock = req.query.stock || null
-    const filters = { page, limit, search }
+    const sortBy = req.query.sortBy || 'created_at'
+    const sortOrder = req.query.sortOrder || 'desc'
+    const filters = { page, limit, search, sortBy, sortOrder }
     if (stock === 'low_stock') {
       filters.minStock = 0
       filters.maxStock = 10
@@ -685,6 +715,13 @@ router.get('/order-items', async (req, res) => {
     const offset = (page - 1) * limit
     const orderId = req.query.orderId ? parseInt(req.query.orderId) : null
     const productId = req.query.productId ? parseInt(req.query.productId) : null
+    const sortBy = req.query.sortBy || 'created_at'
+    const sortOrder = req.query.sortOrder || 'desc'
+    
+    // Allowed sort columns
+    const allowedSortColumns = ['id', 'order_id', 'product_id', 'name', 'image_url', 'price', 'quantity', 'order_number', 'created_at']
+    const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+    const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
     
     let query = `
       SELECT oi.*, 
@@ -714,7 +751,11 @@ router.get('/order-items', async (req, res) => {
       query += ' WHERE ' + conditions.join(' AND ')
     }
     
-    query += ' ORDER BY oi.created_at DESC'
+    // Handle sorting - map joined table fields
+    let sortColumn = `oi.${validSortBy}`
+    if (validSortBy === 'order_number') sortColumn = 'o.order_number'
+    
+    query += ` ORDER BY ${sortColumn} ${validSortOrder}`
     
     // Get total count
     const countQuery = query.replace(
@@ -1557,6 +1598,31 @@ router.post('/reviews/bulk-approve', validateBulkOperation, async (req, res) => 
 // ============================================
 // COMMENTS CRUD OPERATIONS
 // ============================================
+
+/**
+ * GET /api/admin/comments
+ * Get all comments with pagination, search, and sorting
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+router.get('/comments', async (req, res) => {
+  try {
+    const { page, limit, search, productId, userId, isApproved, sortBy, sortOrder } = req.query
+    const result = await commentModel.getAllCommentsPaginated({
+      page,
+      limit,
+      search,
+      productId,
+      userId,
+      isApproved: isApproved !== undefined ? isApproved === 'true' : null,
+      sortBy,
+      sortOrder
+    })
+    res.json(result)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 
 /**
  * DELETE /api/admin/comments/:id

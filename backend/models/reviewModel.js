@@ -287,7 +287,19 @@ export const getAllReviews = async (filters = {}) => {
     query += ' WHERE ' + conditions.join(' AND ')
   }
   
-  query += ' ORDER BY r.created_at DESC'
+  // Sorting support
+  const sortBy = filters.sortBy || 'created_at'
+  const sortOrder = filters.sortOrder || 'desc'
+  const allowedSortColumns = ['id', 'rating', 'comment', 'product_id', 'user_id', 'product_name', 'user_name', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  
+  // Map sort column to actual table column
+  let sortColumn = `r.${validSortBy}`
+  if (validSortBy === 'product_name') sortColumn = 'p.name'
+  else if (validSortBy === 'user_name') sortColumn = 'u.name'
+  
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
   
   // Get total count
   const countQuery = query.replace(

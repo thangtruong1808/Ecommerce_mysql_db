@@ -50,16 +50,32 @@ const SkeletonLoader = ({ type = 'card', count = 1 }) => {
   const renderTableSkeleton = () => (
     <div className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
       {/* Table skeleton */}
-      <div className="p-6 space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex space-x-4">
-            <div className="h-4 bg-gray-200 rounded flex-1"></div>
-            <div className="h-4 bg-gray-200 rounded flex-1"></div>
-            <div className="h-4 bg-gray-200 rounded flex-1"></div>
-            <div className="h-4 bg-gray-200 rounded w-24"></div>
-          </div>
-        ))}
-      </div>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-4"></div></th>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-8"></div></th>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-16"></div></th>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-24"></div></th>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-20"></div></th>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-32"></div></th>
+            <th className="px-6 py-3"><div className="h-4 bg-gray-300 rounded w-24"></div></th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {[...Array(5)].map((_, i) => (
+            <tr key={i}>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-4"></div></td>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-8"></div></td>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+              <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 

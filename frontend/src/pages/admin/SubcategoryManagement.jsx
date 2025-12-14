@@ -14,6 +14,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
+import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
@@ -21,6 +22,7 @@ import SubcategoryCreateModal from '../../components/admin/SubcategoryCreateModa
 import SubcategoryEditModal from '../../components/admin/SubcategoryEditModal'
 import SubcategoryTableRow from '../../components/admin/SubcategoryTableRow'
 import { useSelection } from '../../utils/useSelection'
+import { useCrudOperations } from '../../utils/useCrudOperations'
 
 /**
  * SubcategoryManagement component
@@ -35,11 +37,41 @@ const SubcategoryManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, subcategory: null })
-  const [editModal, setEditModal] = useState({ isOpen: false, subcategory: null })
-  const [createModal, setCreateModal] = useState({ isOpen: false })
+  const [totalItems, setTotalItems] = useState(0)
+  const [sortBy, setSortBy] = useState('name')
+  const [sortOrder, setSortOrder] = useState('asc')
   const { selected: selectedSubcategories, toggle, selectAll, clear, selectedCount } = useSelection(subcategories)
+
+  /**
+   * Fetch subcategories
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const fetchSubcategories = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({ 
+        page, 
+        limit: entriesPerPage,
+        sortBy,
+        sortOrder
+      })
+      if (searchTerm) params.append('search', searchTerm)
+      if (categoryFilter) params.append('categoryId', categoryFilter)
+      const response = await axios.get(`/api/admin/subcategories?${params}`)
+      setSubcategories(response.data.subcategories || [])
+      setTotalPages(response.data.pagination?.pages || 1)
+      setTotalItems(response.data.pagination?.total || 0)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load subcategories')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const crud = useCrudOperations('/api/admin/subcategories', fetchSubcategories)
 
   /**
    * Fetch categories for filter dropdown
@@ -51,28 +83,7 @@ const SubcategoryManagement = () => {
       const response = await axios.get('/api/products/categories')
       setCategories(response.data || [])
     } catch (error) {
-      // Silently fail - categories not critical for subcategory page
-    }
-  }
-
-  /**
-   * Fetch subcategories
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const fetchSubcategories = async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams({ page, limit: 20 })
-      if (searchTerm) params.append('search', searchTerm)
-      if (categoryFilter) params.append('categoryId', categoryFilter)
-      const response = await axios.get(`/api/admin/subcategories?${params}`)
-      setSubcategories(response.data.subcategories || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load subcategories')
-    } finally {
-      setLoading(false)
+      // Silently fail
     }
   }
 
@@ -82,23 +93,19 @@ const SubcategoryManagement = () => {
 
   useEffect(() => {
     fetchSubcategories()
-  }, [page, searchTerm, categoryFilter])
+  }, [page, entriesPerPage, searchTerm, categoryFilter, sortBy, sortOrder])
 
   /**
-   * Handle create subcategory
-   * @param {Object} data - Subcategory data
+   * Handle sort
+   * @param {string} field - Sort field
+   * @param {string} order - Sort order
    * @author Thang Truong
    * @date 2025-12-12
    */
-  const handleCreate = async (data) => {
-    try {
-      await axios.post('/api/admin/subcategories', data)
-      toast.success('Subcategory created successfully')
-      setCreateModal({ isOpen: false })
-      fetchSubcategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create subcategory')
-    }
+  const handleSort = (field, order) => {
+    setSortBy(field)
+    setSortOrder(order)
+    setPage(1)
   }
 
   /**
@@ -108,30 +115,8 @@ const SubcategoryManagement = () => {
    * @date 2025-12-12
    */
   const handleUpdate = async (data) => {
-    try {
-      await axios.put(`/api/admin/subcategories/${editModal.subcategory.id}`, data)
-      toast.success('Subcategory updated successfully')
-      setEditModal({ isOpen: false, subcategory: null })
-      fetchSubcategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update subcategory')
-    }
-  }
-
-  /**
-   * Handle delete confirm
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const handleDeleteConfirm = async () => {
-    try {
-      await axios.delete(`/api/admin/subcategories/${deleteModal.subcategory.id}`)
-      toast.success('Subcategory deleted successfully')
-      setDeleteModal({ isOpen: false, subcategory: null })
-      fetchSubcategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete subcategory')
-    }
+    if (!crud.editModal.entity) return
+    await crud.handleUpdate(crud.editModal.entity.id, data)
   }
 
   /**
@@ -140,15 +125,9 @@ const SubcategoryManagement = () => {
    * @date 2025-12-12
    */
   const handleBulkDelete = async () => {
-    try {
-      const ids = Array.from(selectedSubcategories)
-      await axios.post('/api/admin/subcategories/bulk-delete', { subcategoryIds: ids })
-      toast.success(`${ids.length} subcategory(ies) deleted successfully`)
-      clear()
-      fetchSubcategories()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete subcategories')
-    }
+    const ids = Array.from(selectedSubcategories)
+    await crud.handleBulkDelete(ids, '/api/admin/subcategories/bulk-delete', 'subcategoryIds')
+    clear()
   }
 
   if (loading && subcategories.length === 0) {
@@ -170,7 +149,7 @@ const SubcategoryManagement = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Subcategory Management</h1>
           <button
-            onClick={() => setCreateModal({ isOpen: true })}
+            onClick={() => crud.setCreateModal({ isOpen: true })}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             <FaPlus />
@@ -197,9 +176,24 @@ const SubcategoryManagement = () => {
           searchPlaceholder="Search subcategories by name, description, or category..."
         />
 
+        {/* Pagination top */}
+        <Pagination
+          position="top"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
+
         {/* Subcategories table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -210,60 +204,114 @@ const SubcategoryManagement = () => {
                     onSelectAll={selectAll}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                <SortableTableHeader
+                  label="ID Subcategory"
+                  field="id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Name"
+                  field="name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Category"
+                  field="category_name"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Category ID"
+                  field="category_id"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Description"
+                  field="description"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Created"
+                  field="created_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
+                <SortableTableHeader
+                  label="Updated"
+                  field="updated_at"
+                  currentSort={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {subcategories.map((subcategory) => (
+              {subcategories.map((subcategory, index) => (
                 <SubcategoryTableRow
                   key={subcategory.id}
                   subcategory={subcategory}
+                  index={(page - 1) * entriesPerPage + index + 1}
                   isSelected={selectedSubcategories.has(subcategory.id)}
                   onToggle={toggle}
-                  onEdit={() => setEditModal({ isOpen: true, subcategory })}
-                  onDelete={() => setDeleteModal({ isOpen: true, subcategory })}
+                  onEdit={() => crud.setEditModal({ isOpen: true, entity: subcategory })}
+                  onDelete={() => crud.setDeleteModal({ isOpen: true, entity: subcategory })}
                 />
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination bottom */}
         <Pagination
+          position="bottom"
           currentPage={page}
           totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
           onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
         />
 
         {/* Create modal */}
         <SubcategoryCreateModal
           categories={categories}
-          isOpen={createModal.isOpen}
-          onClose={() => setCreateModal({ isOpen: false })}
-          onSave={handleCreate}
+          isOpen={crud.createModal.isOpen}
+          onClose={() => crud.setCreateModal({ isOpen: false })}
+          onSave={crud.handleCreate}
         />
 
         {/* Edit modal */}
         <SubcategoryEditModal
-          subcategory={editModal.subcategory}
+          subcategory={crud.editModal.entity}
           categories={categories}
-          isOpen={editModal.isOpen}
-          onClose={() => setEditModal({ isOpen: false, subcategory: null })}
+          isOpen={crud.editModal.isOpen}
+          onClose={() => crud.setEditModal({ isOpen: false, entity: null })}
           onSave={handleUpdate}
         />
 
         {/* Delete modal */}
         <ConfirmDeleteModal
-          entity={deleteModal.subcategory}
+          entity={crud.deleteModal.entity}
           entityType="subcategory"
-          isOpen={deleteModal.isOpen}
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setDeleteModal({ isOpen: false, subcategory: null })}
+          isOpen={crud.deleteModal.isOpen}
+          onConfirm={crud.handleDeleteConfirm}
+          onCancel={() => crud.setDeleteModal({ isOpen: false, entity: null })}
         />
 
         {/* Bulk action bar */}
