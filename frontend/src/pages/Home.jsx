@@ -181,10 +181,10 @@ const Home = () => {
         </section>
 
         {/* Recently viewed section */}
-        <RecentlyViewed limit={15} onAddToCart={handleAddToCart} />
+        <RecentlyViewed limit={1000} onAddToCart={handleAddToCart} />
 
         {/* Recommendations section */}
-        <Recommendations limit={15} onAddToCart={handleAddToCart} />
+        <Recommendations limit={1000} onAddToCart={handleAddToCart} />
       </div>
     </div>
   )

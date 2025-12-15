@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { FaThumbsUp } from 'react-icons/fa'
-import ProductCard from './ProductCard'
+import ProductCarousel from './ProductCarousel'
 import SkeletonLoader from './SkeletonLoader'
 
 /**
@@ -82,15 +82,7 @@ const Recommendations = ({ productId = null, limit = 15, showTitle = true, onAdd
         </h2>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={onAddToCart}
-          />
-        ))}
-      </div>
+      <ProductCarousel products={products} onAddToCart={onAddToCart} slidesToShow={5} />
     </div>
   )
 }

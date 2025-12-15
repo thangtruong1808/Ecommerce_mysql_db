@@ -9,10 +9,12 @@ import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import { toast } from 'react-toastify'
 import SkeletonLoader from '../components/SkeletonLoader'
 import ProductCard from '../components/ProductCard'
 import Pagination from '../components/Pagination'
 import FilterSidebar from '../components/FilterSidebar'
+import Breadcrumb from '../components/Breadcrumb'
 import { useProductsData } from '../hooks/useProductsData'
 
 /**
@@ -84,9 +86,24 @@ const Products = () => {
     )
   }
 
+  // Get category info for breadcrumb
+  const selectedCategory = categories.find(cat => cat.id === parseInt(filters.category))
+  const selectedSubcategory = subcategories.find(sub => sub.id === parseInt(filters.subcategory))
+  const selectedChildCategory = childCategories.find(child => child.id === parseInt(filters.childCategory))
+
   return (
     /* Products page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        categoryName={selectedCategory?.name}
+        subcategoryName={selectedSubcategory?.name}
+        childCategoryName={selectedChildCategory?.name}
+        categoryId={selectedCategory?.id}
+        subcategoryId={selectedSubcategory?.id}
+        childCategoryId={selectedChildCategory?.id}
+      />
+
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Products</h1>

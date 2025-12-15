@@ -23,6 +23,7 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import Button from '../components/Button'
 import RecentlyViewed from '../components/RecentlyViewed'
 import Recommendations from '../components/Recommendations'
+import Breadcrumb from '../components/Breadcrumb'
 import { FaTag, FaArrowLeft } from 'react-icons/fa'
 
 /**
@@ -135,6 +136,17 @@ const ProductDetail = () => {
   return (
     /* Product detail page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        categoryName={product.category_name}
+        subcategoryName={product.subcategory_name}
+        childCategoryName={product.child_category_name}
+        categoryId={product.category_id}
+        subcategoryId={product.subcategory_id}
+        childCategoryId={product.child_category_id}
+        productName={product.name}
+      />
+
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
@@ -152,7 +164,6 @@ const ProductDetail = () => {
         </div>
 
         <div>
-          <div className="text-sm text-gray-600 mb-2">{product.category_name} / {product.subcategory_name}</div>
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-900 flex-1">{product.name}</h1>
             <LikeButton productId={product.id} />
