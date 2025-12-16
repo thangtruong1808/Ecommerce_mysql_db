@@ -76,10 +76,10 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero banner section with features */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 mb-16">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 mb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero content */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-6">
             <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
             <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices. Quality you can trust, delivered to your door.</p>
             <div className="flex gap-4 justify-center">
@@ -93,27 +93,18 @@ const Home = () => {
           </div>
 
           {/* Features section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 pt-12 border-t border-blue-400/30">
-            <div className="text-center">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <FaShippingFast className="text-white text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Free Shipping</h3>
-              <p className="text-blue-100">Free shipping on orders over $100</p>
+          <div className="flex flex-wrap justify-center items-center gap-6 mt-8 pt-6 border-t border-blue-400/20">
+            <div className="flex items-center gap-2">
+              <FaShippingFast className="text-white text-sm" />
+              <span className="text-sm text-blue-100">Free Shipping</span>
             </div>
-            <div className="text-center">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <FaShieldAlt className="text-white text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Secure Payment</h3>
-              <p className="text-blue-100">Safe and secure checkout process</p>
+            <div className="flex items-center gap-2">
+              <FaShieldAlt className="text-white text-sm" />
+              <span className="text-sm text-blue-100">Secure Payment</span>
             </div>
-            <div className="text-center">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <FaUndo className="text-white text-2xl" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Easy Returns</h3>
-              <p className="text-blue-100">Hassle-free return policy</p>
+            <div className="flex items-center gap-2">
+              <FaUndo className="text-white text-sm" />
+              <span className="text-sm text-blue-100">Easy Returns</span>
             </div>
           </div>
         </div>

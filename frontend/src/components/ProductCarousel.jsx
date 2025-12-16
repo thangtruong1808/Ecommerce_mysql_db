@@ -73,6 +73,29 @@ const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
 
   if (products.length === 0) return null
 
+  // For fewer products, use flex layout with same card size as carousel
+  if (products.length <= 4) {
+    // Calculate card width to match carousel (each card is 100/itemsPerView %)
+    const cardWidthPercent = 100 / itemsPerView
+
+    /* Product flex layout for small number of products */
+    return (
+      <div className="flex flex-wrap">
+        {products.map((product) => (
+          <div 
+            key={product.id} 
+            className="flex-shrink-0"
+            style={{ width: `${cardWidthPercent}%` }}
+          >
+            <div className="px-2">
+              <ProductCard product={product} onAddToCart={onAddToCart} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   // Duplicate products for seamless infinite loop
   const duplicatedProducts = [...products, ...products, ...products]
   const visibleCount = Math.min(itemsPerView, products.length)

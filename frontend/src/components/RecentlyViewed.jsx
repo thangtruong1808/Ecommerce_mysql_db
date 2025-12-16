@@ -6,10 +6,9 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTrash, FaEye } from 'react-icons/fa'
+import { FaEye } from 'react-icons/fa'
 import ProductCarousel from './ProductCarousel'
 import SkeletonLoader from './SkeletonLoader'
 import Button from './Button'
@@ -81,9 +80,7 @@ const RecentlyViewed = ({ limit = 15, showTitle = true, onAddToCart }) => {
     return (
       <div className="mb-12">
         {showTitle && (
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Recently Viewed Items</h2>
-          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Recently Viewed Items</h2>
         )}
         <SkeletonLoader type="card" count={4} />
       </div>
