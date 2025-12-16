@@ -22,12 +22,7 @@ import ProductCard from './ProductCard'
 const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const carouselRef = useRef(null)
-  const containerRef = useRef(null)
   const [itemsPerView, setItemsPerView] = useState(slidesToShow)
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [currentX, setCurrentX] = useState(0)
-  const [dragOffset, setDragOffset] = useState(0)
 
   /**
    * Update items per view based on screen size
@@ -76,80 +71,6 @@ const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
     })
   }
 
-  /**
-   * Get client X position from event
-   * @param {Event} e - Mouse or touch event
-   * @returns {number} Client X position
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const getClientX = (e) => {
-    return e.touches ? e.touches[0].clientX : e.clientX
-  }
-
-  /**
-   * Handle drag start
-   * @param {Event} e - Mouse or touch event
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const handleDragStart = (e) => {
-    setIsDragging(true)
-    const clientX = getClientX(e)
-    setStartX(clientX)
-    setCurrentX(clientX)
-    setDragOffset(0)
-  }
-
-  /**
-   * Handle drag move
-   * @param {Event} e - Mouse or touch event
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const handleDragMove = (e) => {
-    if (!isDragging || startX === 0) return
-    e.preventDefault()
-    const clientX = getClientX(e)
-    setCurrentX(clientX)
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.offsetWidth
-      const offset = ((clientX - startX) / containerWidth) * 100
-      setDragOffset(offset)
-    }
-  }
-
-  /**
-   * Handle drag end
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  const handleDragEnd = () => {
-    if (!isDragging) return
-    setIsDragging(false)
-    const visibleCount = Math.min(itemsPerView, products.length)
-    const itemWidth = 100 / visibleCount
-    const threshold = itemWidth * 0.3
-
-    if (Math.abs(dragOffset) > threshold) {
-      const step = Math.min(itemsPerView, products.length)
-      if (dragOffset > 0) {
-        setCurrentIndex((prev) => {
-          const newIndex = prev - step
-          return newIndex < 0 ? products.length - (products.length % step || step) : newIndex
-        })
-      } else {
-        setCurrentIndex((prev) => {
-          const newIndex = prev + step
-          return newIndex >= products.length ? 0 : newIndex
-        })
-      }
-    }
-    setDragOffset(0)
-    setStartX(0)
-    setCurrentX(0)
-  }
-
   if (products.length === 0) return null
 
   // Duplicate products for seamless infinite loop
@@ -157,9 +78,8 @@ const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
   const visibleCount = Math.min(itemsPerView, products.length)
   const itemWidth = 100 / visibleCount
   const baseOffset = products.length * itemWidth
-  const translateX = baseOffset + (currentIndex % products.length) * itemWidth + dragOffset
 
-  /* Product carousel with multi-slide and draggable */
+  /* Product carousel with multi-slide */
   return (
     <div className="w-full relative">
       <button
@@ -170,23 +90,12 @@ const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
         <FaChevronLeft />
       </button>
 
-      <div
-        ref={containerRef}
-        className="overflow-hidden px-10 cursor-grab active:cursor-grabbing select-none"
-        onMouseDown={handleDragStart}
-        onMouseMove={handleDragMove}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-        onTouchStart={handleDragStart}
-        onTouchMove={handleDragMove}
-        onTouchEnd={handleDragEnd}
-      >
+      <div className="overflow-hidden px-10">
         <div
           ref={carouselRef}
-          className="flex"
+          className="flex transition-transform duration-300 ease-in-out"
           style={{
-            transform: `translateX(-${translateX}%)`,
-            transition: isDragging ? 'none' : 'transform 0.3s ease-in-out'
+            transform: `translateX(-${baseOffset + (currentIndex % products.length) * itemWidth}%)`
           }}
         >
           {duplicatedProducts.map((product, index) => (
