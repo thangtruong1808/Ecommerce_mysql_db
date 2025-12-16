@@ -78,50 +78,60 @@ const ProductFormFields = ({ register, errors, categories = [], subcategories = 
       </div>
 
       {/* Subcategory selection */}
-      {selectedCategory && (
-        <div>
-          <label htmlFor="subcategory_id" className="block text-sm font-medium text-gray-700 mb-2">
-            Subcategory *
-          </label>
-          <select
-            {...register('subcategory_id', { required: 'Subcategory is required' })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select Subcategory</option>
-            {subcategories.map((sub) => (
-              <option key={sub.id} value={sub.id}>
-                {sub.name}
-              </option>
-            ))}
-          </select>
-          {errors.subcategory_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.subcategory_id.message}</p>
-          )}
-        </div>
-      )}
+      <div>
+        <label htmlFor="subcategory_id" className="block text-sm font-medium text-gray-700 mb-2">
+          Subcategory *
+        </label>
+        <select
+          {...register('subcategory_id', { 
+            validate: (value) => {
+              if (selectedCategory && !value) {
+                return 'Subcategory is required'
+              }
+              return true
+            }
+          })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">{selectedCategory ? 'Select Subcategory' : 'Select Category First'}</option>
+          {subcategories.map((sub) => (
+            <option key={sub.id} value={sub.id}>
+              {sub.name}
+            </option>
+          ))}
+        </select>
+        {errors.subcategory_id && (
+          <p className="mt-1 text-sm text-red-600">{errors.subcategory_id.message}</p>
+        )}
+      </div>
 
       {/* Child category selection */}
-      {selectedSubcategory && (
-        <div>
-          <label htmlFor="child_category_id" className="block text-sm font-medium text-gray-700 mb-2">
-            Child Category *
-          </label>
-          <select
-            {...register('child_category_id', { required: 'Child category is required' })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select Child Category</option>
-            {childCategories.map((child) => (
-              <option key={child.id} value={child.id}>
-                {child.name}
-              </option>
-            ))}
-          </select>
-          {errors.child_category_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.child_category_id.message}</p>
-          )}
-        </div>
-      )}
+      <div>
+        <label htmlFor="child_category_id" className="block text-sm font-medium text-gray-700 mb-2">
+          Child Category *
+        </label>
+        <select
+          {...register('child_category_id', { 
+            validate: (value) => {
+              if (selectedSubcategory && !value) {
+                return 'Child category is required'
+              }
+              return true
+            }
+          })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">{selectedSubcategory ? 'Select Child Category' : 'Select Subcategory First'}</option>
+          {childCategories.map((child) => (
+            <option key={child.id} value={child.id}>
+              {child.name}
+            </option>
+          ))}
+        </select>
+        {errors.child_category_id && (
+          <p className="mt-1 text-sm text-red-600">{errors.child_category_id.message}</p>
+        )}
+      </div>
 
       {/* Price and stock */}
       <div className="grid grid-cols-2 gap-4">

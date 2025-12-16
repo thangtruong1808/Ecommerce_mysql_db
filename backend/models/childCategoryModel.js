@@ -69,6 +69,19 @@ export const getAllChildCategoriesPaginated = async (filters = {}) => {
     query += ' WHERE ' + conditions.join(' AND ')
   }
   
+  // Get total count (before adding ORDER BY and LIMIT)
+  let countQuery = `
+    SELECT COUNT(*) as total
+    FROM child_categories cc
+    JOIN subcategories s ON cc.subcategory_id = s.id
+    JOIN categories c ON s.category_id = c.id
+  `
+  if (conditions.length > 0) {
+    countQuery += ' WHERE ' + conditions.join(' AND ')
+  }
+  const [countResult] = await db.execute(countQuery, params)
+  const total = parseInt(countResult[0]?.total) || 0
+  
   // Handle sorting - map joined table fields
   let sortColumn = `cc.${validSortBy}`
   if (validSortBy === 'subcategory_name') sortColumn = 's.name'
@@ -76,14 +89,6 @@ export const getAllChildCategoriesPaginated = async (filters = {}) => {
   else if (validSortBy === 'subcategory_id') sortColumn = 'cc.subcategory_id'
   
   query += ` ORDER BY ${sortColumn} ${validSortOrder}`
-  
-  // Get total count
-  const countQuery = query.replace(
-    'SELECT cc.*, s.name as subcategory_name, s.id as subcategory_id, c.name as category_name, c.id as category_id',
-    'SELECT COUNT(*) as total'
-  )
-  const [countResult] = await db.execute(countQuery, params)
-  const total = parseInt(countResult[0].total) || 0
   
   // Get paginated results
   query += ` LIMIT ${limit} OFFSET ${offset}`

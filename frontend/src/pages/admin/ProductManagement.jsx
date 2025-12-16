@@ -18,7 +18,7 @@ import InlineEditCell from '../../components/admin/InlineEditCell'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
 import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
-import QuickCreateModal from '../../components/admin/QuickCreateModal'
+import ProductFormModal from '../../components/admin/ProductFormModal'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
 import SortableTableHeader from '../../components/admin/SortableTableHeader'
@@ -50,7 +50,7 @@ const ProductManagement = () => {
   const [sortBy, setSortBy] = useState('created_at')
   const [sortOrder, setSortOrder] = useState('desc')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null })
-  const [createModal, setCreateModal] = useState({ isOpen: false })
+  const [formModal, setFormModal] = useState({ isOpen: false, product: null })
   const { selected: selectedProducts, toggle, selectAll, clear, selectedCount } = useSelection(products)
 
   /**
@@ -139,19 +139,13 @@ const ProductManagement = () => {
   }
 
   /**
-   * Handle create success
-   * @param {Object} data - Product data
+   * Handle form success (create or edit)
    * @author Thang Truong
    * @date 2025-12-12
    */
-  const handleCreateSuccess = async (data) => {
-    try {
-      await quickCreateProduct(data)
-      setCreateModal({ isOpen: false })
-      fetchProducts()
-    } catch (error) {
-      // Error handled in utility
-    }
+  const handleFormSuccess = () => {
+    setFormModal({ isOpen: false, product: null })
+    fetchProducts()
   }
 
   /**
@@ -216,7 +210,7 @@ const ProductManagement = () => {
         {/* Page header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
-          <QuickActionButton type="product" onCreate={() => setCreateModal({ isOpen: true })} />
+          <QuickActionButton type="product" onCreate={() => setFormModal({ isOpen: true, product: null })} />
         </div>
 
         {/* Filters and search */}
@@ -378,9 +372,13 @@ const ProductManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.id}</td>
                   <td className="px-6 py-4 text-sm font-medium">
-                    <Link to={`/admin/products/${product.id}/edit`} className="text-blue-600 hover:text-blue-800">
+                    <button
+                      onClick={() => setFormModal({ isOpen: true, product })}
+                      className="text-blue-600 hover:text-blue-800 text-left"
+                      aria-label="Edit product"
+                    >
                       {product.name}
-                    </Link>
+                    </button>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={product.description}>
                     {product.description || <span className="text-gray-400">No description</span>}
@@ -469,11 +467,11 @@ const ProductManagement = () => {
           onCancel={() => setDeleteModal({ isOpen: false, product: null })}
         />
 
-        <QuickCreateModal
-          type="product"
-          isOpen={createModal.isOpen}
-          onClose={() => setCreateModal({ isOpen: false })}
-          onSuccess={handleCreateSuccess}
+        <ProductFormModal
+          isOpen={formModal.isOpen}
+          onClose={() => setFormModal({ isOpen: false, product: null })}
+          onSuccess={handleFormSuccess}
+          product={formModal.product}
         />
 
         {/* Bulk action bar */}

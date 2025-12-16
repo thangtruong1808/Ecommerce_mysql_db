@@ -172,6 +172,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return
     const checkTokenExpiration = async () => {
+      const path = window.location.pathname
+      const isProtected = isProtectedRoute()
+      const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
+      const isPublicPage = !isProtected && !isAuthPage
+      
+      // Don't check token expiration on public pages to avoid console errors
+      if (isPublicPage) return
+      
       try {
         const response = await axios.post('/api/auth/refresh', {}, {
           validateStatus: (status) => status === 200 || status === 401
@@ -184,6 +192,7 @@ export const AuthProvider = ({ children }) => {
         if (error.config) {
           error.config._silent = true
         }
+        error._silent = true
         if (error.response?.status === 401) {
           await handleTokenExpiration()
         }
@@ -342,6 +351,26 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Request interceptor to mark refresh token calls as silent on public pages
+  useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const path = window.location.pathname
+        const isProtected = isProtectedRoute()
+        const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
+        const isPublicPage = !isProtected && !isAuthPage
+        
+        // Mark refresh token calls as silent on public pages
+        if (config.url?.includes('/api/auth/refresh') && isPublicPage) {
+          config._silent = true
+        }
+        return config
+      },
+      (error) => Promise.reject(error)
+    )
+    return () => axios.interceptors.request.eject(requestInterceptor)
+  }, [])
+
   // Axios interceptor for automatic token refresh and auto-logout
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
@@ -366,41 +395,70 @@ export const AuthProvider = ({ children }) => {
             originalRequest.url?.includes('/api/auth/register')) {
           return Promise.reject(error)
         }
-        // Handle 401 errors on protected endpoints
+        // Handle 401 errors on protected endpoints only
+        // Don't try to refresh token on public pages for unauthenticated users
+        const path = window.location.pathname
+        const isProtected = isProtectedRoute()
+        const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
+        const isPublicPage = !isProtected && !isAuthPage
+        
         if (!originalRequest._retry) {
           originalRequest._retry = true
           // If refresh endpoint returns 401, refresh token expired
           if (originalRequest.url?.includes('/api/auth/refresh')) {
+            // Mark as silent for public pages
+            if (isPublicPage) {
+              error._silent = true
+              if (error.config) {
+                error.config._silent = true
+              }
+            }
             // Only clear user and redirect if on protected route
-            if (isProtectedRoute()) {
+            if (isProtected) {
               await handleTokenExpiration()
             }
             return Promise.reject(error)
           }
-          // Try to refresh token
+          // Only try to refresh token on protected pages
+          // On public pages, just reject the error silently
+          if (isPublicPage) {
+            error._silent = true
+            if (error.config) {
+              error.config._silent = true
+            }
+            return Promise.reject(error)
+          }
+          // Try to refresh token (only on protected pages)
+          // Mark refresh call as silent to suppress console errors
           try {
             const refreshResponse = await axios.post('/api/auth/refresh', {}, {
-              validateStatus: (status) => status === 200 || status === 401
+              validateStatus: (status) => status === 200 || status === 401,
+              _silent: true // Mark as silent to suppress console errors
             })
             if (refreshResponse.status === 200) {
               // Token refreshed successfully - retry original request
               return axios(originalRequest)
             } else {
               // Refresh token expired - only logout if on protected route
-              if (isProtectedRoute()) {
+              if (isProtected) {
                 await handleTokenExpiration()
               }
               return Promise.reject(error)
             }
           } catch (refreshError) {
+            // Mark refresh error as silent to suppress console errors
+            if (refreshError.config) {
+              refreshError.config._silent = true
+            }
+            refreshError._silent = true
             // Refresh failed - check if it's 401 (expired) or other error
             if (refreshError.response?.status === 401) {
               // Refresh token expired - only logout if on protected route
-              if (isProtectedRoute()) {
+              if (isProtected) {
                 await handleTokenExpiration()
               }
             }
-            return Promise.reject(error)
+            return Promise.reject(refreshError)
           }
         }
         return Promise.reject(error)
