@@ -76,7 +76,7 @@ const Pagination = ({
 
   // Bottom section: Navigation buttons + page info
   // Only show pagination if there are more than 10 items
-  const totalItemsNum = Number(totalItems) || 0
+  const totalItemsNum = parseInt(totalItems) || 0
   if (totalItemsNum === 0 || totalItemsNum <= 10) return null
 
   /* Pagination navigation controls */

@@ -26,12 +26,23 @@ router.get('/', async (req, res) => {
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
-      userId: req.query.userId ? parseInt(req.query.userId) : null
+      userId: req.query.userId ? parseInt(req.query.userId) : null,
+      sortBy: req.query.sortBy || 'created_at',
+      sortOrder: req.query.sortOrder || 'desc'
     }
     const result = await cartModel.getAllCarts(filters)
     res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ 
+      message: error.message,
+      carts: [],
+      pagination: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        pages: 0
+      }
+    })
   }
 })
 

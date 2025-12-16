@@ -215,15 +215,23 @@ export const getAllCarts = async (filters = {}) => {
     query += ' WHERE 1=1'
   }
   
-  query += ' GROUP BY c.id'
-  
-  // Get total count
-  const countQuery = query.replace(
-    'SELECT c.*, u.name as user_name, u.email as user_email, COUNT(ci.id) as item_count, COALESCE(SUM(ci.quantity * p.price), 0) as total_value',
-    'SELECT COUNT(DISTINCT c.id) as total'
-  )
+  // Get total count (before adding GROUP BY, ORDER BY and LIMIT)
+  let countQuery = `
+    SELECT COUNT(DISTINCT c.id) as total
+    FROM carts c
+    LEFT JOIN users u ON c.user_id = u.id
+    LEFT JOIN cart_items ci ON c.id = ci.cart_id
+    LEFT JOIN products p ON ci.product_id = p.id
+  `
+  if (userId && !isNaN(userId)) {
+    countQuery += ' WHERE c.user_id = ?'
+  } else {
+    countQuery += ' WHERE 1=1'
+  }
   const [countResult] = await db.execute(countQuery, params)
-  const total = countResult[0].total
+  const total = Number(countResult[0]?.total) || 0
+  
+  query += ' GROUP BY c.id'
   
   // Sorting support
   const sortBy = filters.sortBy || 'created_at'
@@ -248,8 +256,8 @@ export const getAllCarts = async (filters = {}) => {
     pagination: {
       page,
       limit,
-      total,
-      pages: Math.ceil(total / limit)
+      total: Number(total) || 0,
+      pages: Math.ceil((Number(total) || 0) / limit)
     }
   }
 }

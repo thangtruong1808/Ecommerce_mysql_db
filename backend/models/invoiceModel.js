@@ -176,7 +176,10 @@ export const updateInvoicePdfPath = async (invoiceId, pdfPath) => {
  * @date 2025-12-12
  */
 export const getAllInvoices = async (filters = {}) => {
-  const { page = 1, limit = 20, search = '', paymentStatus = null } = filters
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const search = filters.search || ''
+  const paymentStatus = filters.paymentStatus || null
   const offset = (page - 1) * limit
 
   // Validate and convert to integers to avoid MySQL prepared statement issues
@@ -209,6 +212,19 @@ export const getAllInvoices = async (filters = {}) => {
     params.push(searchPattern, searchPattern, searchPattern, searchPattern)
   }
   
+  // Get total count (before adding ORDER BY and LIMIT)
+  let countQuery = `
+    SELECT COUNT(*) as total
+    FROM invoices i
+    JOIN users u ON i.user_id = u.id
+    JOIN orders o ON i.order_id = o.id
+  `
+  if (conditions.length > 0) {
+    countQuery += ' WHERE ' + conditions.join(' AND ')
+  }
+  const [countResult] = await db.execute(countQuery, params)
+  const total = Number(countResult[0]?.total) || 0
+  
   if (conditions.length > 0) {
     query += ' WHERE ' + conditions.join(' AND ')
   }
@@ -227,19 +243,19 @@ export const getAllInvoices = async (filters = {}) => {
   
   query += ` ORDER BY ${sortColumn} ${validSortOrder}`
   
-  // Get total count
-  const countQuery = query.replace(
-    'SELECT i.*, u.name as user_name, u.email as user_email, o.id as order_id, o.order_number',
-    'SELECT COUNT(*) as total'
-  )
-  const [countResult] = await db.execute(countQuery, params)
-  const total = countResult[0].total
-  
   // Get paginated results
   query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
   
   const [rows] = await db.execute(query, params)
-  return { invoices: rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } }
+  return { 
+    invoices: rows, 
+    pagination: { 
+      page, 
+      limit, 
+      total: Number(total) || 0, 
+      pages: Math.ceil((Number(total) || 0) / limit) 
+    } 
+  }
 }
 
 /**
