@@ -60,11 +60,20 @@ const InvoiceManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (statusFilter) params.append('paymentStatus', statusFilter)
       const response = await axios.get(`/api/admin/invoices?${params}`)
-      setInvoices(response.data.invoices || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.invoices) {
+        setInvoices(response.data.invoices || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setInvoices([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load invoices')
+      setInvoices([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

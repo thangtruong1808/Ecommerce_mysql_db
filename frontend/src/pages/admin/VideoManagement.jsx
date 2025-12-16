@@ -51,10 +51,17 @@ const VideoManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (productFilter) params.append('productId', productFilter)
       const response = await axios.get(`/api/admin/videos?${params}`)
-      setVideos(response.data.videos || [])
-      setTotalPages(response.data.pagination?.pages || 1)
+      if (response.data && response.data.videos) {
+        setVideos(response.data.videos || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+      } else {
+        setVideos([])
+        setTotalPages(1)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load videos')
+      setVideos([])
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }

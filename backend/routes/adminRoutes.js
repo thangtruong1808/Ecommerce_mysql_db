@@ -494,7 +494,16 @@ router.get('/products', async (req, res) => {
     const result = await productModel.getAllProducts(filters)
     res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ 
+      message: error.message,
+      products: [],
+      pagination: {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
+        total: 0,
+        pages: 0
+      }
+    })
   }
 })
 

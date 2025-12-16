@@ -59,11 +59,20 @@ const ProductViewManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (userTypeFilter) params.append('userType', userTypeFilter)
       const response = await axios.get(`/api/admin/product-views?${params}`)
-      setViews(response.data.views || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.views) {
+        setViews(response.data.views || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setViews([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load product views')
+      setViews([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

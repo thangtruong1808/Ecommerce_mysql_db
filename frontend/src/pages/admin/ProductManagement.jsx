@@ -70,11 +70,20 @@ const ProductManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (stockFilter) params.append('stock', stockFilter)
       const response = await axios.get(`/api/admin/products?${params}`)
-      setProducts(response.data.products || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.products) {
+        setProducts(response.data.products || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setProducts([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load products')
+      setProducts([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

@@ -62,14 +62,29 @@ router.get('/vouchers', async (req, res) => {
 
 /**
  * GET /api/vouchers/admin/all
- * Get all vouchers (admin only)
+ * Get all vouchers with pagination (admin only)
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 router.get('/vouchers/admin/all', protect, admin, async (req, res) => {
   try {
-    const vouchers = await voucherModel.getAllVouchers()
-    res.json(vouchers)
+    const filters = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 20
+    }
+    const result = await voucherModel.getAllVouchers(filters)
+    res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ 
+      message: error.message,
+      vouchers: [],
+      pagination: {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
+        total: 0,
+        pages: 0
+      }
+    })
   }
 })
 

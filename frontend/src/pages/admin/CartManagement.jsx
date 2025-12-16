@@ -58,11 +58,20 @@ const CartManagement = () => {
       })
       if (searchTerm) params.append('userId', searchTerm)
       const response = await axios.get(`/api/admin/carts?${params}`)
-      setCarts(response.data.carts || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.carts) {
+        setCarts(response.data.carts || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setCarts([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load carts')
+      setCarts([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

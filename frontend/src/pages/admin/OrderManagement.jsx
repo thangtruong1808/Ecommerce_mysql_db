@@ -65,11 +65,20 @@ const OrderManagement = () => {
       if (statusFilter) params.append('status', statusFilter)
       if (searchTerm) params.append('search', searchTerm)
       const response = await axios.get(`/api/admin/orders?${params}`)
-      setOrders(response.data.orders || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.orders) {
+        setOrders(response.data.orders || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setOrders([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load orders')
+      setOrders([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

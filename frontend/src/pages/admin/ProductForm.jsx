@@ -3,7 +3,7 @@
  * Form for creating and editing products (admin only)
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 import { useState, useEffect } from 'react'
@@ -19,6 +19,8 @@ import Button from '../../components/Button'
 /**
  * ProductForm component
  * @returns {JSX.Element} Product form page
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 const ProductForm = () => {
   const { id } = useParams()
@@ -41,12 +43,14 @@ const ProductForm = () => {
 
   /**
    * Fetch categories
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get('/api/products/categories')
-        setCategories(response.data)
+        setCategories(response.data || [])
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to load categories')
       }
@@ -56,62 +60,72 @@ const ProductForm = () => {
 
   /**
    * Fetch subcategories when category changes
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     if (selectedCategory) {
       const selectedCat = categories.find(cat => cat.id === parseInt(selectedCategory))
       if (selectedCat?.subcategories) {
-        setSubcategories(selectedCat.subcategories)
+        setSubcategories(selectedCat.subcategories || [])
       } else {
         const fetchSubcategories = async () => {
           try {
             const response = await axios.get(`/api/products/subcategories/${selectedCategory}`)
-            setSubcategories(response.data)
+            setSubcategories(response.data || [])
           } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to load subcategories')
           }
         }
         fetchSubcategories()
       }
-      setValue('subcategory_id', '')
-      setValue('child_category_id', '')
-      setChildCategories([])
+      if (!isEdit) {
+        setValue('subcategory_id', '')
+        setValue('child_category_id', '')
+        setChildCategories([])
+      }
     } else {
       setSubcategories([])
       setChildCategories([])
     }
-  }, [selectedCategory, categories, setValue])
+  }, [selectedCategory, categories, setValue, isEdit])
 
   /**
    * Fetch child categories when subcategory changes
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
     if (selectedSubcategory) {
       const selectedSub = subcategories.find(sub => sub.id === parseInt(selectedSubcategory))
       if (selectedSub?.child_categories) {
-        setChildCategories(selectedSub.child_categories)
+        setChildCategories(selectedSub.child_categories || [])
       } else {
         const fetchChildCategories = async () => {
           try {
             const response = await axios.get(`/api/products/child-categories/${selectedSubcategory}`)
-            setChildCategories(response.data)
+            setChildCategories(response.data || [])
           } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to load child categories')
           }
         }
         fetchChildCategories()
       }
-      setValue('child_category_id', '')
+      if (!isEdit) {
+        setValue('child_category_id', '')
+      }
     } else {
       setChildCategories([])
     }
-  }, [selectedSubcategory, subcategories, setValue])
+  }, [selectedSubcategory, subcategories, setValue, isEdit])
 
   /**
    * Fetch product data for editing
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   useEffect(() => {
-    if (isEdit) {
+    if (isEdit && categories.length > 0) {
       const fetchProduct = async () => {
         try {
           const response = await axios.get(`/api/products/${id}`)
@@ -120,9 +134,37 @@ const ProductForm = () => {
           setValue('description', product.description)
           setValue('price', product.price)
           setValue('stock', product.stock)
-          setValue('category_id', product.category_id)
-          setValue('subcategory_id', product.subcategory_id)
-          setValue('child_category_id', product.child_category_id)
+          
+          // Set category and trigger subcategory fetch
+          if (product.category_id) {
+            setValue('category_id', product.category_id)
+            // Fetch subcategories for the selected category
+            const fetchSubcategories = async () => {
+              try {
+                const subRes = await axios.get(`/api/products/subcategories/${product.category_id}`)
+                setSubcategories(subRes.data || [])
+                
+                // Set subcategory and trigger child category fetch
+                if (product.subcategory_id) {
+                  setValue('subcategory_id', product.subcategory_id)
+                  // Fetch child categories for the selected subcategory
+                  const fetchChildCategories = async () => {
+                    try {
+                      const childRes = await axios.get(`/api/products/child-categories/${product.subcategory_id}`)
+                      setChildCategories(childRes.data || [])
+                      setValue('child_category_id', product.child_category_id)
+                    } catch (error) {
+                      toast.error(error.response?.data?.message || 'Failed to load child categories')
+                    }
+                  }
+                  fetchChildCategories()
+                }
+              } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to load subcategories')
+              }
+            }
+            fetchSubcategories()
+          }
         } catch (error) {
           toast.error(error.response?.data?.message || 'Failed to load product')
           navigate('/admin/products')
@@ -130,11 +172,13 @@ const ProductForm = () => {
       }
       fetchProduct()
     }
-  }, [id, isEdit, setValue, navigate])
+  }, [id, isEdit, setValue, navigate, categories])
 
   /**
    * Handle form submission
    * @param {Object} data - Form data
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const onSubmit = async (data) => {
     try {
@@ -156,6 +200,7 @@ const ProductForm = () => {
     }
   }
 
+  /* Product form page for create and edit */
   return (
     <AdminLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -166,7 +211,7 @@ const ProductForm = () => {
 
         {/* Product form */}
         <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6 space-y-6">
-          {/* Form fields */}
+          {/* Form fields with category selection by name */}
           <ProductFormFields
             register={register}
             errors={errors}

@@ -61,11 +61,20 @@ const ChildCategoryManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (subcategoryFilter) params.append('subcategoryId', subcategoryFilter)
       const response = await axios.get(`/api/admin/child-categories?${params}`)
-      setChildCategories(response.data.childCategories || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.childCategories) {
+        setChildCategories(response.data.childCategories || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(parseInt(response.data.pagination?.total) || 0)
+      } else {
+        setChildCategories([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load child categories')
+      setChildCategories([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

@@ -61,11 +61,20 @@ const ReviewManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (ratingFilter) params.append('rating', ratingFilter)
       const response = await axios.get(`/api/admin/reviews?${params}`)
-      setReviews(response.data.reviews || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.reviews) {
+        setReviews(response.data.reviews || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setReviews([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load reviews')
+      setReviews([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

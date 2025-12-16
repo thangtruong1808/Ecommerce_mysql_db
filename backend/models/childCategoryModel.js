@@ -83,7 +83,7 @@ export const getAllChildCategoriesPaginated = async (filters = {}) => {
     'SELECT COUNT(*) as total'
   )
   const [countResult] = await db.execute(countQuery, params)
-  const total = countResult[0].total
+  const total = parseInt(countResult[0].total) || 0
   
   // Get paginated results
   query += ` LIMIT ${limit} OFFSET ${offset}`

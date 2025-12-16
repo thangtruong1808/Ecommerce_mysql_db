@@ -58,11 +58,20 @@ const CategoryManagement = () => {
       })
       if (searchTerm) params.append('search', searchTerm)
       const response = await axios.get(`/api/admin/categories?${params}`)
-      setCategories(response.data.categories || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.categories) {
+        setCategories(response.data.categories || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setCategories([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load categories')
+      setCategories([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

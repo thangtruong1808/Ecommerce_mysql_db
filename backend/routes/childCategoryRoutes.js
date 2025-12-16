@@ -29,12 +29,23 @@ router.get('/', async (req, res) => {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
       search: req.query.search || '',
-      subcategoryId: req.query.subcategoryId ? parseInt(req.query.subcategoryId) : null
+      subcategoryId: req.query.subcategoryId ? parseInt(req.query.subcategoryId) : null,
+      sortBy: req.query.sortBy || 'name',
+      sortOrder: req.query.sortOrder || 'asc'
     }
     const result = await childCategoryModel.getAllChildCategoriesPaginated(filters)
     res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ 
+      message: error.message,
+      childCategories: [],
+      pagination: {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
+        total: 0,
+        pages: 0
+      }
+    })
   }
 })
 

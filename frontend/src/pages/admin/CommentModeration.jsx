@@ -61,11 +61,20 @@ const CommentModeration = () => {
       if (isApprovedFilter !== '') params.append('isApproved', isApprovedFilter)
       
       const response = await axios.get(`/api/admin/comments?${params}`)
-      setComments(response.data.comments || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      if (response.data && response.data.comments) {
+        setComments(response.data.comments || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setComments([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load comments')
+      setComments([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

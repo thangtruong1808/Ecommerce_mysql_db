@@ -170,11 +170,47 @@ export const getVoucherUsageCount = async (voucherId, userId) => {
  * Get all vouchers (admin)
  * @returns {Promise<Array>} - Array of all vouchers
  */
-export const getAllVouchers = async () => {
+/**
+ * Get all vouchers with pagination
+ * @param {Object} filters - Filter options
+ * @returns {Promise<Object>} - Vouchers and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllVouchers = async (filters = {}) => {
+  const page = parseInt(filters.page) || 1
+  const limit = parseInt(filters.limit) || 20
+  const offset = (page - 1) * limit
+  
+  // Ensure limit and offset are valid integers
+  const limitInt = Number.isInteger(limit) ? limit : parseInt(limit, 10)
+  const offsetInt = Number.isInteger(offset) ? offset : parseInt(offset, 10)
+  
+  if (isNaN(limitInt) || limitInt < 1) {
+    throw new Error('Invalid limit parameter')
+  }
+  if (isNaN(offsetInt) || offsetInt < 0) {
+    throw new Error('Invalid offset parameter')
+  }
+  
+  // Get total count
+  const [countResult] = await db.execute('SELECT COUNT(*) as total FROM vouchers')
+  const total = countResult[0]?.total || 0
+  
+  // Get paginated results
   const [rows] = await db.execute(
-    'SELECT * FROM vouchers ORDER BY created_at DESC'
+    `SELECT * FROM vouchers ORDER BY created_at DESC LIMIT ${limitInt} OFFSET ${offsetInt}`
   )
-  return rows
+  
+  return {
+    vouchers: rows,
+    pagination: {
+      page,
+      limit: limitInt,
+      total,
+      pages: Math.ceil(total / limitInt)
+    }
+  }
 }
 
 /**

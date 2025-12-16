@@ -96,7 +96,7 @@ const Home = () => {
           <div className="flex flex-wrap justify-center items-center gap-6 mt-8 pt-6 border-t border-blue-400/20">
             <div className="flex items-center gap-2">
               <FaShippingFast className="text-white text-sm" />
-              <span className="text-sm text-blue-100">Free Shipping</span>
+              <span className="text-sm text-blue-100">Free Shipping over $100</span>
             </div>
             <div className="flex items-center gap-2">
               <FaShieldAlt className="text-white text-sm" />
@@ -170,7 +170,10 @@ const Home = () => {
             </div>
           )}
         </section>
-
+        {/* Divider */}
+        <div className="my-12">
+          <hr />
+        </div>
         {/* Recently viewed section */}
         <RecentlyViewed limit={1000} onAddToCart={handleAddToCart} />
 

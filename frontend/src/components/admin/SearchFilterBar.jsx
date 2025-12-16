@@ -29,6 +29,20 @@ const SearchFilterBar = ({
   filterOptions = [],
   searchPlaceholder = 'Search...'
 }) => {
+  /**
+   * Handle search input change
+   * Ensures search term is always treated as text string
+   * @param {Event} e - Input change event
+   * @author Thang Truong
+   * @date 2025-12-12
+   */
+  const handleSearchChange = (e) => {
+    const value = e.target.value
+    // Always treat as string, even if numeric (e.g., "2.5")
+    const sanitizedValue = String(value).trim()
+    onSearchChange(sanitizedValue)
+  }
+
   /* Search and filter bar */
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
@@ -39,7 +53,7 @@ const SearchFilterBar = ({
             type="text"
             placeholder={searchPlaceholder}
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           {searchTerm && (

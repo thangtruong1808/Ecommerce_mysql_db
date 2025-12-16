@@ -61,11 +61,20 @@ const SubcategoryManagement = () => {
       if (searchTerm) params.append('search', searchTerm)
       if (categoryFilter) params.append('categoryId', categoryFilter)
       const response = await axios.get(`/api/admin/subcategories?${params}`)
+      if (response.data && response.data.subcategories) {
       setSubcategories(response.data.subcategories || [])
       setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(response.data.pagination?.total || 0)
+      setTotalItems(parseInt(response.data.pagination?.total) || 0)
+      } else {
+        setSubcategories([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load subcategories')
+      setSubcategories([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }

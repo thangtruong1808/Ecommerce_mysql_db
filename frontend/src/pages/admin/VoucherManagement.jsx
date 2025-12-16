@@ -12,6 +12,7 @@ import { toast } from 'react-toastify'
 import { FaPlus, FaEdit, FaTrash, FaTag } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
+import Pagination from '../../components/admin/Pagination'
 import Button from '../../components/Button'
 
 /**
@@ -23,19 +24,40 @@ const VoucherManagement = () => {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVoucher, setEditingVoucher] = useState(null)
+  const [page, setPage] = useState(1)
+  const [entriesPerPage, setEntriesPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
 
   /**
    * Fetch vouchers
+   * @author Thang Truong
+   * @date 2025-12-12
    */
   const fetchVouchers = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('/api/vouchers/admin/all', {
+      const params = new URLSearchParams({
+        page,
+        limit: entriesPerPage
+      })
+      const response = await axios.get(`/api/vouchers/admin/all?${params}`, {
         withCredentials: true
       })
-      setVouchers(response.data || [])
+      if (response.data && response.data.vouchers) {
+        setVouchers(response.data.vouchers || [])
+        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalItems(response.data.pagination?.total || 0)
+      } else {
+        setVouchers([])
+        setTotalPages(1)
+        setTotalItems(0)
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load vouchers')
+      setVouchers([])
+      setTotalPages(1)
+      setTotalItems(0)
     } finally {
       setLoading(false)
     }
@@ -43,7 +65,7 @@ const VoucherManagement = () => {
 
   useEffect(() => {
     fetchVouchers()
-  }, [])
+  }, [page, entriesPerPage])
 
   /**
    * Handle delete voucher
@@ -203,6 +225,20 @@ const VoucherManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination bottom */}
+        <Pagination
+          position="bottom"
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          entriesPerPage={entriesPerPage}
+          onPageChange={setPage}
+          onEntriesChange={(value) => {
+            setEntriesPerPage(value)
+            setPage(1)
+          }}
+        />
 
         {/* Simple form modal (simplified - full form would be in separate component) */}
         {showForm && (

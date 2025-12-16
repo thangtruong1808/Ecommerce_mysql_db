@@ -46,6 +46,7 @@ const Pagination = ({
 
   // Top section: Entries selector + range display
   if (position === 'top') {
+    /* Pagination top section with entries selector */
     return (
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -74,7 +75,9 @@ const Pagination = ({
   }
 
   // Bottom section: Navigation buttons + page info
-  if (totalPages <= 1 && totalItems <= entriesPerPage) return null
+  // Only show pagination if there are more than 10 items
+  const totalItemsNum = Number(totalItems) || 0
+  if (totalItemsNum === 0 || totalItemsNum <= 10) return null
 
   /* Pagination navigation controls */
   return (

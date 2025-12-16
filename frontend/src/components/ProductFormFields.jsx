@@ -1,13 +1,14 @@
 /**
  * Product Form Fields Component
- * Reusable product form input fields
+ * Reusable product form input fields with category selection by name
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-12
  */
 
 /**
  * ProductFormFields component
+ * Displays category, subcategory, and child category selects by name (not ID)
  * @param {Object} props - Component props
  * @param {Object} props.register - React Hook Form register function
  * @param {Object} props.errors - Form errors object
@@ -17,8 +18,11 @@
  * @param {number} props.selectedCategory - Selected category ID
  * @param {number} props.selectedSubcategory - Selected subcategory ID
  * @returns {JSX.Element} Product form fields component
+ * @author Thang Truong
+ * @date 2025-12-12
  */
-const ProductFormFields = ({ register, errors, categories, subcategories, childCategories, selectedCategory, selectedSubcategory }) => {
+const ProductFormFields = ({ register, errors, categories = [], subcategories = [], childCategories = [], selectedCategory, selectedSubcategory }) => {
+  /* Product form fields with category selection by name */
   return (
     <>
       {/* Form fields container */}
