@@ -255,17 +255,23 @@ export const getAllCommentsPaginated = async (filters = {}) => {
     if (validSortBy === 'product_name') sortColumn = 'p.name'
     else if (validSortBy === 'user_name') sortColumn = 'u.name'
     
-    query += ` ORDER BY ${sortColumn} ${validSortOrder}`
-    
-    // Get total count
-    const countQuery = query.replace(
-      'SELECT c.*, u.name as user_name, u.email as user_email, p.name as product_name',
-      'SELECT COUNT(*) as total'
-    )
+    // Get total count - build count query before adding ORDER BY and LIMIT
+    // Use a simpler approach: build count query from base query structure
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM product_comments c
+      JOIN users u ON c.user_id = u.id
+      JOIN products p ON c.product_id = p.id
+    `
+    if (conditions.length > 0) {
+      countQuery += ' WHERE ' + conditions.join(' AND ')
+    }
     const [countResult] = await db.execute(countQuery, params)
-    const total = countResult[0]?.total || 0
+    // Ensure total is a number - MySQL returns COUNT as BigInt, convert to number
+    const total = Number(countResult[0]?.total) || 0
 
-    // Get paginated results
+    // Add sorting and pagination to main query
+    query += ` ORDER BY ${sortColumn} ${validSortOrder}`
     const limitInt = Math.floor(Number(limit))
     const offsetInt = Math.floor(Number(offset))
     query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`

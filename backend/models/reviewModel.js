@@ -290,36 +290,42 @@ export const getAllReviews = async (filters = {}) => {
       params.push(searchPattern, searchPattern, searchPattern, searchPattern)
     }
     
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ')
-    }
-    
-    // Sorting support
-    const sortBy = filters.sortBy || 'created_at'
-    const sortOrder = filters.sortOrder || 'desc'
-    const allowedSortColumns = ['id', 'rating', 'comment', 'product_id', 'user_id', 'product_name', 'user_name', 'created_at', 'updated_at']
-    const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
-    const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
-    
-    // Map sort column to actual table column
-    let sortColumn = `r.${validSortBy}`
-    if (validSortBy === 'product_name') sortColumn = 'p.name'
-    else if (validSortBy === 'user_name') sortColumn = 'u.name'
-    
-    query += ` ORDER BY ${sortColumn} ${validSortOrder}`
-    
-    // Get total count
-    const countQuery = query.replace(
-      'SELECT r.*, u.name as user_name, u.email as user_email, p.name as product_name',
-      'SELECT COUNT(*) as total'
-    )
-    const [countResult] = await db.execute(countQuery, params)
-    const total = countResult[0]?.total || 0
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
+  }
+  
+  // Get total count - build count query before adding ORDER BY and LIMIT
+  // Use a simpler approach: build count query from base query structure
+  let countQuery = `
+    SELECT COUNT(*) as total
+    FROM reviews r
+    JOIN users u ON r.user_id = u.id
+    JOIN products p ON r.product_id = p.id
+  `
+  if (conditions.length > 0) {
+    countQuery += ' WHERE ' + conditions.join(' AND ')
+  }
+  const [countResult] = await db.execute(countQuery, params)
+  // Ensure total is a number - MySQL returns COUNT as BigInt, convert to number
+  const total = Number(countResult[0]?.total) || 0
 
-    // Get paginated results
-    const limitInt = Math.floor(Number(limit))
-    const offsetInt = Math.floor(Number(offset))
-    query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
+  // Sorting support
+  const sortBy = filters.sortBy || 'created_at'
+  const sortOrder = filters.sortOrder || 'desc'
+  const allowedSortColumns = ['id', 'rating', 'comment', 'product_id', 'user_id', 'product_name', 'user_name', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  
+  // Map sort column to actual table column
+  let sortColumn = `r.${validSortBy}`
+  if (validSortBy === 'product_name') sortColumn = 'p.name'
+  else if (validSortBy === 'user_name') sortColumn = 'u.name'
+  
+  // Add sorting and pagination to main query
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
+  const limitInt = Math.floor(Number(limit))
+  const offsetInt = Math.floor(Number(offset))
+  query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
 
     const [rows] = await db.execute(query, params)
 

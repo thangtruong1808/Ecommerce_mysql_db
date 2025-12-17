@@ -75,12 +75,14 @@ const Pagination = ({
   }
 
   // Bottom section: Navigation buttons + page info
-  // Only show pagination if there are more than 10 items
+  // Only show pagination if there are more items than entries per page
   const totalItemsNum = parseInt(totalItems) || 0
   const totalPagesNum = parseInt(totalPages) || 1
   const currentPageNum = parseInt(currentPage) || 1
+  const entriesPerPageNum = parseInt(entriesPerPage) || 10
   
-  if (totalItemsNum === 0 || totalItemsNum <= 10) return null
+  // Show pagination if there are more items than entries per page
+  if (totalItemsNum === 0 || totalItemsNum <= entriesPerPageNum) return null
 
   /* Pagination navigation controls */
   return (

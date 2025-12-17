@@ -62,21 +62,18 @@ const CommentModeration = () => {
       if (isApprovedFilter !== '') params.append('isApproved', isApprovedFilter)
       
       const response = await axios.get(`/api/admin/comments?${params}`)
+      // Always extract pagination from response, even if comments array is empty
       const pagination = response.data?.pagination || { 
         page: 1, 
         limit: entriesPerPage, 
         total: 0, 
         pages: 1 
       }
-      if (response.data && response.data.comments) {
-        setComments(response.data.comments || [])
-        setTotalPages(pagination.pages || 1)
-        setTotalItems(pagination.total || 0)
-      } else {
-        setComments([])
-        setTotalPages(1)
-        setTotalItems(0)
-      }
+      // Set comments and pagination regardless of whether comments array exists
+      // Ensure all values are properly parsed as numbers
+      setComments(response.data?.comments || [])
+      setTotalPages(Number(pagination.pages) || 1)
+      setTotalItems(Number(pagination.total) || 0)
       setInitialLoad(false)
     } catch (error) {
       // Handle errors gracefully - ensure pagination is always set

@@ -1638,13 +1638,18 @@ router.post('/reviews/bulk-approve', validateBulkOperation, async (req, res) => 
 router.get('/comments', async (req, res) => {
   try {
     const { page, limit, search, productId, userId, isApproved, sortBy, sortOrder } = req.query
+    // Handle isApproved filter: empty string means show all, 'true'/'false' means filter
+    let isApprovedFilter = null
+    if (isApproved !== undefined && isApproved !== '') {
+      isApprovedFilter = isApproved === 'true'
+    }
     const result = await commentModel.getAllCommentsPaginated({
       page,
       limit,
       search: search ? String(search).trim() : '',
       productId,
       userId,
-      isApproved: isApproved !== undefined ? isApproved === 'true' : null,
+      isApproved: isApprovedFilter,
       sortBy,
       sortOrder
     })
