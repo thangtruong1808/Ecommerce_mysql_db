@@ -3,13 +3,13 @@
  * Full CRUD operations for users with filters, search, pagination, bulk actions
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTrash, FaPlus, FaEdit } from 'react-icons/fa'
+import { FaTrash, FaPlus, FaEdit, FaUsers } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
@@ -33,7 +33,7 @@ import {
  * UserManagement component
  * @returns {JSX.Element} User management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const UserManagement = () => {
   const [users, setUsers] = useState([])
@@ -54,7 +54,7 @@ const UserManagement = () => {
   /**
    * Fetch users
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchUsers = async () => {
     try {
@@ -96,7 +96,7 @@ const UserManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -109,7 +109,7 @@ const UserManagement = () => {
    * @param {number} userId - User ID
    * @param {string} newRole - New role
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleRoleChange = async (userId, newRole) => {
     try {
@@ -124,7 +124,7 @@ const UserManagement = () => {
    * Handle create success
    * @param {Object} data - User data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleCreateSuccess = async (data) => {
     try {
@@ -140,7 +140,7 @@ const UserManagement = () => {
    * Handle update user
    * @param {Object} data - User data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleUpdate = async (data) => {
     try {
@@ -157,7 +157,7 @@ const UserManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -186,16 +186,26 @@ const UserManagement = () => {
     <AdminLayout>
       <div className="max-w-full mx-auto">
         {/* Page header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <button
-            onClick={() => setCreateModal({ isOpen: true })}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <FaPlus className="mr-2" />
-            Add User
-          </button>
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaUsers className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">User Management</h1>
+          </div>
+          {/* Button */}
+          <div className="flex items-center justify-center sm:mt-4 md:mt-0">
+            <button
+              onClick={() => setCreateModal({ isOpen: true })}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <FaPlus className="mr-2" />
+              Add User
+            </button>
+          </div>
         </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

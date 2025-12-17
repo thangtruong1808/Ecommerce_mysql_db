@@ -3,7 +3,7 @@
  * Full CRUD operations for product views with filters, search, pagination
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
@@ -26,7 +26,7 @@ import { formatDate } from '../../utils/dateUtils'
  * ProductViewManagement component
  * @returns {JSX.Element} Product view management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const ProductViewManagement = () => {
   const [views, setViews] = useState([])
@@ -45,7 +45,7 @@ const ProductViewManagement = () => {
   /**
    * Fetch product views
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchViews = async () => {
     try {
@@ -87,7 +87,7 @@ const ProductViewManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -98,7 +98,7 @@ const ProductViewManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -114,7 +114,7 @@ const ProductViewManagement = () => {
   /**
    * Handle bulk delete
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkDelete = async () => {
     try {
@@ -144,8 +144,17 @@ const ProductViewManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Product View Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaEye className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Product View Management</h1>
+          </div>
+        </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

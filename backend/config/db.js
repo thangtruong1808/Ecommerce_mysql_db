@@ -3,7 +3,7 @@
  * Handles MySQL database connection with connection pooling
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-17
  */
 
 import mysql from 'mysql2/promise'
@@ -44,19 +44,7 @@ const pool = mysql.createPool(dbConfig)
  */
 const connectDB = async () => {
   try {
-    // Debug: Show what values are being used (only in development)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Database Configuration (from .env):')
-      console.log(`  DB_HOST: ${process.env.DB_HOST || '(not set, using default: localhost)'}`)
-      console.log(`  DB_USER: ${process.env.DB_USER || '(not set, using default: root)'}`)
-      console.log(`  DB_NAME: ${process.env.DB_NAME || '(not set, using default: ecommerce_db)'}`)
-      console.log(`  DB_PASSWORD: ${process.env.DB_PASSWORD ? '*** (set)' : '(not set or empty)'}`)
-      console.log(`  .env file path: ${envPath}`)
-    }
-    
     const connection = await pool.getConnection()
-    console.log('MySQL Database Connected Successfully')
-    console.log(`Connected to database: ${dbConfig.database} on ${dbConfig.host}`)
     connection.release()
   } catch (error) {
     console.error('Database Connection Error:', error.message)

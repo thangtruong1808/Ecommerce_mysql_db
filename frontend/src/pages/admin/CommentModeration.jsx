@@ -3,7 +3,7 @@
  * Admin page for managing product comments with full CRUD operations
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
@@ -25,7 +25,7 @@ import { formatDate } from '../../utils/dateUtils'
  * CommentModeration component
  * @returns {JSX.Element} Comment moderation page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const CommentModeration = () => {
   const [comments, setComments] = useState([])
@@ -46,7 +46,7 @@ const CommentModeration = () => {
   /**
    * Fetch comments
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchComments = async () => {
     try {
@@ -89,7 +89,7 @@ const CommentModeration = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -101,7 +101,7 @@ const CommentModeration = () => {
    * Handle approve comment
    * @param {number} commentId - Comment ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleApprove = async (commentId) => {
     try {
@@ -122,7 +122,7 @@ const CommentModeration = () => {
    * Handle reject comment
    * @param {number} commentId - Comment ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleReject = async (commentId) => {
     try {
@@ -142,7 +142,7 @@ const CommentModeration = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -161,7 +161,7 @@ const CommentModeration = () => {
   /**
    * Handle bulk approve
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkApprove = async () => {
     try {
@@ -190,13 +190,17 @@ const CommentModeration = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <FaComments className="text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Comment Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaComments className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Comment Management</h1>
           </div>
         </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

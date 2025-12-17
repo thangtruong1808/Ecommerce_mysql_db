@@ -2,7 +2,7 @@
  * Express Server
  * Main server file for the ecommerce backend API
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import express from 'express'
@@ -44,8 +44,6 @@ if (envResult.error) {
   console.warn(`Warning: Could not load .env file from ${envPath}`)
   console.warn('Please ensure .env file exists in the project root directory.')
   console.warn('You can copy backend/env.example to .env and update the values.')
-} else {
-  console.log(`Environment variables loaded from: ${envPath}`)
 }
 
 // Connect to database
@@ -98,18 +96,33 @@ app.use('/api/admin/child-categories', childCategoryRoutes)
 app.use('/api/admin/carts', cartAdminRoutes)
 app.use('/api/product-views', productViewRoutes)
 
-// Health check
+/**
+ * Health check endpoint
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' })
 })
 
-// Error handling middleware
+/**
+ * Error handling middleware
+ * Handles all unhandled errors and returns appropriate error response
+ * @param {Error} err - Error object
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
 app.use((err, req, res, next) => {
   console.error(err.stack)
   res.status(500).json({ message: 'Something went wrong!', error: err.message })
 })
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`)
+  // Server started successfully
 })
 

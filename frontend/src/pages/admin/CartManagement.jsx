@@ -3,13 +3,14 @@
  * Full CRUD operations for carts with filters, search, pagination
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaShoppingCart } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
@@ -26,7 +27,7 @@ import { useSelection } from '../../utils/useSelection'
  * CartManagement component
  * @returns {JSX.Element} Cart management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const CartManagement = () => {
   const [carts, setCarts] = useState([])
@@ -45,7 +46,7 @@ const CartManagement = () => {
   /**
    * Fetch carts
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchCarts = async () => {
     try {
@@ -86,7 +87,7 @@ const CartManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -98,7 +99,7 @@ const CartManagement = () => {
    * Handle view cart details
    * @param {number} cartId - Cart ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleView = async (cartId) => {
     try {
@@ -112,7 +113,7 @@ const CartManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -128,7 +129,7 @@ const CartManagement = () => {
   /**
    * Handle bulk delete
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkDelete = async () => {
     try {
@@ -158,8 +159,17 @@ const CartManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Cart Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaShoppingCart className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Cart Management</h1>
+          </div>
+        </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

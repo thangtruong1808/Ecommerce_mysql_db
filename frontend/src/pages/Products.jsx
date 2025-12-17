@@ -2,7 +2,7 @@
  * Products Page Component
  * Displays product listing with filters, search, and pagination
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useEffect, useRef } from 'react'
@@ -21,7 +21,7 @@ import { useProductsData } from '../hooks/useProductsData'
  * Products component
  * @returns {JSX.Element} Products listing page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const Products = () => {
   const { addToCart } = useCart()
@@ -46,6 +46,11 @@ const Products = () => {
     closeFilter,
   } = data
 
+  /**
+   * Focus first field in filter drawer when opened
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   useEffect(() => {
     if (isFilterOpen) {
       const timer = setTimeout(() => {
@@ -57,10 +62,10 @@ const Products = () => {
   }, [isFilterOpen])
 
   /**
-   * Handle add to cart
-   * @param {number} productId - Product ID
+   * Handle add to cart event
+   * @param {number} productId - Product ID to add to cart
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
@@ -91,8 +96,8 @@ const Products = () => {
   const selectedSubcategory = subcategories.find(sub => sub.id === parseInt(filters.subcategory))
   const selectedChildCategory = childCategories.find(child => child.id === parseInt(filters.childCategory))
 
+  /* Products page layout with filters, product grid, and pagination */
   return (
-    /* Products page layout */
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Breadcrumb */}
       <Breadcrumb

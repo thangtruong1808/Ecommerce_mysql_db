@@ -3,12 +3,13 @@
  * Full CRUD operations for product videos with filters, search, pagination
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaVideo } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
@@ -25,7 +26,7 @@ import { deleteVideo, setPrimaryVideo, updateVideo } from '../../utils/mediaApi'
  * VideoManagement component
  * @returns {JSX.Element} Video management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const VideoManagement = () => {
   const [videos, setVideos] = useState([])
@@ -42,7 +43,7 @@ const VideoManagement = () => {
   /**
    * Fetch videos
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchVideos = async () => {
     try {
@@ -74,7 +75,7 @@ const VideoManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -90,7 +91,7 @@ const VideoManagement = () => {
    * Handle set primary
    * @param {number} videoId - Video ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSetPrimary = async (videoId) => {
     try {
@@ -107,7 +108,7 @@ const VideoManagement = () => {
   /**
    * Handle bulk delete
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkDelete = async () => {
     try {
@@ -124,7 +125,7 @@ const VideoManagement = () => {
    * Handle video update
    * @param {Object} data - Update data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleVideoUpdate = async (data) => {
     try {
@@ -151,8 +152,17 @@ const VideoManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Video Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaVideo className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Video Management</h1>
+          </div>
+        </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

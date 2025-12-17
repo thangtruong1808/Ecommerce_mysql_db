@@ -3,14 +3,14 @@
  * Full CRUD operations for orders with filters, search, pagination, bulk actions
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTrash } from 'react-icons/fa'
+import { FaTrash, FaShoppingBag } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import StatusBadge from '../../components/admin/StatusBadge'
@@ -32,7 +32,7 @@ import {
  * OrderManagement component
  * @returns {JSX.Element} Order management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const OrderManagement = () => {
   const [orders, setOrders] = useState([])
@@ -51,7 +51,7 @@ const OrderManagement = () => {
   /**
    * Fetch orders
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchOrders = async () => {
     try {
@@ -93,7 +93,7 @@ const OrderManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -106,7 +106,7 @@ const OrderManagement = () => {
    * @param {Object} order - Order object
    * @returns {string} Formatted order number
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const formatOrderNumber = (order) => {
     if (order.order_number) return order.order_number
@@ -119,7 +119,7 @@ const OrderManagement = () => {
    * @param {Object} order - Order object
    * @returns {string} Order status
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const getOrderStatus = (order) => {
     if (order.is_delivered) return 'delivered'
@@ -132,7 +132,7 @@ const OrderManagement = () => {
    * @param {number} orderId - Order ID
    * @param {string} newStatus - New status
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -146,7 +146,7 @@ const OrderManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -163,7 +163,7 @@ const OrderManagement = () => {
    * @param {string} actionType - Action type
    * @param {Object} data - Action data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkAction = async (actionType, data) => {
     try {
@@ -197,7 +197,17 @@ const OrderManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Order Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaShoppingBag className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Order Management</h1>
+          </div>
+        </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

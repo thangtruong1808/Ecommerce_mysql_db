@@ -3,7 +3,7 @@
  * Admin page for managing vouchers
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
@@ -112,7 +112,7 @@ const VoucherManagement = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-full mx-auto ">
           {/* Loading skeleton */}
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Voucher Management</h1>
           <SkeletonLoader type="table" />
@@ -123,23 +123,30 @@ const VoucherManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-full mx-auto">
         {/* Page header */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-2">
-            <FaTag className="text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Voucher Management</h1>
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaTag className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Voucher Management</h1>
           </div>
-          <Button
-            onClick={() => {
-              setEditingVoucher(null)
-              setShowForm(true)
-            }}
-            icon={<FaPlus />}
-          >
-            Create Voucher
-          </Button>
+          {/* Button */}
+          <div className="flex items-center justify-center sm:mt-4 md:mt-0">
+            <Button
+              onClick={() => {
+                setEditingVoucher(null)
+                setShowForm(true)
+              }}
+              icon={<FaPlus />}
+            >
+              Create Voucher
+            </Button>
+          </div>
         </div>
+
+        {/* Divider between header and table */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Vouchers table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">

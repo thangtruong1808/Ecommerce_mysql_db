@@ -3,12 +3,13 @@
  * Full CRUD operations for product images with filters, search, pagination
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaImage } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
@@ -25,7 +26,7 @@ import { deleteImage, setPrimaryImage } from '../../utils/mediaApi'
  * ImageManagement component
  * @returns {JSX.Element} Image management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const ImageManagement = () => {
   const [images, setImages] = useState([])
@@ -41,7 +42,7 @@ const ImageManagement = () => {
   /**
    * Fetch images
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchImages = async () => {
     try {
@@ -73,7 +74,7 @@ const ImageManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -89,7 +90,7 @@ const ImageManagement = () => {
    * Handle set primary
    * @param {number} imageId - Image ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSetPrimary = async (imageId) => {
     try {
@@ -106,7 +107,7 @@ const ImageManagement = () => {
   /**
    * Handle bulk delete
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkDelete = async () => {
     try {
@@ -137,8 +138,17 @@ const ImageManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Image Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaImage className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Image Management</h1>
+          </div>
+        </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

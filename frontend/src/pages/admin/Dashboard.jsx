@@ -3,13 +3,13 @@
  * Displays comprehensive admin overview with analytics, charts, and insights
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { FaDollarSign, FaShoppingCart, FaUsers, FaBox, FaChartLine, FaExclamationTriangle, FaClock } from 'react-icons/fa'
+import { FaDollarSign, FaShoppingCart, FaUsers, FaBox, FaChartLine, FaExclamationTriangle, FaClock, FaTachometerAlt } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import MetricCard from '../../components/admin/MetricCard'
 import PeriodFilter from '../../components/admin/PeriodFilter'
@@ -26,15 +26,50 @@ import {
 } from '../../utils/dashboardApi'
 
 /**
- * Dashboard component
- * @returns {JSX.Element} Admin dashboard page
+ * Get activity icon based on activity type
+ * @param {string} type - Activity type (order, review, comment, registration)
+ * @returns {string} Emoji icon for the activity type
+ * @author Thang Truong
+ * @date 2025-12-17
  */
+const getActivityIcon = (type) => {
+  switch (type?.toLowerCase()) {
+    case 'order': return '🛒'
+    case 'review': return '⭐'
+    case 'comment': return '💬'
+    case 'registration': return '👤'
+    default: return '📦'
+  }
+}
+
+/**
+ * Format date to relative time string
+ * @param {string} dateString - Date string to format
+ * @returns {string} Formatted relative time (e.g., "5m ago", "2h ago")
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
+const formatActivityDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
+
 /**
  * Dashboard component
  * Overview and analytics dashboard - no CRUD operations
  * @returns {JSX.Element} Admin dashboard page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const Dashboard = () => {
   const [period, setPeriod] = useState('month')
@@ -49,8 +84,9 @@ const Dashboard = () => {
 
   /**
    * Fetch all dashboard data
+   * Loads overview, categories, customer data, products, activities, and performance metrics
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchDashboardData = async () => {
     try {
@@ -88,18 +124,30 @@ const Dashboard = () => {
   }
 
   /**
-   * Handle period change
-   * @param {string} newPeriod - New selected period
+   * Handle period change event
+   * Updates the selected time period for dashboard data
+   * @param {string} newPeriod - New selected period (day, week, month, year)
+   * @author Thang Truong
+   * @date 2025-12-17
    */
   const handlePeriodChange = (newPeriod) => {
     setPeriod(newPeriod)
   }
 
+  /**
+   * Fetch dashboard data when period changes
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   useEffect(() => {
     fetchDashboardData()
   }, [period])
 
-  // Auto-refresh every 5 minutes
+  /**
+   * Auto-refresh dashboard data every 5 minutes
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   useEffect(() => {
     const interval = setInterval(() => {
       fetchDashboardData()
@@ -140,11 +188,12 @@ const Dashboard = () => {
   const conversionRate = performanceMetrics?.conversionRate || 0
 
   /**
-   * Format order number
-   * @param {Object} order - Order object
-   * @returns {string} Formatted order number
+   * Format order number for display
+   * Generates order number from order ID and creation date
+   * @param {Object} order - Order object with id, order_number, and created_at
+   * @returns {string} Formatted order number (ORD-YYYYMMDD-XXXXX)
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const formatOrderNumber = (order) => {
     if (order.order_number) return order.order_number
@@ -152,22 +201,31 @@ const Dashboard = () => {
     return `ORD-${date}-${String(order.id).padStart(5, '0')}`
   }
 
-  /* Admin dashboard overview */
+  /* Admin dashboard overview with metrics, charts, and activity sections */
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          {lastUpdated && (
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+        {/* Left group: Icon + Title + Last Updated */}
+        <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+          <FaTachometerAlt className="text-blue-600 text-2xl sm:mr-2 md:mr-2 " />
+          <h1 className="text-3xl font-bold text-gray-900 text-center mr-2 mt-2 sm:mt-0">Admin Dashboard</h1>
+          
+           {lastUpdated && (
             <p className="text-sm text-gray-500 flex items-center">
               <FaClock className="mr-1" /> Updated: {lastUpdated.toLocaleTimeString()}
             </p>
           )}
         </div>
-        <PeriodFilter period={period} onPeriodChange={handlePeriodChange} />
+        {/* Period filter */}
+        <div className="flex items-center justify-center sm:mt-4 md:mt-0">
+          <PeriodFilter period={period} onPeriodChange={handlePeriodChange} />
+        </div>
       </div>
+
+      {/* Divider between header and key metrics */}
+      <div className="my-2 mb-4"><hr /></div>
 
       {/* Key Metrics Row - Compact */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
@@ -335,40 +393,15 @@ const Dashboard = () => {
           <div className="flex-1 overflow-y-auto">
             <div className="space-y-2">
               {recentActivities.length > 0 ? (
-                recentActivities.map((activity, index) => {
-                  const getActivityIcon = (type) => {
-                    switch (type?.toLowerCase()) {
-                      case 'order': return '🛒'
-                      case 'review': return '⭐'
-                      case 'comment': return '💬'
-                      case 'registration': return '👤'
-                      default: return '📦'
-                    }
-                  }
-                  const formatDate = (dateString) => {
-                    if (!dateString) return ''
-                    const date = new Date(dateString)
-                    const now = new Date()
-                    const diffMs = now - date
-                    const diffMins = Math.floor(diffMs / 60000)
-                    const diffHours = Math.floor(diffMs / 3600000)
-                    const diffDays = Math.floor(diffMs / 86400000)
-                    if (diffMins < 1) return 'Just now'
-                    if (diffMins < 60) return `${diffMins}m ago`
-                    if (diffHours < 24) return `${diffHours}h ago`
-                    if (diffDays < 7) return `${diffDays}d ago`
-                    return date.toLocaleDateString()
-                  }
-                  return (
-                    <div key={`activity-${index}-${activity.id || activity.createdAt || activity.created_at || activity.date || Date.now()}`} className="flex items-start space-x-2 pb-2 border-b border-gray-200 last:border-0">
-                      <span className="text-base mt-0.5">{getActivityIcon(activity.type)}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{activity.description || activity.message || 'Activity'}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{formatDate(activity.createdAt || activity.created_at || activity.date)}</p>
-                      </div>
+                recentActivities.map((activity, index) => (
+                  <div key={`activity-${index}-${activity.id || activity.createdAt || activity.created_at || activity.date || Date.now()}`} className="flex items-start space-x-2 pb-2 border-b border-gray-200 last:border-0">
+                    <span className="text-base mt-0.5">{getActivityIcon(activity.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900">{activity.description || activity.message || 'Activity'}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{formatActivityDate(activity.createdAt || activity.created_at || activity.date)}</p>
                     </div>
-                  )
-                })
+                  </div>
+                ))
               ) : (
                 <p className="text-gray-600 text-sm">No recent activity</p>
               )}

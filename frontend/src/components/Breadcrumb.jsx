@@ -2,10 +2,10 @@
  * Breadcrumb Component
  * Displays navigation breadcrumb with category hierarchy
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { FaHome, FaChevronRight } from 'react-icons/fa'
 
 /**
@@ -20,7 +20,7 @@ import { FaHome, FaChevronRight } from 'react-icons/fa'
  * @param {string} props.productName - Product name (optional, for product detail page)
  * @returns {JSX.Element} Breadcrumb component
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const Breadcrumb = ({
   categoryName,
@@ -31,6 +31,7 @@ const Breadcrumb = ({
   childCategoryId,
   productName
 }) => {
+  const location = useLocation()
   const items = []
 
   // Home
@@ -39,6 +40,15 @@ const Breadcrumb = ({
     path: '/',
     icon: <FaHome />
   })
+
+  // Products page - show "Products" if no category is selected
+  if (location.pathname === '/products' && !categoryName && !productName) {
+    items.push({
+      label: 'Products',
+      path: '/products',
+      isActive: true
+    })
+  }
 
   // Category
   if (categoryName && categoryId) {
@@ -73,9 +83,10 @@ const Breadcrumb = ({
     })
   }
 
-  if (items.length <= 1) return null
+  // Don't show breadcrumb if only Home exists (except on products page)
+  if (items.length <= 1 && location.pathname !== '/products') return null
 
-  /* Breadcrumb navigation */
+  /* Breadcrumb navigation - displays hierarchical navigation path */
   return (
     <nav className="mb-6" aria-label="Breadcrumb">
       <ol className="flex items-center space-x-2 text-sm">

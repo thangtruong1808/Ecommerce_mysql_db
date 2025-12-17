@@ -3,13 +3,14 @@
  * Full CRUD operations for product images and videos
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaImages } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import MediaUploader from '../../components/admin/MediaUploader'
 import MediaGallery from '../../components/admin/MediaGallery'
@@ -30,7 +31,7 @@ import {
  * MediaManagement component
  * @returns {JSX.Element} Media management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const MediaManagement = () => {
   const { productId } = useParams()
@@ -45,7 +46,7 @@ const MediaManagement = () => {
   /**
    * Fetch product and media
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchData = async () => {
     try {
@@ -73,7 +74,7 @@ const MediaManagement = () => {
    * Handle image upload
    * @param {Array} files - Image files
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleImageUpload = async (files) => {
     try {
@@ -88,7 +89,7 @@ const MediaManagement = () => {
    * Handle video upload
    * @param {Array} files - Video files
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleVideoUpload = async (files) => {
     try {
@@ -103,7 +104,7 @@ const MediaManagement = () => {
    * Handle image delete
    * @param {number} imageId - Image ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleImageDelete = async (imageId) => {
     if (window.confirm('Are you sure you want to delete this image?')) {
@@ -120,7 +121,7 @@ const MediaManagement = () => {
    * Handle video delete
    * @param {number} videoId - Video ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleVideoDelete = async (videoId) => {
     if (window.confirm('Are you sure you want to delete this video?')) {
@@ -137,7 +138,7 @@ const MediaManagement = () => {
    * Handle set primary image
    * @param {number} imageId - Image ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSetPrimaryImage = async (imageId) => {
     try {
@@ -152,7 +153,7 @@ const MediaManagement = () => {
    * Handle set primary video
    * @param {number} videoId - Video ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSetPrimaryVideo = async (videoId) => {
     try {
@@ -167,7 +168,7 @@ const MediaManagement = () => {
    * Handle video edit
    * @param {Object} video - Video object
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleVideoEdit = (video) => {
     setEditVideo(video)
@@ -177,7 +178,7 @@ const MediaManagement = () => {
    * Handle video update
    * @param {Object} data - Update data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleVideoUpdate = async (data) => {
     try {
@@ -203,18 +204,28 @@ const MediaManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/admin/products')}
-            className="text-blue-600 hover:text-blue-800 mb-4"
-          >
-            ← Back to Products
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Media Management - {product?.name || 'Product'}
-          </h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaImages className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">
+              Media Management - {product?.name || 'Product'}
+            </h1>
+          </div>
+          {/* Back button */}
+          <div className="flex items-center justify-center sm:mt-4 md:mt-0">
+            <button
+              onClick={() => navigate('/admin/products')}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              ← Back to Products
+            </button>
+          </div>
         </div>
+
+        {/* Divider between header and tabs */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">

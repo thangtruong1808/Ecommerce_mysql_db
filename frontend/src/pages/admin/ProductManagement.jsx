@@ -3,14 +3,14 @@
  * Full CRUD operations for products with filters, search, pagination, bulk actions
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTrash, FaImages } from 'react-icons/fa'
+import { FaTrash, FaImages, FaBox } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import QuickActionButton from '../../components/admin/QuickActionButton'
@@ -36,7 +36,7 @@ import {
  * ProductManagement component
  * @returns {JSX.Element} Product management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const ProductManagement = () => {
   const [products, setProducts] = useState([])
@@ -56,7 +56,7 @@ const ProductManagement = () => {
   /**
    * Fetch products
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchProducts = async () => {
     try {
@@ -98,7 +98,7 @@ const ProductManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -111,7 +111,7 @@ const ProductManagement = () => {
    * @param {number} productId - Product ID
    * @param {number} newStock - New stock level
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleStockUpdate = async (productId, newStock) => {
     try {
@@ -127,7 +127,7 @@ const ProductManagement = () => {
    * @param {number} productId - Product ID
    * @param {number} newPrice - New price
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handlePriceUpdate = async (productId, newPrice) => {
     try {
@@ -141,7 +141,7 @@ const ProductManagement = () => {
   /**
    * Handle form success (create or edit)
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleFormSuccess = () => {
     setFormModal({ isOpen: false, product: null })
@@ -151,7 +151,7 @@ const ProductManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -168,14 +168,14 @@ const ProductManagement = () => {
    * @param {string} actionType - Action type
    * @param {Object} data - Action data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   /**
    * Handle bulk action
    * @param {string} actionType - Action type
    * @param {Object} data - Action data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkAction = async (actionType, data) => {
     try {
@@ -208,11 +208,21 @@ const ProductManagement = () => {
     <AdminLayout>
       <div className="max-w-full mx-auto">
         {/* Page header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2 ">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaBox className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Product Management</h1>
+          </div>        
+          {/* Button */}
+          <div className="flex items-center justify-center sm:mt-4 md:mt-0"> 
           <QuickActionButton type="product" onCreate={() => setFormModal({ isOpen: true, product: null })} />
+          </div>
         </div>
 
+         {/* Divider between header and key metrics */}
+       <div className="my-2 mb-4"><hr /></div>
+      
         {/* Filters and search */}
         <SearchFilterBar
           searchTerm={searchTerm}

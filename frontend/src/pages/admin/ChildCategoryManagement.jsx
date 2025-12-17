@@ -3,13 +3,13 @@
  * Full CRUD operations for child categories with filters, search, pagination
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaPlus } from 'react-icons/fa'
+import { FaPlus, FaLayerGroup } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
@@ -28,7 +28,7 @@ import { useCrudOperations } from '../../utils/useCrudOperations'
  * ChildCategoryManagement component
  * @returns {JSX.Element} Child category management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const ChildCategoryManagement = () => {
   const [childCategories, setChildCategories] = useState([])
@@ -47,7 +47,7 @@ const ChildCategoryManagement = () => {
   /**
    * Fetch child categories
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchChildCategories = async () => {
     try {
@@ -85,7 +85,7 @@ const ChildCategoryManagement = () => {
   /**
    * Fetch subcategories for filter dropdown
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchSubcategories = async () => {
     try {
@@ -109,7 +109,7 @@ const ChildCategoryManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -121,7 +121,7 @@ const ChildCategoryManagement = () => {
    * Handle update child category
    * @param {Object} data - Child category data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleUpdate = async (data) => {
     if (!crud.editModal.entity) return
@@ -131,7 +131,7 @@ const ChildCategoryManagement = () => {
   /**
    * Handle bulk delete
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedChildCategories)
@@ -154,17 +154,27 @@ const ChildCategoryManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Child Category Management</h1>
-          <button
-            onClick={() => crud.setCreateModal({ isOpen: true })}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            <FaPlus />
-            Add Child Category
-          </button>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaLayerGroup className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Child Category Management</h1>
+          </div>
+          {/* Button */}
+          <div className="flex items-center justify-center sm:mt-4 md:mt-0">
+            <button
+              onClick={() => crud.setCreateModal({ isOpen: true })}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              <FaPlus />
+              Add Child Category
+            </button>
+          </div>
         </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar

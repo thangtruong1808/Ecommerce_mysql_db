@@ -3,13 +3,14 @@
  * Full CRUD operations for invoices with filters, search, pagination
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { FaFileInvoice } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
 import SearchFilterBar from '../../components/admin/SearchFilterBar'
@@ -26,7 +27,7 @@ import { useSelection } from '../../utils/useSelection'
  * InvoiceManagement component
  * @returns {JSX.Element} Invoice management page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const InvoiceManagement = () => {
   const [invoices, setInvoices] = useState([])
@@ -46,7 +47,7 @@ const InvoiceManagement = () => {
   /**
    * Fetch invoices
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchInvoices = async () => {
     try {
@@ -88,7 +89,7 @@ const InvoiceManagement = () => {
    * @param {string} field - Sort field
    * @param {string} order - Sort order
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSort = (field, order) => {
     setSortBy(field)
@@ -100,7 +101,7 @@ const InvoiceManagement = () => {
    * Handle update invoice
    * @param {Object} data - Invoice data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleUpdate = async (data) => {
     try {
@@ -117,7 +118,7 @@ const InvoiceManagement = () => {
    * Handle resend email
    * @param {number} invoiceId - Invoice ID
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleResendEmail = async (invoiceId) => {
     try {
@@ -132,7 +133,7 @@ const InvoiceManagement = () => {
   /**
    * Handle delete confirm
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleDeleteConfirm = async () => {
     try {
@@ -148,7 +149,7 @@ const InvoiceManagement = () => {
   /**
    * Handle bulk delete
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleBulkDelete = async () => {
     try {
@@ -178,8 +179,17 @@ const InvoiceManagement = () => {
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Invoice Management</h1>
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row justify-evenly sm:items-center mb-2">
+          {/* Icon + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
+            <FaFileInvoice className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Invoice Management</h1>
+          </div>
+        </div>
+
+        {/* Divider between header and filters */}
+        <div className="my-2 mb-4"><hr /></div>
 
         {/* Filters and search */}
         <SearchFilterBar
