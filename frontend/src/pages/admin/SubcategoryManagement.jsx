@@ -34,6 +34,7 @@ const SubcategoryManagement = () => {
   const [subcategories, setSubcategories] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -45,7 +46,7 @@ const SubcategoryManagement = () => {
   const { selected: selectedSubcategories, toggle, selectAll, clear, selectedCount } = useSelection(subcategories)
 
   /**
-   * Fetch subcategories
+   * Fetch subcategories with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -58,23 +59,32 @@ const SubcategoryManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (categoryFilter) params.append('categoryId', categoryFilter)
       const response = await axios.get(`/api/admin/subcategories?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.subcategories) {
-      setSubcategories(response.data.subcategories || [])
-      setTotalPages(response.data.pagination?.pages || 1)
-      setTotalItems(parseInt(response.data.pagination?.total) || 0)
+        setSubcategories(response.data.subcategories || [])
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(parseInt(pagination.total) || 0)
       } else {
         setSubcategories([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load subcategories')
+      const errorMessage = error.response?.data?.message || 'No subcategories found matching your search'
+      toast.error(errorMessage)
       setSubcategories([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -139,7 +149,7 @@ const SubcategoryManagement = () => {
     clear()
   }
 
-  if (loading && subcategories.length === 0) {
+  if (loading && initialLoad && subcategories.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -277,8 +287,26 @@ const SubcategoryManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {subcategories.map((subcategory, index) => (
-                <SubcategoryTableRow
+              {subcategories.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="9" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No subcategories found matching "${searchTerm}"` 
+                          : 'No subcategories found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all subcategories.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                subcategories.map((subcategory, index) => (
+                  <SubcategoryTableRow
                   key={subcategory.id}
                   subcategory={subcategory}
                   index={(page - 1) * entriesPerPage + index + 1}
@@ -286,8 +314,9 @@ const SubcategoryManagement = () => {
                   onToggle={toggle}
                   onEdit={() => crud.setEditModal({ isOpen: true, entity: subcategory })}
                   onDelete={() => crud.setDeleteModal({ isOpen: true, entity: subcategory })}
-                />
-              ))}
+                  />
+                ))
+              )}
             </tbody>
             </table>
           </div>

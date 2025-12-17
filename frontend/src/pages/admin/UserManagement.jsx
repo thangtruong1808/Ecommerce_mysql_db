@@ -38,6 +38,7 @@ import {
 const UserManagement = () => {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -52,7 +53,7 @@ const UserManagement = () => {
   const { selected: selectedUsers, toggle, selectAll, clear, selectedCount } = useSelection(users)
 
   /**
-   * Fetch users
+   * Fetch users with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -65,23 +66,32 @@ const UserManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (roleFilter) params.append('role', roleFilter)
       const response = await axios.get(`/api/admin/users?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.users) {
         setUsers(response.data.users || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setUsers([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load users')
+      const errorMessage = error.response?.data?.message || 'No users found matching your search'
+      toast.error(errorMessage)
       setUsers([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -170,7 +180,7 @@ const UserManagement = () => {
   }
 
 
-  if (loading && users.length === 0) {
+  if (loading && initialLoad && users.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -302,7 +312,25 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user, index) => (
+              {users.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="8" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No users found matching "${searchTerm}"` 
+                          : 'No users found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all users.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                users.map((user, index) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <BulkSelectCheckbox
@@ -355,7 +383,8 @@ const UserManagement = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
             </table>
           </div>

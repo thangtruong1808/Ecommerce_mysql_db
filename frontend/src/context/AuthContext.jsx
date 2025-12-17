@@ -32,6 +32,9 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null)
   const isRedirectingRef = useRef(false)
   const isFetchingUserRef = useRef(false)
+  const isRefreshingTokenRef = useRef(false)
+  const lastRefreshTimeRef = useRef(0)
+  const userFetchedTimeRef = useRef(0)
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
@@ -149,12 +152,25 @@ export const AuthProvider = ({ children }) => {
         setError(null)
       }
     } catch (error) {
+      // Handle 429 errors gracefully - don't clear user on rate limit
+      if (error.response?.status === 429) {
+        error._silent = true
+        if (error.config) {
+          error.config._silent = true
+        }
+        // Don't clear user on rate limit - just set loading to false
+        setLoading(false)
+        isFetchingUserRef.current = false
+        userFetchedTimeRef.current = Date.now()
+        return
+      }
       // Silent fail - /api/auth/me should never error, but handle gracefully
       setUser(null)
       setError(null)
     } finally {
       setLoading(false)
       isFetchingUserRef.current = false
+      userFetchedTimeRef.current = Date.now()
     }
   }
 
@@ -166,11 +182,13 @@ export const AuthProvider = ({ children }) => {
   /**
    * Check refresh token expiration periodically when user is authenticated
    * Silently handles 401 errors to avoid console noise
+   * Prevents duplicate refresh calls to avoid 429 rate limit errors
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   useEffect(() => {
     if (!user) return
+    
     const checkTokenExpiration = async () => {
       const path = window.location.pathname
       const isProtected = isProtectedRoute()
@@ -180,6 +198,21 @@ export const AuthProvider = ({ children }) => {
       // Don't check token expiration on public pages to avoid console errors
       if (isPublicPage) return
       
+      // Prevent duplicate refresh calls - only allow one refresh per 5 seconds
+      const now = Date.now()
+      if (isRefreshingTokenRef.current || (now - lastRefreshTimeRef.current < 5000)) {
+        return
+      }
+      
+      // Don't check immediately after fetching user - wait at least 3 seconds
+      // This prevents simultaneous calls on page refresh
+      if (userFetchedTimeRef.current > 0 && (now - userFetchedTimeRef.current < 3000)) {
+        return
+      }
+      
+      isRefreshingTokenRef.current = true
+      lastRefreshTimeRef.current = now
+      
       try {
         const response = await axios.post('/api/auth/refresh', {}, {
           validateStatus: (status) => status === 200 || status === 401
@@ -188,6 +221,16 @@ export const AuthProvider = ({ children }) => {
           await handleTokenExpiration()
         }
       } catch (error) {
+        // Handle 429 errors gracefully - don't logout user
+        if (error.response?.status === 429) {
+          error._silent = true
+          if (error.config) {
+            error.config._silent = true
+          }
+          // Don't logout on rate limit - just wait and retry later
+          isRefreshingTokenRef.current = false
+          return
+        }
         // Mark as silent to avoid console errors
         if (error.config) {
           error.config._silent = true
@@ -196,11 +239,24 @@ export const AuthProvider = ({ children }) => {
         if (error.response?.status === 401) {
           await handleTokenExpiration()
         }
+      } finally {
+        // Reset flag after a delay to allow periodic checks
+        setTimeout(() => {
+          isRefreshingTokenRef.current = false
+        }, 5000)
       }
     }
-    checkTokenExpiration()
-    const interval = setInterval(checkTokenExpiration, 60 * 1000)
-    return () => clearInterval(interval)
+    
+    // Wait 3 seconds after user is set before first check to avoid simultaneous calls with fetchUser
+    // This prevents 429 rate limit errors on page refresh
+    const initialDelay = setTimeout(() => {
+      checkTokenExpiration()
+      // Periodic checks every 60 seconds
+      const interval = setInterval(checkTokenExpiration, 60 * 1000)
+      return () => clearInterval(interval)
+    }, 3000)
+    
+    return () => clearTimeout(initialDelay)
   }, [user])
 
   /**
@@ -329,19 +385,39 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Refresh access token - called automatically when access token expires
+   * Prevents duplicate calls to avoid 429 rate limit errors
    * @returns {Promise<boolean>} Success status
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const refreshToken = async () => {
+    // Prevent duplicate refresh calls - only allow one refresh per 5 seconds
+    const now = Date.now()
+    if (isRefreshingTokenRef.current || (now - lastRefreshTimeRef.current < 5000)) {
+      return false
+    }
+    
+    isRefreshingTokenRef.current = true
+    lastRefreshTimeRef.current = now
+    
     try {
       const response = await axios.post('/api/auth/refresh', {}, {
         validateStatus: (status) => status === 200 || status === 401
       })
+      isRefreshingTokenRef.current = false
       if (response.status === 200) return true
       await handleTokenExpiration()
       return false
     } catch (error) {
+      isRefreshingTokenRef.current = false
+      // Handle 429 errors gracefully - don't logout user
+      if (error.response?.status === 429) {
+        error._silent = true
+        if (error.config) {
+          error.config._silent = true
+        }
+        return false
+      }
       if (error.response?.status === 401) {
         await handleTokenExpiration()
       } else {
@@ -429,12 +505,27 @@ export const AuthProvider = ({ children }) => {
             return Promise.reject(error)
           }
           // Try to refresh token (only on protected pages)
+          // Prevent duplicate refresh calls to avoid 429 rate limit errors
+          const now = Date.now()
+          if (isRefreshingTokenRef.current || (now - lastRefreshTimeRef.current < 5000)) {
+            // If refresh is in progress or was recent, reject to avoid 429
+            error._silent = true
+            if (error.config) {
+              error.config._silent = true
+            }
+            return Promise.reject(error)
+          }
+          
+          isRefreshingTokenRef.current = true
+          lastRefreshTimeRef.current = now
+          
           // Mark refresh call as silent to suppress console errors
           try {
             const refreshResponse = await axios.post('/api/auth/refresh', {}, {
               validateStatus: (status) => status === 200 || status === 401,
               _silent: true // Mark as silent to suppress console errors
             })
+            isRefreshingTokenRef.current = false
             if (refreshResponse.status === 200) {
               // Token refreshed successfully - retry original request
               return axios(originalRequest)
@@ -446,6 +537,16 @@ export const AuthProvider = ({ children }) => {
               return Promise.reject(error)
             }
           } catch (refreshError) {
+            isRefreshingTokenRef.current = false
+            // Handle 429 errors gracefully - don't logout user
+            if (refreshError.response?.status === 429) {
+              refreshError._silent = true
+              if (refreshError.config) {
+                refreshError.config._silent = true
+              }
+              // Don't logout on rate limit - just reject the original error
+              return Promise.reject(error)
+            }
             // Mark refresh error as silent to suppress console errors
             if (refreshError.config) {
               refreshError.config._silent = true
@@ -469,11 +570,15 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Check authentication - can be called manually when needed
+   * Always fetches user to ensure auth state is current, especially on page refresh
+   * Prevents duplicate calls to avoid 429 rate limit errors
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const checkAuth = () => {
-    if (isProtectedRoute() && !isFetchingUserRef.current) {
+    // Prevent duplicate calls - only fetch if not already fetching
+    // This prevents 429 rate limit errors from multiple simultaneous requests
+    if (!isFetchingUserRef.current) {
       fetchUser()
     }
   }

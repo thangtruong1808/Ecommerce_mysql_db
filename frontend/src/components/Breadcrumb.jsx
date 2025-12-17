@@ -58,16 +58,16 @@ const Breadcrumb = ({
     })
   }
 
-  // Subcategory
-  if (subcategoryName && subcategoryId) {
+  // Subcategory (only show if category is also present)
+  if (subcategoryName && subcategoryId && categoryId) {
     items.push({
       label: subcategoryName,
       path: `/products?category=${categoryId}&subcategory=${subcategoryId}`
     })
   }
 
-  // Child Category
-  if (childCategoryName && childCategoryId) {
+  // Child Category (only show if category and subcategory are also present)
+  if (childCategoryName && childCategoryId && categoryId && subcategoryId) {
     items.push({
       label: childCategoryName,
       path: `/products?category=${categoryId}&subcategory=${subcategoryId}&childCategory=${childCategoryId}`

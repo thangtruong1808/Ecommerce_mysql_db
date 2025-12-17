@@ -31,6 +31,7 @@ import { deleteImage, setPrimaryImage } from '../../utils/mediaApi'
 const ImageManagement = () => {
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [productFilter, setProductFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -40,7 +41,7 @@ const ImageManagement = () => {
   const { selected: selectedImages, toggle, selectAll, clear, selectedCount } = useSelection(images)
 
   /**
-   * Fetch images
+   * Fetch images with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -48,20 +49,29 @@ const ImageManagement = () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({ page, limit: 20 })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (productFilter) params.append('productId', productFilter)
       const response = await axios.get(`/api/admin/images?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: 20, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.images) {
         setImages(response.data.images || [])
-        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalPages(pagination.pages || 1)
       } else {
         setImages([])
         setTotalPages(1)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load images')
+      const errorMessage = error.response?.data?.message || 'No images found matching your search'
+      toast.error(errorMessage)
       setImages([])
       setTotalPages(1)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -123,7 +133,7 @@ const ImageManagement = () => {
   }
 
 
-  if (loading && images.length === 0) {
+  if (loading && initialLoad && images.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -190,8 +200,26 @@ const ImageManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {images.map((image) => (
-                <ImageTableRow
+              {images.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No images found matching "${searchTerm}"` 
+                          : 'No images found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all images.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                images.map((image) => (
+                  <ImageTableRow
                   key={image.id}
                   image={image}
                   isSelected={selectedImages.has(image.id)}
@@ -199,8 +227,9 @@ const ImageManagement = () => {
                   onView={() => setLightboxImage(image)}
                   onSetPrimary={handleSetPrimary}
                   onDelete={(id) => setDeleteModal({ isOpen: true, image: images.find(img => img.id === id) })}
-                />
-              ))}
+                  />
+                ))
+              )}
             </tbody>
           </table>
         </div>

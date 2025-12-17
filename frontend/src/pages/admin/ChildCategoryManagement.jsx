@@ -34,6 +34,7 @@ const ChildCategoryManagement = () => {
   const [childCategories, setChildCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [subcategoryFilter, setSubcategoryFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -45,7 +46,7 @@ const ChildCategoryManagement = () => {
   const { selected: selectedChildCategories, toggle, selectAll, clear, selectedCount } = useSelection(childCategories)
 
   /**
-   * Fetch child categories
+   * Fetch child categories with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -58,23 +59,32 @@ const ChildCategoryManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (subcategoryFilter) params.append('subcategoryId', subcategoryFilter)
       const response = await axios.get(`/api/admin/child-categories?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.childCategories) {
         setChildCategories(response.data.childCategories || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(parseInt(response.data.pagination?.total) || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(parseInt(pagination.total) || 0)
       } else {
         setChildCategories([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load child categories')
+      const errorMessage = error.response?.data?.message || 'No child categories found matching your search'
+      toast.error(errorMessage)
       setChildCategories([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -139,7 +149,7 @@ const ChildCategoryManagement = () => {
     clear()
   }
 
-  if (loading && childCategories.length === 0) {
+  if (loading && initialLoad && childCategories.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -284,8 +294,26 @@ const ChildCategoryManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {childCategories.map((childCategory, index) => (
-                <ChildCategoryTableRow
+              {childCategories.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="10" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No child categories found matching "${searchTerm}"` 
+                          : 'No child categories found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all child categories.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                childCategories.map((childCategory, index) => (
+                  <ChildCategoryTableRow
                   key={childCategory.id}
                   childCategory={childCategory}
                   index={(page - 1) * entriesPerPage + index + 1}
@@ -293,8 +321,9 @@ const ChildCategoryManagement = () => {
                   onToggle={toggle}
                   onEdit={() => crud.setEditModal({ isOpen: true, entity: childCategory })}
                   onDelete={() => crud.setDeleteModal({ isOpen: true, entity: childCategory })}
-                />
-              ))}
+                  />
+                ))
+              )}
             </tbody>
             </table>
           </div>

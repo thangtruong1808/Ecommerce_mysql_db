@@ -41,6 +41,7 @@ import {
 const ProductManagement = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [stockFilter, setStockFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -54,7 +55,7 @@ const ProductManagement = () => {
   const { selected: selectedProducts, toggle, selectAll, clear, selectedCount } = useSelection(products)
 
   /**
-   * Fetch products
+   * Fetch products with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -67,23 +68,32 @@ const ProductManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (stockFilter) params.append('stock', stockFilter)
       const response = await axios.get(`/api/admin/products?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.products) {
         setProducts(response.data.products || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setProducts([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load products')
+      const errorMessage = error.response?.data?.message || 'No products found matching your search'
+      toast.error(errorMessage)
       setProducts([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -192,7 +202,7 @@ const ProductManagement = () => {
     }
   }
 
-  if (loading && products.length === 0) {
+  if (loading && initialLoad && products.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -368,7 +378,25 @@ const ProductManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product, index) => (
+              {products.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="15" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No products found matching "${searchTerm}"` 
+                          : 'No products found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all products.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                products.map((product, index) => (
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <BulkSelectCheckbox
@@ -448,7 +476,8 @@ const ProductManagement = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
             </table>
           </div>

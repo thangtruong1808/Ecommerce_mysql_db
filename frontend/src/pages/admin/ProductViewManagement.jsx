@@ -31,6 +31,7 @@ import { formatDate } from '../../utils/dateUtils'
 const ProductViewManagement = () => {
   const [views, setViews] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [userTypeFilter, setUserTypeFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -43,7 +44,7 @@ const ProductViewManagement = () => {
   const { selected: selectedViews, toggle, selectAll, clear, selectedCount } = useSelection(views)
 
   /**
-   * Fetch product views
+   * Fetch product views with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -56,23 +57,32 @@ const ProductViewManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (userTypeFilter) params.append('userType', userTypeFilter)
       const response = await axios.get(`/api/admin/product-views?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.views) {
         setViews(response.data.views || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setViews([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load product views')
+      const errorMessage = error.response?.data?.message || 'No product views found matching your search'
+      toast.error(errorMessage)
       setViews([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -128,7 +138,7 @@ const ProductViewManagement = () => {
     }
   }
 
-  if (loading && views.length === 0) {
+  if (loading && initialLoad && views.length === 0) {
     return (
       /* Loading skeleton */
       <AdminLayout>
@@ -244,10 +254,21 @@ const ProductViewManagement = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {views.length === 0 ? (
+                {views.length === 0 && !loading ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                      No product views found
+                    <td colSpan="7" className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-gray-500 text-lg font-medium">
+                          {searchTerm 
+                            ? `No product views found matching "${searchTerm}"` 
+                            : 'No product views found'}
+                        </p>
+                        {searchTerm && (
+                          <p className="text-gray-400 text-sm mt-2">
+                            Try adjusting your search terms or clear the search to see all product views.
+                          </p>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (

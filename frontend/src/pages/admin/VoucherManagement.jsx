@@ -12,27 +12,40 @@ import { toast } from 'react-toastify'
 import { FaPlus, FaEdit, FaTrash, FaTag } from 'react-icons/fa'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SkeletonLoader from '../../components/SkeletonLoader'
+import SearchFilterBar from '../../components/admin/SearchFilterBar'
 import Pagination from '../../components/admin/Pagination'
 import Button from '../../components/Button'
 
 /**
  * VoucherManagement component
  * @returns {JSX.Element} Voucher management page
+ * @author Thang Truong
+ * @date 2025-12-17
  */
 const VoucherManagement = () => {
   const [vouchers, setVouchers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVoucher, setEditingVoucher] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
   const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
   /**
-   * Fetch vouchers
+   * Format date for display
+   * @param {string} dateString - Date string
+   * @returns {string} Formatted date
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
+   */
+  /**
+   * Fetch vouchers with search and filter
+   * @author Thang Truong
+   * @date 2025-12-17
    */
   const fetchVouchers = async () => {
     try {
@@ -41,35 +54,53 @@ const VoucherManagement = () => {
         page,
         limit: entriesPerPage
       })
+      if (searchTerm) params.append('search', String(searchTerm))
+      if (statusFilter) params.append('status', statusFilter)
       const response = await axios.get(`/api/vouchers/admin/all?${params}`, {
         withCredentials: true
       })
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.vouchers) {
         setVouchers(response.data.vouchers || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setVouchers([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load vouchers')
+      const errorMessage = error.response?.data?.message || 'No vouchers found matching your search'
+      toast.error(errorMessage)
       setVouchers([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
   }
 
+  /**
+   * Fetch vouchers when filters change
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   useEffect(() => {
     fetchVouchers()
-  }, [page, entriesPerPage])
+  }, [page, entriesPerPage, searchTerm, statusFilter])
 
   /**
-   * Handle delete voucher
-   * @param {number} voucherId - Voucher ID
+   * Handle delete voucher event
+   * @param {number} voucherId - Voucher ID to delete
+   * @author Thang Truong
+   * @date 2025-12-17
    */
   const handleDelete = async (voucherId) => {
     if (!window.confirm('Are you sure you want to delete this voucher?')) {
@@ -91,6 +122,8 @@ const VoucherManagement = () => {
    * Format date for display
    * @param {string} dateString - Date string
    * @returns {string} Formatted date
+   * @author Thang Truong
+   * @date 2025-12-17
    */
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString()
@@ -100,6 +133,8 @@ const VoucherManagement = () => {
    * Check if voucher is active
    * @param {Object} voucher - Voucher object
    * @returns {boolean} True if active
+   * @author Thang Truong
+   * @date 2025-12-17
    */
   const isVoucherActive = (voucher) => {
     if (!voucher.is_active) return false
@@ -109,7 +144,7 @@ const VoucherManagement = () => {
     return now >= start && now <= end
   }
 
-  if (loading) {
+  if (loading && initialLoad && vouchers.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto ">
@@ -121,6 +156,7 @@ const VoucherManagement = () => {
     )
   }
 
+  /* Voucher management page with search and filters */
   return (
     <AdminLayout>
       <div className="max-w-full mx-auto">
@@ -145,8 +181,29 @@ const VoucherManagement = () => {
           </div>
         </div>
 
-        {/* Divider between header and table */}
+        {/* Divider between header and filters */}
         <div className="my-2 mb-4"><hr /></div>
+
+        {/* Filters and search */}
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={(value) => {
+            setSearchTerm(value)
+            setPage(1)
+          }}
+          filterValue={statusFilter}
+          onFilterChange={(value) => {
+            setStatusFilter(value)
+            setPage(1)
+          }}
+          filterOptions={[
+            { value: '', label: 'All Status' },
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'expired', label: 'Expired' }
+          ]}
+          searchPlaceholder="Search vouchers by code..."
+        />
 
         {/* Vouchers table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -165,10 +222,21 @@ const VoucherManagement = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {/* Voucher rows */}
-              {vouchers.length === 0 ? (
+              {vouchers.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-                    No vouchers found
+                  <td colSpan="7" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No vouchers found matching "${searchTerm}"` 
+                          : 'No vouchers found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all vouchers.
+                        </p>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (

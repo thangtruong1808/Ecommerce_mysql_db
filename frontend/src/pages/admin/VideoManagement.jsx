@@ -31,6 +31,7 @@ import { deleteVideo, setPrimaryVideo, updateVideo } from '../../utils/mediaApi'
 const VideoManagement = () => {
   const [videos, setVideos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [productFilter, setProductFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -41,7 +42,7 @@ const VideoManagement = () => {
   const { selected: selectedVideos, toggle, selectAll, clear, selectedCount } = useSelection(videos)
 
   /**
-   * Fetch videos
+   * Fetch videos with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -49,20 +50,29 @@ const VideoManagement = () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({ page, limit: 20 })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (productFilter) params.append('productId', productFilter)
       const response = await axios.get(`/api/admin/videos?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: 20, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.videos) {
         setVideos(response.data.videos || [])
-        setTotalPages(response.data.pagination?.pages || 1)
+        setTotalPages(pagination.pages || 1)
       } else {
         setVideos([])
         setTotalPages(1)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load videos')
+      const errorMessage = error.response?.data?.message || 'No videos found matching your search'
+      toast.error(errorMessage)
       setVideos([])
       setTotalPages(1)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -137,7 +147,7 @@ const VideoManagement = () => {
     }
   }
 
-  if (loading && videos.length === 0) {
+  if (loading && initialLoad && videos.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -206,8 +216,26 @@ const VideoManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {videos.map((video) => (
-                <VideoTableRow
+              {videos.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="9" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No videos found matching "${searchTerm}"` 
+                          : 'No videos found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all videos.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                videos.map((video) => (
+                  <VideoTableRow
                   key={video.id}
                   video={video}
                   isSelected={selectedVideos.has(video.id)}
@@ -217,8 +245,9 @@ const VideoManagement = () => {
                   onEdit={(v) => setEditModal({ isOpen: true, video: v })}
                   onSetPrimary={handleSetPrimary}
                   onDelete={(id) => setDeleteModal({ isOpen: true, video: videos.find(v => v.id === id) })}
-                />
-              ))}
+                  />
+                ))
+              )}
             </tbody>
           </table>
         </div>

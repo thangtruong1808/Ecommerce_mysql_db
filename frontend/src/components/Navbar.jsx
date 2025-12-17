@@ -239,10 +239,10 @@ const Navbar = () => {
                             <div className="space-y-2">
                               {(category.subcategories || []).map((sub) => (
                                 <div key={sub.id} className="space-y-1">
-                                  <Link to={`/products?subcategory=${sub.id}`} className="block text-sm font-medium text-gray-800 hover:text-blue-600">{sub.name}</Link>
+                                  <Link to={`/products?category=${category.id}&subcategory=${sub.id}`} className="block text-sm font-medium text-gray-800 hover:text-blue-600">{sub.name}</Link>
                                   <div className="flex flex-wrap gap-2">
                                     {(sub.child_categories || []).map((child) => (
-                                      <Link key={child.id} to={`/products?childCategory=${child.id}`} className="text-xs text-gray-600 hover:text-blue-600 bg-gray-50 px-2 py-1 rounded">{child.name}</Link>
+                                      <Link key={child.id} to={`/products?category=${category.id}&subcategory=${sub.id}&childCategory=${child.id}`} className="text-xs text-gray-600 hover:text-blue-600 bg-gray-50 px-2 py-1 rounded">{child.name}</Link>
                                     ))}
                                   </div>
                                 </div>
@@ -354,10 +354,10 @@ const Navbar = () => {
                         <Link to={`/products?category=${category.id}`} onClick={closeMobileMenu} className="block text-sm font-semibold text-gray-800">{category.name}</Link>
                         {(category.subcategories || []).map((sub) => (
                           <div key={sub.id} className="pl-2">
-                            <Link to={`/products?subcategory=${sub.id}`} onClick={closeMobileMenu} className="block text-sm text-gray-600 mb-1">{sub.name}</Link>
+                            <Link to={`/products?category=${category.id}&subcategory=${sub.id}`} onClick={closeMobileMenu} className="block text-sm text-gray-600 mb-1">{sub.name}</Link>
                             <div className="pl-2 flex flex-wrap gap-2">
                               {(sub.child_categories || []).map((child) => (
-                                <Link key={child.id} to={`/products?childCategory=${child.id}`} onClick={closeMobileMenu} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">{child.name}</Link>
+                                <Link key={child.id} to={`/products?category=${category.id}&subcategory=${sub.id}&childCategory=${child.id}`} onClick={closeMobileMenu} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">{child.name}</Link>
                               ))}
                             </div>
                           </div>

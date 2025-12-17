@@ -278,8 +278,10 @@ export const getAllReviews = async (filters = {}) => {
     params.push(rating)
   }
   if (search) {
+    // Sanitize search string and escape special LIKE characters
+    const sanitizedSearch = String(search).trim().replace(/[%_\\]/g, '\\$&')
+    const searchPattern = `%${sanitizedSearch}%`
     conditions.push('(u.name LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR r.comment LIKE ?)')
-    const searchPattern = `%${search}%`
     params.push(searchPattern, searchPattern, searchPattern, searchPattern)
   }
   

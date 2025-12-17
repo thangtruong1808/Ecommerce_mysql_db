@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
       userId: req.query.userId ? parseInt(req.query.userId) : null,
+      search: req.query.search || null,
       sortBy: req.query.sortBy || 'created_at',
       sortOrder: req.query.sortOrder || 'desc'
     }
@@ -34,13 +35,13 @@ router.get('/', async (req, res) => {
     res.json(result)
   } catch (error) {
     res.status(500).json({ 
-      message: error.message,
+      message: error.message || 'No carts found matching your search',
       carts: [],
       pagination: {
-        page: 1,
-        limit: 20,
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
         total: 0,
-        pages: 0
+        pages: 1
       }
     })
   }

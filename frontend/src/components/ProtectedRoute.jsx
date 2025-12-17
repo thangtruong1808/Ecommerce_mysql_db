@@ -22,19 +22,30 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, isAdmin, loading, checkAuth } = useAuth()
 
   /**
-   * Trigger auth check when ProtectedRoute mounts if not already checked
+   * Trigger auth check when ProtectedRoute mounts
+   * Ensures auth state is checked on page refresh
+   * Only calls if still loading to avoid duplicate calls with AuthContext fetchUser
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   useEffect(() => {
-    // If still loading and we have checkAuth function, trigger it
-    // This handles the case where user navigates to protected route
-    if (loading && checkAuth && !isAuthenticated) {
-      checkAuth()
+    // Only check auth if still loading (initial load)
+    // This prevents duplicate calls with AuthContext fetchUser on page refresh
+    // AuthContext.fetchUser() already runs on mount, so we don't need to call checkAuth
+    // unless the initial fetch hasn't completed yet
+    if (checkAuth && loading) {
+      // Small delay to let AuthContext.fetchUser() complete first
+      const timer = setTimeout(() => {
+        if (loading) {
+          checkAuth()
+        }
+      }, 500)
+      return () => clearTimeout(timer)
     }
-  }, [loading, checkAuth, isAuthenticated])
+  }, [checkAuth, loading])
 
   // Show loading spinner while checking authentication
+  // This prevents redirects during initial auth check on page refresh
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -47,12 +58,12 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     )
   }
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (only after loading completes)
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 
-  // Redirect to home if admin-only route and user is not admin
+  // Redirect to home if admin-only route and user is not admin (only after loading completes)
   if (adminOnly && !isAdmin) {
     return <Navigate to="/" replace />
   }

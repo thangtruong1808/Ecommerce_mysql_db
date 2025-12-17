@@ -37,6 +37,7 @@ import {
 const OrderManagement = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
@@ -49,7 +50,7 @@ const OrderManagement = () => {
   const { selected: selectedOrders, toggle, selectAll, clear, selectedCount } = useSelection(orders)
 
   /**
-   * Fetch orders
+   * Fetch orders with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -63,22 +64,31 @@ const OrderManagement = () => {
         sortOrder
       })
       if (statusFilter) params.append('status', statusFilter)
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       const response = await axios.get(`/api/admin/orders?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.orders) {
         setOrders(response.data.orders || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setOrders([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load orders')
+      const errorMessage = error.response?.data?.message || 'No orders found matching your search'
+      toast.error(errorMessage)
       setOrders([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -182,7 +192,7 @@ const OrderManagement = () => {
   }
 
 
-  if (loading && orders.length === 0) {
+  if (loading && initialLoad && orders.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -382,7 +392,25 @@ const OrderManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order, index) => (
+              {orders.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="18" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No orders found matching "${searchTerm}"` 
+                          : 'No orders found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all orders.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order, index) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <BulkSelectCheckbox
@@ -462,7 +490,8 @@ const OrderManagement = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
             </table>
           </div>

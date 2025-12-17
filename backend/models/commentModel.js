@@ -234,8 +234,10 @@ export const getAllCommentsPaginated = async (filters = {}) => {
     params.push(isApproved ? 1 : 0)
   }
   if (search) {
+    // Sanitize search string and escape special LIKE characters
+    const sanitizedSearch = String(search).trim().replace(/[%_\\]/g, '\\$&')
+    const searchPattern = `%${sanitizedSearch}%`
     conditions.push('(u.name LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR c.comment LIKE ?)')
-    const searchPattern = `%${search}%`
     params.push(searchPattern, searchPattern, searchPattern, searchPattern)
   }
   

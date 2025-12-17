@@ -32,6 +32,7 @@ import { useSelection } from '../../utils/useSelection'
 const CartManagement = () => {
   const [carts, setCarts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const [entriesPerPage, setEntriesPerPage] = useState(10)
@@ -44,7 +45,7 @@ const CartManagement = () => {
   const { selected: selectedCarts, toggle, selectAll, clear, selectedCount } = useSelection(carts)
 
   /**
-   * Fetch carts
+   * Fetch carts with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -57,22 +58,31 @@ const CartManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('userId', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       const response = await axios.get(`/api/admin/carts?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.carts) {
         setCarts(response.data.carts || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setCarts([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load carts')
+      const errorMessage = error.response?.data?.message || 'No carts found matching your search'
+      toast.error(errorMessage)
       setCarts([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -144,7 +154,7 @@ const CartManagement = () => {
   }
 
 
-  if (loading && carts.length === 0) {
+  if (loading && initialLoad && carts.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -178,7 +188,7 @@ const CartManagement = () => {
             setSearchTerm(value)
             setPage(1)
           }}
-          searchPlaceholder="Search by user ID..."
+          searchPlaceholder="Search by cart ID, user ID, name, or email..."
         />
 
         {/* Pagination top */}
@@ -263,17 +273,36 @@ const CartManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {carts.map((cart, index) => (
-                <CartTableRow
-                  key={cart.id}
-                  cart={cart}
-                  index={(page - 1) * entriesPerPage + index + 1}
-                  isSelected={selectedCarts.has(cart.id)}
-                  onToggle={toggle}
-                  onView={() => handleView(cart.id)}
-                  onDelete={() => setDeleteModal({ isOpen: true, cart })}
-                />
-              ))}
+              {carts.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="9" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No carts found matching "${searchTerm}"` 
+                          : 'No carts found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all carts.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                carts.map((cart, index) => (
+                  <CartTableRow
+                    key={cart.id}
+                    cart={cart}
+                    index={(page - 1) * entriesPerPage + index + 1}
+                    isSelected={selectedCarts.has(cart.id)}
+                    onToggle={toggle}
+                    onView={() => handleView(cart.id)}
+                    onDelete={() => setDeleteModal({ isOpen: true, cart })}
+                  />
+                ))
+              )}
             </tbody>
             </table>
           </div>

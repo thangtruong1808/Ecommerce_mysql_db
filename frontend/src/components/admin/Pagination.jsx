@@ -77,6 +77,9 @@ const Pagination = ({
   // Bottom section: Navigation buttons + page info
   // Only show pagination if there are more than 10 items
   const totalItemsNum = parseInt(totalItems) || 0
+  const totalPagesNum = parseInt(totalPages) || 1
+  const currentPageNum = parseInt(currentPage) || 1
+  
   if (totalItemsNum === 0 || totalItemsNum <= 10) return null
 
   /* Pagination navigation controls */
@@ -87,34 +90,34 @@ const Pagination = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => onPageChange(1)}
-            disabled={currentPage === 1}
+            disabled={currentPageNum === 1}
             className="p-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             aria-label="First page"
           >
             <FaAngleDoubleLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
+            onClick={() => onPageChange(Math.max(1, currentPageNum - 1))}
+            disabled={currentPageNum === 1}
             className="p-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             aria-label="Previous page"
           >
             <FaAngleLeft className="w-4 h-4" />
           </button>
           <span className="px-4 py-2 text-sm text-gray-700">
-            Page {currentPage} of {totalPages}
+            Page {currentPageNum} of {totalPagesNum}
           </span>
           <button
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(Math.min(totalPagesNum, currentPageNum + 1))}
+            disabled={currentPageNum === totalPagesNum}
             className="p-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             aria-label="Next page"
           >
             <FaAngleRight className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onPageChange(totalPages)}
-            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(totalPagesNum)}
+            disabled={currentPageNum === totalPagesNum}
             className="p-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             aria-label="Last page"
           >

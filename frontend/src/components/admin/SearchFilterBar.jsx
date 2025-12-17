@@ -3,9 +3,10 @@
  * Reusable search and filter bar for management pages
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
+import { useRef, useEffect } from 'react'
 import { FaSearch, FaTimes } from 'react-icons/fa'
 
 /**
@@ -19,7 +20,7 @@ import { FaSearch, FaTimes } from 'react-icons/fa'
  * @param {string} props.searchPlaceholder - Search placeholder text
  * @returns {JSX.Element} Search filter bar component
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const SearchFilterBar = ({
   searchTerm,
@@ -29,12 +30,27 @@ const SearchFilterBar = ({
   filterOptions = [],
   searchPlaceholder = 'Search...'
 }) => {
+  const inputRef = useRef(null)
+
+  /**
+   * Maintain input focus after parent re-renders
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
+  useEffect(() => {
+    if (inputRef.current && document.activeElement === inputRef.current) {
+      const cursorPosition = inputRef.current.selectionStart
+      inputRef.current.focus()
+      inputRef.current.setSelectionRange(cursorPosition, cursorPosition)
+    }
+  }, [searchTerm])
+
   /**
    * Handle search input change
    * Ensures search term is always treated as text string
    * @param {Event} e - Input change event
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleSearchChange = (e) => {
     const value = e.target.value
@@ -50,6 +66,7 @@ const SearchFilterBar = ({
         <div className="flex-1 relative">
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
+            ref={inputRef}
             type="text"
             placeholder={searchPlaceholder}
             value={searchTerm}

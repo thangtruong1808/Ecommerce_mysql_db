@@ -33,6 +33,7 @@ import { useCrudOperations } from '../../utils/useCrudOperations'
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const [entriesPerPage, setEntriesPerPage] = useState(10)
@@ -43,7 +44,7 @@ const CategoryManagement = () => {
   const { selected: selectedCategories, toggle, selectAll, clear, selectedCount } = useSelection(categories)
 
   /**
-   * Fetch categories
+   * Fetch categories with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -56,22 +57,31 @@ const CategoryManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       const response = await axios.get(`/api/admin/categories?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.categories) {
         setCategories(response.data.categories || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setCategories([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load categories')
+      const errorMessage = error.response?.data?.message || 'No categories found matching your search'
+      toast.error(errorMessage)
       setCategories([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -118,7 +128,7 @@ const CategoryManagement = () => {
     clear()
   }
 
-  if (loading && categories.length === 0) {
+  if (loading && initialLoad && categories.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -233,8 +243,26 @@ const CategoryManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {categories.map((category, index) => (
-                <CategoryTableRow
+              {categories.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No categories found matching "${searchTerm}"` 
+                          : 'No categories found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all categories.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                categories.map((category, index) => (
+                  <CategoryTableRow
                   key={category.id}
                   category={category}
                   index={(page - 1) * entriesPerPage + index + 1}
@@ -242,8 +270,9 @@ const CategoryManagement = () => {
                   onToggle={toggle}
                   onEdit={() => crud.setEditModal({ isOpen: true, entity: category })}
                   onDelete={() => crud.setDeleteModal({ isOpen: true, entity: category })}
-                />
-              ))}
+                  />
+                ))
+              )}
             </tbody>
             </table>
           </div>

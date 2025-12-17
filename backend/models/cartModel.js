@@ -194,6 +194,7 @@ export const getAllCarts = async (filters = {}) => {
   const limit = parseInt(filters.limit) || 20
   const offset = (page - 1) * limit
   const userId = filters.userId ? parseInt(filters.userId) : null
+  const search = filters.search ? String(filters.search).trim() : null
   
   let query = `
     SELECT c.*, 
@@ -207,13 +208,24 @@ export const getAllCarts = async (filters = {}) => {
     LEFT JOIN products p ON ci.product_id = p.id
   `
   const params = []
+  let whereConditions = []
   
   if (userId && !isNaN(userId)) {
-    query += ' WHERE c.user_id = ?'
+    whereConditions.push('c.user_id = ?')
     params.push(userId)
-  } else {
-    query += ' WHERE 1=1'
   }
+  
+  if (search) {
+    // Search by cart ID, user ID, user name, or user email
+    const searchParam = `%${search}%`
+    whereConditions.push('(c.id LIKE ? OR c.user_id LIKE ? OR u.name LIKE ? OR u.email LIKE ?)')
+    params.push(searchParam, searchParam, searchParam, searchParam)
+  }
+  
+  const whereClause = whereConditions.length > 0 
+    ? ` WHERE ${whereConditions.join(' AND ')}`
+    : ' WHERE 1=1'
+  query += whereClause
   
   // Get total count (before adding GROUP BY, ORDER BY and LIMIT)
   let countQuery = `
@@ -223,11 +235,7 @@ export const getAllCarts = async (filters = {}) => {
     LEFT JOIN cart_items ci ON c.id = ci.cart_id
     LEFT JOIN products p ON ci.product_id = p.id
   `
-  if (userId && !isNaN(userId)) {
-    countQuery += ' WHERE c.user_id = ?'
-  } else {
-    countQuery += ' WHERE 1=1'
-  }
+  countQuery += whereClause
   const [countResult] = await db.execute(countQuery, params)
   const total = Number(countResult[0]?.total) || 0
   

@@ -31,6 +31,8 @@ export const useProductsData = (searchParams, setSearchParams) => {
 
   const isUpdatingFromUrl = useRef(false)
   const productsLoadingRef = useRef(false)
+  const categoriesCacheRef = useRef(null)
+  const isHydratingSubcategoryRef = useRef(false)
 
   /**
    * Fetch products with current filters
@@ -82,6 +84,54 @@ export const useProductsData = (searchParams, setSearchParams) => {
   }
 
   useEffect(() => {
+    // Handle case where only subcategory is provided (find parent category)
+    // This ensures breadcrumb and filters work correctly when navigating from mega menu
+    if (!filters.category && filters.subcategory && categories.length > 0 && !isHydratingSubcategoryRef.current) {
+      const subcategoryId = parseInt(filters.subcategory)
+      for (const category of categories) {
+        const subcategory = (category.subcategories || []).find(sub => sub.id === subcategoryId)
+        if (subcategory) {
+          isHydratingSubcategoryRef.current = true
+          setSubcategories(category.subcategories || [])
+          setFilters(prev => ({
+            ...prev,
+            category: category.id.toString(),
+            subcategory: filters.subcategory
+          }))
+          setTimeout(() => { isHydratingSubcategoryRef.current = false }, 100)
+          return
+        }
+      }
+      // If not found in loaded categories, try to fetch subcategory info
+      const hydrateSubcategory = async () => {
+        if (isHydratingSubcategoryRef.current) return
+        isHydratingSubcategoryRef.current = true
+        try {
+          const allCategories = await loadCategories()
+          for (const cat of allCategories) {
+            const sub = (cat.subcategories || []).find(s => s.id === subcategoryId)
+            if (sub) {
+              setCategories(allCategories)
+              setSubcategories(cat.subcategories || [])
+              setFilters(prev => ({
+                ...prev,
+                category: cat.id.toString(),
+                subcategory: filters.subcategory
+              }))
+              isHydratingSubcategoryRef.current = false
+              return
+            }
+          }
+          isHydratingSubcategoryRef.current = false
+        } catch (error) {
+          isHydratingSubcategoryRef.current = false
+          // Silent fail - will fall through to clearing subcategory
+        }
+      }
+      hydrateSubcategory()
+      return
+    }
+    
     if (!filters.category) {
       setSubcategories([])
       setChildCategories([])
@@ -92,7 +142,11 @@ export const useProductsData = (searchParams, setSearchParams) => {
     if (selected?.subcategories) {
       setSubcategories(selected.subcategories)
       setChildCategories([])
-      setFilters(prev => ({ ...prev, subcategory: '', childCategory: '' }))
+      // Don't clear subcategory if it matches the selected category's subcategories
+      const subcategoryExists = selected.subcategories.some(sub => sub.id === parseInt(filters.subcategory))
+      if (!subcategoryExists && filters.subcategory) {
+        setFilters(prev => ({ ...prev, subcategory: '', childCategory: '' }))
+      }
       return
     }
     const fetchSubs = async () => {
@@ -100,14 +154,18 @@ export const useProductsData = (searchParams, setSearchParams) => {
         const response = await axios.get(`/api/products/subcategories/${filters.category}`)
         setSubcategories(response.data)
         setChildCategories([])
-        setFilters(prev => ({ ...prev, subcategory: '', childCategory: '' }))
+        // Don't clear subcategory if it exists in the fetched subcategories
+        const subcategoryExists = response.data.some(sub => sub.id === parseInt(filters.subcategory))
+        if (!subcategoryExists && filters.subcategory) {
+          setFilters(prev => ({ ...prev, subcategory: '', childCategory: '' }))
+        }
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to load subcategories')
       }
     }
     fetchSubs()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.category, categories])
+  }, [filters.category, filters.subcategory, categories])
 
   useEffect(() => {
     if (!filters.subcategory) {

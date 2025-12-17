@@ -30,6 +30,7 @@ import { formatDate } from '../../utils/dateUtils'
 const CommentModeration = () => {
   const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [isApprovedFilter, setIsApprovedFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -44,7 +45,7 @@ const CommentModeration = () => {
   const { selected: selectedComments, toggle, selectAll, clear, selectedCount } = useSelection(comments)
 
   /**
-   * Fetch comments
+   * Fetch comments with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -57,24 +58,33 @@ const CommentModeration = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (isApprovedFilter !== '') params.append('isApproved', isApprovedFilter)
       
       const response = await axios.get(`/api/admin/comments?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.comments) {
         setComments(response.data.comments || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setComments([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load comments')
+      const errorMessage = error.response?.data?.message || 'No comments found matching your search'
+      toast.error(errorMessage)
       setComments([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -175,7 +185,7 @@ const CommentModeration = () => {
     }
   }
 
-  if (loading && comments.length === 0) {
+  if (loading && initialLoad && comments.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -304,10 +314,21 @@ const CommentModeration = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {comments.length === 0 ? (
+              {comments.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
-                    No comments found
+                  <td colSpan="10" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No comments found matching "${searchTerm}"` 
+                          : 'No comments found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all comments.
+                        </p>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (

@@ -1465,7 +1465,7 @@ router.get('/reviews', async (req, res) => {
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
-      search: req.query.search || '',
+      search: req.query.search ? String(req.query.search).trim() : '',
       productId: req.query.productId ? parseInt(req.query.productId) : null,
       userId: req.query.userId ? parseInt(req.query.userId) : null,
       rating: req.query.rating ? parseInt(req.query.rating) : null
@@ -1473,7 +1473,16 @@ router.get('/reviews', async (req, res) => {
     const result = await reviewModel.getAllReviews(filters)
     res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ 
+      message: error.message || 'No reviews found matching your search',
+      reviews: [],
+      pagination: {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
+        total: 0,
+        pages: 1
+      }
+    })
   }
 })
 
@@ -1632,7 +1641,7 @@ router.get('/comments', async (req, res) => {
     const result = await commentModel.getAllCommentsPaginated({
       page,
       limit,
-      search,
+      search: search ? String(search).trim() : '',
       productId,
       userId,
       isApproved: isApproved !== undefined ? isApproved === 'true' : null,
@@ -1641,7 +1650,16 @@ router.get('/comments', async (req, res) => {
     })
     res.json(result)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ 
+      message: error.message || 'No comments found matching your search',
+      comments: [],
+      pagination: {
+        page: parseInt(req.query.page) || 1,
+        limit: parseInt(req.query.limit) || 20,
+        total: 0,
+        pages: 1
+      }
+    })
   }
 })
 

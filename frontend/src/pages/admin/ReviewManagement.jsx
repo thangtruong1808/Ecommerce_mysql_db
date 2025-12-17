@@ -32,6 +32,7 @@ import { useSelection } from '../../utils/useSelection'
 const ReviewManagement = () => {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [ratingFilter, setRatingFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -45,7 +46,7 @@ const ReviewManagement = () => {
   const { selected: selectedReviews, toggle, selectAll, clear, selectedCount } = useSelection(reviews)
 
   /**
-   * Fetch reviews
+   * Fetch reviews with search and filters
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -58,23 +59,32 @@ const ReviewManagement = () => {
         sortBy,
         sortOrder
       })
-      if (searchTerm) params.append('search', searchTerm)
+      if (searchTerm) params.append('search', String(searchTerm))
       if (ratingFilter) params.append('rating', ratingFilter)
       const response = await axios.get(`/api/admin/reviews?${params}`)
+      const pagination = response.data?.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
       if (response.data && response.data.reviews) {
         setReviews(response.data.reviews || [])
-        setTotalPages(response.data.pagination?.pages || 1)
-        setTotalItems(response.data.pagination?.total || 0)
+        setTotalPages(pagination.pages || 1)
+        setTotalItems(pagination.total || 0)
       } else {
         setReviews([])
         setTotalPages(1)
         setTotalItems(0)
       }
+      setInitialLoad(false)
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load reviews')
+      const errorMessage = error.response?.data?.message || 'No reviews found matching your search'
+      toast.error(errorMessage)
       setReviews([])
       setTotalPages(1)
       setTotalItems(0)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -150,7 +160,7 @@ const ReviewManagement = () => {
   }
 
 
-  if (loading && reviews.length === 0) {
+  if (loading && initialLoad && reviews.length === 0) {
     return (
       <AdminLayout>
         <div className="max-w-full mx-auto">
@@ -296,17 +306,36 @@ const ReviewManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {reviews.map((review, index) => (
-                <ReviewTableRow
-                  key={review.id}
-                  review={review}
-                  index={(page - 1) * entriesPerPage + index + 1}
-                  isSelected={selectedReviews.has(review.id)}
-                  onToggle={toggle}
-                  onEdit={() => setEditModal({ isOpen: true, review })}
-                  onDelete={() => setDeleteModal({ isOpen: true, review })}
-                />
-              ))}
+              {reviews.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan="10" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        {searchTerm 
+                          ? `No reviews found matching "${searchTerm}"` 
+                          : 'No reviews found'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-gray-400 text-sm mt-2">
+                          Try adjusting your search terms or clear the search to see all reviews.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                reviews.map((review, index) => (
+                  <ReviewTableRow
+                    key={review.id}
+                    review={review}
+                    index={(page - 1) * entriesPerPage + index + 1}
+                    isSelected={selectedReviews.has(review.id)}
+                    onToggle={toggle}
+                    onEdit={() => setEditModal({ isOpen: true, review })}
+                    onDelete={() => setDeleteModal({ isOpen: true, review })}
+                  />
+                ))
+              )}
             </tbody>
             </table>
           </div>
