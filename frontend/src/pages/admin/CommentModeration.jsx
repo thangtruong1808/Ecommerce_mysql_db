@@ -79,11 +79,19 @@ const CommentModeration = () => {
       }
       setInitialLoad(false)
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'No comments found matching your search'
+      // Handle errors gracefully - ensure pagination is always set
+      const errorData = error.response?.data || {}
+      const pagination = errorData.pagination || { 
+        page: 1, 
+        limit: entriesPerPage, 
+        total: 0, 
+        pages: 1 
+      }
+      const errorMessage = errorData.message || 'No comments found matching your search'
       toast.error(errorMessage)
       setComments([])
-      setTotalPages(1)
-      setTotalItems(0)
+      setTotalPages(pagination.pages || 1)
+      setTotalItems(pagination.total || 0)
       setInitialLoad(false)
     } finally {
       setLoading(false)

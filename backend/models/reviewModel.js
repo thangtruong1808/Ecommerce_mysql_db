@@ -245,86 +245,105 @@ export const rejectReview = async (reviewId) => {
  * @date 2025-12-12
  */
 export const getAllReviews = async (filters = {}) => {
-  const page = parseInt(filters.page) || 1
-  const limit = parseInt(filters.limit) || 20
-  const offset = (page - 1) * limit
-  const search = filters.search || ''
-  const productId = filters.productId ? parseInt(filters.productId) : null
-  const userId = filters.userId ? parseInt(filters.userId) : null
-  const rating = filters.rating ? parseInt(filters.rating) : null
-  
-  let query = `
-    SELECT r.*, 
-           u.name as user_name,
-           u.email as user_email,
-           p.name as product_name
-    FROM reviews r
-    JOIN users u ON r.user_id = u.id
-    JOIN products p ON r.product_id = p.id
-  `
-  const params = []
-  
-  const conditions = []
-  if (productId && !isNaN(productId)) {
-    conditions.push('r.product_id = ?')
-    params.push(productId)
-  }
-  if (userId && !isNaN(userId)) {
-    conditions.push('r.user_id = ?')
-    params.push(userId)
-  }
-  if (rating && !isNaN(rating) && rating >= 1 && rating <= 5) {
-    conditions.push('r.rating = ?')
-    params.push(rating)
-  }
-  if (search) {
-    // Sanitize search string and escape special LIKE characters
-    const sanitizedSearch = String(search).trim().replace(/[%_\\]/g, '\\$&')
-    const searchPattern = `%${sanitizedSearch}%`
-    conditions.push('(u.name LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR r.comment LIKE ?)')
-    params.push(searchPattern, searchPattern, searchPattern, searchPattern)
-  }
-  
-  if (conditions.length > 0) {
-    query += ' WHERE ' + conditions.join(' AND ')
-  }
-  
-  // Sorting support
-  const sortBy = filters.sortBy || 'created_at'
-  const sortOrder = filters.sortOrder || 'desc'
-  const allowedSortColumns = ['id', 'rating', 'comment', 'product_id', 'user_id', 'product_name', 'user_name', 'created_at', 'updated_at']
-  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
-  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
-  
-  // Map sort column to actual table column
-  let sortColumn = `r.${validSortBy}`
-  if (validSortBy === 'product_name') sortColumn = 'p.name'
-  else if (validSortBy === 'user_name') sortColumn = 'u.name'
-  
-  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
-  
-  // Get total count
-  const countQuery = query.replace(
-    'SELECT r.*, u.name as user_name, u.email as user_email, p.name as product_name',
-    'SELECT COUNT(*) as total'
-  )
-  const [countResult] = await db.execute(countQuery, params)
-  const total = countResult[0].total
-  
-  // Get paginated results
-  const limitInt = Math.floor(Number(limit))
-  const offsetInt = Math.floor(Number(offset))
-  query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
-  
-  const [rows] = await db.execute(query, params)
-  
-  return {
-    reviews: rows,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
+  try {
+    const page = parseInt(filters.page) || 1
+    const limit = parseInt(filters.limit) || 20
+    const offset = (page - 1) * limit
+    const search = filters.search ? String(filters.search).trim() : ''
+    const productId = filters.productId ? parseInt(filters.productId) : null
+    const userId = filters.userId ? parseInt(filters.userId) : null
+    const rating = filters.rating ? parseInt(filters.rating) : null
+    
+    let query = `
+      SELECT r.*, 
+             u.name as user_name,
+             u.email as user_email,
+             p.name as product_name
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      JOIN products p ON r.product_id = p.id
+    `
+    const params = []
+    
+    const conditions = []
+    if (productId && !isNaN(productId)) {
+      conditions.push('r.product_id = ?')
+      params.push(productId)
+    }
+    if (userId && !isNaN(userId)) {
+      conditions.push('r.user_id = ?')
+      params.push(userId)
+    }
+    if (rating && !isNaN(rating) && rating >= 1 && rating <= 5) {
+      conditions.push('r.rating = ?')
+      params.push(rating)
+    }
+    if (search) {
+      // Sanitize search string and escape special LIKE characters (% _ \)
+      // Must escape backslashes first, then other special characters
+      const sanitizedSearch = String(search).trim()
+        .replace(/\\/g, '\\\\')  // Escape backslashes first
+        .replace(/%/g, '\\%')    // Escape percent signs
+        .replace(/_/g, '\\_')    // Escape underscores
+      const searchPattern = `%${sanitizedSearch}%`
+      conditions.push('(u.name LIKE ? OR u.email LIKE ? OR p.name LIKE ? OR r.comment LIKE ?)')
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+    }
+    
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ')
+    }
+    
+    // Sorting support
+    const sortBy = filters.sortBy || 'created_at'
+    const sortOrder = filters.sortOrder || 'desc'
+    const allowedSortColumns = ['id', 'rating', 'comment', 'product_id', 'user_id', 'product_name', 'user_name', 'created_at', 'updated_at']
+    const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+    const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+    
+    // Map sort column to actual table column
+    let sortColumn = `r.${validSortBy}`
+    if (validSortBy === 'product_name') sortColumn = 'p.name'
+    else if (validSortBy === 'user_name') sortColumn = 'u.name'
+    
+    query += ` ORDER BY ${sortColumn} ${validSortOrder}`
+    
+    // Get total count
+    const countQuery = query.replace(
+      'SELECT r.*, u.name as user_name, u.email as user_email, p.name as product_name',
+      'SELECT COUNT(*) as total'
+    )
+    const [countResult] = await db.execute(countQuery, params)
+    const total = countResult[0]?.total || 0
+
+    // Get paginated results
+    const limitInt = Math.floor(Number(limit))
+    const offsetInt = Math.floor(Number(offset))
+    query += ` LIMIT ${limitInt} OFFSET ${offsetInt}`
+
+    const [rows] = await db.execute(query, params)
+
+    return {
+      reviews: rows || [],
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit) || 1
+      }
+    }
+  } catch (error) {
+    // Return empty result with default pagination on any error
+    const page = parseInt(filters.page) || 1
+    const limit = parseInt(filters.limit) || 20
+    return {
+      reviews: [],
+      pagination: {
+        page,
+        limit,
+        total: 0,
+        pages: 1
+      }
     }
   }
 }
