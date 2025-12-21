@@ -1,9 +1,10 @@
 /**
  * Filter Sidebar Component
- * Displays product filters (search, category, price, sort)
+ * Displays product filters (search, category, subcategory, child category, price, sort)
+ * Handles hierarchical category filtering with proper data flow
  * 
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-17
  */
 
 /**
@@ -19,19 +20,34 @@
  * @returns {JSX.Element} Filter sidebar component
  */
 const FilterSidebar = ({ categories, subcategories, childCategories, filters, searchValue, onFilterChange, onClear }) => {
-  // Get subcategories for selected category
+  /**
+   * Get available subcategories for selected category
+   * Prioritizes nested subcategories from selected category
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   const selectedCategory = categories.find(cat => cat.id === parseInt(filters.category))
   const availableSubcategories = selectedCategory?.subcategories || subcategories
   
-  // Get child categories for selected subcategory
+  /**
+   * Get available child categories for selected subcategory
+   * Prioritizes nested child_categories from selected subcategory
+   * Falls back to childCategories prop if nested data not available
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   const selectedSubcategory = availableSubcategories.find(sub => sub.id === parseInt(filters.subcategory))
-  const availableChildCategories = selectedSubcategory?.child_categories || childCategories
+  const availableChildCategories = (selectedSubcategory?.child_categories && Array.isArray(selectedSubcategory.child_categories) && selectedSubcategory.child_categories.length > 0)
+    ? selectedSubcategory.child_categories
+    : (Array.isArray(childCategories) ? childCategories : [])
+  
+  /* Filter sidebar container with all filter controls */
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      {/* Filters container */}
+      {/* Filters header */}
       <h2 className="text-lg font-semibold mb-4">Filters</h2>
 
-      {/* Search */}
+      {/* Search input field */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
         <input
@@ -43,7 +59,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, se
         />
       </div>
 
-      {/* Category filter */}
+      {/* Category dropdown filter */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
         <select
@@ -60,7 +76,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, se
         </select>
       </div>
 
-      {/* Subcategory filter */}
+      {/* Subcategory dropdown filter - shown when category is selected */}
       {filters.category && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
@@ -79,7 +95,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, se
         </div>
       )}
 
-      {/* Child category filter */}
+      {/* Child category dropdown filter - shown when subcategory is selected */}
       {filters.subcategory && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">Child Category</label>
@@ -98,7 +114,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, se
         </div>
       )}
 
-      {/* Price range */}
+      {/* Price range filter with min and max inputs */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
         <div className="flex space-x-2">
@@ -119,7 +135,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, se
         </div>
       </div>
 
-      {/* Sort */}
+      {/* Sort dropdown filter */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
         <select
@@ -135,7 +151,7 @@ const FilterSidebar = ({ categories, subcategories, childCategories, filters, se
         </select>
       </div>
 
-      {/* Clear all */}
+      {/* Clear all filters button */}
       <div className="mt-6">
         <button
           type="button"

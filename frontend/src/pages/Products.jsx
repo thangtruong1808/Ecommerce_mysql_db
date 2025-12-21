@@ -1,6 +1,8 @@
 /**
  * Products Page Component
  * Displays product listing with filters, search, and pagination
+ * Supports hierarchical category filtering (category -> subcategory -> child category)
+ * 
  * @author Thang Truong
  * @date 2025-12-17
  */
@@ -91,15 +93,19 @@ const Products = () => {
     )
   }
 
-  // Get category info for breadcrumb
+  /**
+   * Get selected category info for breadcrumb navigation
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
   const selectedCategory = categories.find(cat => cat.id === parseInt(filters.category))
   const selectedSubcategory = subcategories.find(sub => sub.id === parseInt(filters.subcategory))
   const selectedChildCategory = childCategories.find(child => child.id === parseInt(filters.childCategory))
 
-  /* Products page layout with filters, product grid, and pagination */
+  /* Products page main container with filters drawer, product grid, and pagination */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Breadcrumb */}
+      {/* Breadcrumb navigation showing category hierarchy */}
       <Breadcrumb
         categoryName={selectedCategory?.name}
         subcategoryName={selectedSubcategory?.name}
@@ -109,18 +115,18 @@ const Products = () => {
         childCategoryId={selectedChildCategory?.id}
       />
 
-      {/* Page header */}
+      {/* Page header with title */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Products</h1>
       </div>
 
-      {/* Drawer overlay */}
+      {/* Drawer overlay - darkens background when filters drawer is open */}
       {isFilterOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-30 z-40" onClick={closeFilter} />
       )}
 
       <div className="relative">
-        {/* Filters drawer */}
+        {/* Filters drawer - slides in from left */}
         <div
           id="product-filters-drawer"
           role="dialog"
@@ -131,6 +137,7 @@ const Products = () => {
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
+          {/* Drawer header with title and close button */}
           <div className="drawer-header h-16 flex items-center justify-between px-4 border-b">
             <h2 id="product-filters-title" className="text-lg font-semibold">Filters</h2>
             <button
@@ -142,6 +149,7 @@ const Products = () => {
               ✕
             </button>
           </div>
+          {/* Drawer body with filter controls */}
           {isFilterOpen && (
             <div ref={filterContentRef} className="drawer-body p-4">
               <FilterSidebar
@@ -155,6 +163,7 @@ const Products = () => {
               />
             </div>
           )}
+          {/* Drawer footer with close button */}
           {isFilterOpen && (
             <div className="drawer-footer p-4 border-t space-x-2">
               <button
@@ -168,13 +177,15 @@ const Products = () => {
           )}
         </div>
 
-        {/* Products grid */}
+        {/* Products grid container */}
         <div className="lg:ml-0">
+          {/* Empty state when no products found */}
           {products.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600">No products found</p>
             </div>
           ) : (
+            /* Product grid - responsive columns based on screen size */
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {products.map((product) => (
                 <ProductCard
@@ -186,6 +197,7 @@ const Products = () => {
             </div>
           )}
 
+          {/* Pagination controls - shown when products exist */}
           {products.length > 0 && (
             <Pagination
               currentPage={pagination.page}
