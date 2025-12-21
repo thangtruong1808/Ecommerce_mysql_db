@@ -161,7 +161,7 @@ const Profile = () => {
         <div className="bg-white shadow-md rounded-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center"><FaMapMarkerAlt className="mr-2 text-blue-600" /> Shipping Addresses</h2>
-            {!showAddressForm && <button onClick={() => { setShowAddressForm(true); setEditingAddress(null); addressForm.reset() }} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center space-x-2 transition" disabled={isLoading}><FaPlus /> <span>Add Address</span></button>}
+            {!showAddressForm && <button onClick={() => { setShowAddressForm(true); setEditingAddress(null); addressForm.reset() }} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2 transition" disabled={isLoading}><FaPlus /> <span>Add Address</span></button>}
           </div>
           {showAddressForm ? (
             <form onSubmit={addressForm.handleSubmit(onAddressSubmit)} className="space-y-4">

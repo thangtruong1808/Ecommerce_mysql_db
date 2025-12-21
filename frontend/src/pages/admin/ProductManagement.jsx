@@ -444,7 +444,7 @@ const ProductManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.discount_value || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {product.is_on_clearance ? (
-                      <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs">Yes</span>
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">Yes</span>
                     ) : (
                       <span className="text-gray-400">No</span>
                     )}

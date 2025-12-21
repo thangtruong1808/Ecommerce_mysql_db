@@ -36,9 +36,9 @@ const StarRating = ({ rating = 0, readOnly = false, onChange }) => {
           disabled={readOnly}
           className={`text-2xl ${
             star <= rating
-              ? 'text-yellow-400'
+              ? 'text-yellow-600'
               : 'text-gray-300'
-          } ${!readOnly ? 'cursor-pointer hover:text-yellow-300' : 'cursor-default'}`}
+          } ${!readOnly ? 'cursor-pointer hover:text-yellow-600' : 'cursor-default'}`}
         >
           ★
         </button>

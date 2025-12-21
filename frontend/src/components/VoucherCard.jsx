@@ -54,8 +54,8 @@ const VoucherCard = ({ voucher }) => {
   const daysLeft = getDaysUntilExpiry()
   const isPercentage = voucher.discount_type === 'percentage'
   const gradientClass = isPercentage 
-    ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
-    : 'bg-gradient-to-br from-green-500 to-emerald-600'
+    ? 'bg-gradient-to-br from-blue-500 to-blue-700' 
+    : 'bg-gradient-to-br from-green-500 to-green-700'
 
   /* Voucher card with attractive design */
   return (
@@ -114,7 +114,7 @@ const VoucherCard = ({ voucher }) => {
           )}
           <div>Valid until: {formatDate(voucher.end_date)}</div>
           {daysLeft > 0 && daysLeft <= 7 && (
-            <div className="font-semibold text-yellow-200">
+            <div className="font-semibold text-yellow-600">
               Expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}!
             </div>
           )}

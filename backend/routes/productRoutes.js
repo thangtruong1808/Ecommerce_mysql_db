@@ -60,9 +60,10 @@ router.get('/', async (req, res) => {
  * GET /api/products/clearance
  * Get all clearance products (products marked for clearance)
  * Business logic: Shows all products with is_on_clearance=true
+ * Optionally filters by category when category query parameter is provided
  * Discount fields are optional - if present and active, discounted price is calculated
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 router.get('/clearance', async (req, res) => {
   try {
@@ -70,7 +71,8 @@ router.get('/clearance', async (req, res) => {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 15,
       sortBy: req.query.sortBy || 'created_at',
-      sortOrder: req.query.sortOrder || 'DESC'
+      sortOrder: req.query.sortOrder || 'DESC',
+      categoryId: req.query.category ? parseInt(req.query.category) : null
     }
 
     const result = await productModel.getClearanceProducts(filters)

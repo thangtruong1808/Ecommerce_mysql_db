@@ -357,7 +357,7 @@ const Dashboard = () => {
         {/* Low Stock Alerts */}
         <div className="bg-white rounded-lg shadow-md p-4 flex flex-col h-80">
           <h2 className="text-lg font-semibold mb-3 flex items-center">
-            <FaExclamationTriangle className="text-yellow-500 mr-2" />
+            <FaExclamationTriangle className="text-yellow-600 mr-2" />
             Low Stock Products
           </h2>
           {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (

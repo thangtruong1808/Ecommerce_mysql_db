@@ -51,7 +51,7 @@ const VoucherCTA = () => {
     return (
       <Link 
         to="/products" 
-        className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 hover:opacity-90 transition-opacity group"
+        className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 hover:opacity-90 transition-opacity group"
       >
         <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity"></div>
         <div className="relative h-full p-6 flex flex-col justify-between text-white">
@@ -83,7 +83,7 @@ const VoucherCTA = () => {
   return (
     <Link 
       to="/products" 
-      className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 hover:opacity-90 transition-opacity group"
+      className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 hover:opacity-90 transition-opacity group"
     >
       <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity"></div>
       <div className="relative h-full p-6 flex flex-col justify-between text-white">

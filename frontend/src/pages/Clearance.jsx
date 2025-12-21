@@ -1,11 +1,13 @@
 /**
  * Clearance Page Component
  * Displays all clearance products with active discounts
+ * Optionally filters by category when category parameter is provided in URL
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import SkeletonLoader from '../components/SkeletonLoader'
@@ -17,9 +19,13 @@ import { FaTag } from 'react-icons/fa'
  * Clearance component
  * @returns {JSX.Element} Clearance page
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const Clearance = () => {
+  const [searchParams] = useSearchParams()
+  const categoryId = searchParams.get('category')
+  const categoryName = searchParams.get('categoryName') ? decodeURIComponent(searchParams.get('categoryName')) : null
+  
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
@@ -30,10 +36,10 @@ const Clearance = () => {
   })
 
   /**
-   * Fetch clearance products with current filters
+   * Fetch clearance products with current filters and category
    * @returns {Promise<void>} Resolves when products fetched
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchClearanceProducts = async () => {
     try {
@@ -42,6 +48,7 @@ const Clearance = () => {
       
       if (filters.sortBy) params.append('sortBy', filters.sortBy)
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
+      if (categoryId) params.append('category', categoryId)
       params.append('page', filters.page)
       params.append('limit', 15)
 
@@ -57,7 +64,7 @@ const Clearance = () => {
 
   useEffect(() => {
     fetchClearanceProducts()
-  }, [filters])
+  }, [filters, categoryId])
 
   /**
    * Handle page change
@@ -87,10 +94,15 @@ const Clearance = () => {
       <div className="mb-8">
         <div className="flex items-center space-x-2 mb-4">
           <FaTag className="text-red-500 text-2xl" />
-          <h1 className="text-3xl font-bold text-gray-900">Clearance Sale</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {categoryName ? `${categoryName} Clearance Sale` : 'Clearance Sale'}
+          </h1>
         </div>
         <p className="text-gray-600">
-          Shop our clearance items with amazing discounts!
+          {categoryName 
+            ? `Discover amazing deals on ${categoryName.toLowerCase()} items!`
+            : 'Shop our clearance items with amazing discounts!'
+          }
         </p>
       </div>
 

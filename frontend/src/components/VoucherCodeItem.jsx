@@ -40,14 +40,14 @@ const VoucherCodeItem = ({ voucher, isCopied, onCopy, showHeader = false }) => {
       {/* Header text - centered */}
       {showHeader && (
         <div className="text-center mb-2">          
-          <span className="text-md text-yellow-400 font-medium">Available Voucher Codes: {getDiscountText()} OFF</span>
+          <span className="text-md text-yellow-600 font-medium">Available Voucher Codes: {getDiscountText()} OFF</span>
         </div>
       )}
       {/* Main content - inline layout */}
       <div className="flex items-center justify-center gap-2 mb-1">
         {/* Discount and voucher code */}
         <div className="flex items-center justify-center gap-2 flex-1">          
-          <span className="font-mono text-4xl font-semibold text-yellow-400 mr-4">
+          <span className="font-mono text-4xl font-semibold text-yellow-600 mr-4">
             {voucher.code}
           </span>
           <button
@@ -67,7 +67,7 @@ const VoucherCodeItem = ({ voucher, isCopied, onCopy, showHeader = false }) => {
         
       </div>
       {/* Expiry information - inline */}
-      <div className="text-xs text-yellow-400 flex flex-wrap items-center justify-center gap-2">
+      <div className="text-xs text-yellow-600 flex flex-wrap items-center justify-center gap-2">
         <span>Valid: {formatDate(voucher.start_date)} - {formatDate(voucher.end_date)}</span>
         <span>•</span>
         <span>Expires: {formatDateTime(voucher.end_date)}</span>

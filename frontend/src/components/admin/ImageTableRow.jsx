@@ -68,14 +68,14 @@ const ImageTableRow = ({ image, isSelected, onToggle, onView, onSetPrimary, onDe
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm">
         {image.is_primary ? (
-          <span className="inline-flex items-center gap-1 text-xs bg-yellow-500 text-white px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 text-xs bg-yellow-600 text-white px-2 py-1 rounded">
             <FaStar className="text-xs" />
             Primary
           </span>
         ) : (
           <button
             onClick={() => onSetPrimary(image.id)}
-            className="text-gray-400 hover:text-yellow-600"
+            className="text-gray-400 hover:text-yellow-700"
             aria-label="Set as primary"
           >
             <FaStar />

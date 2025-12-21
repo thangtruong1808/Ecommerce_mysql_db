@@ -40,7 +40,7 @@ const RecentActivityFeed = ({ activities = [], onApprove, onReject, onDelete }) 
       case 'comment':
         return <FaComment className="text-green-500" />
       case 'registration':
-        return <FaUserPlus className="text-purple-500" />
+        return <FaUserPlus className="text-blue-500" />
       default:
         return <FaBox className="text-gray-500" />
     }

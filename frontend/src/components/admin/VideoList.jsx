@@ -99,7 +99,7 @@ const VideoList = ({ videos = [], onSetPrimary, onDelete, onEdit }) => {
                       {video.title || 'Untitled Video'}
                     </h3>
                     {video.is_primary && (
-                      <span className="inline-flex items-center gap-1 text-xs bg-yellow-500 text-white px-2 py-1 rounded mt-1">
+                      <span className="inline-flex items-center gap-1 text-xs bg-yellow-600 text-white px-2 py-1 rounded mt-1">
                         <FaStar className="text-xs" />
                         Primary
                       </span>

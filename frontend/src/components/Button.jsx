@@ -36,7 +36,7 @@ const getIcon = (iconName) => {
  * Button component
  * @param {Object} props - Component props
  * @param {ReactNode} props.children - Button content
- * @param {string} props.variant - Button variant ('primary', 'secondary', 'danger', 'outline')
+ * @param {string} props.variant - Button variant ('primary', 'secondary', 'danger', 'outline', 'gold')
  * @param {string} props.size - Button size ('sm', 'md', 'lg')
  * @param {boolean} props.loading - Loading state
  * @param {string|ReactNode} props.icon - Icon name or icon component
@@ -63,18 +63,20 @@ const Button = ({
    * Get button variant classes
    * @returns {string} CSS classes
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
         return 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400'
       case 'secondary':
-        return 'bg-gray-200 text-gray-800 hover:bg-gray-300 disabled:bg-gray-100'
+        return 'bg-yellow-500 text-white hover:bg-yellow-600 disabled:bg-gray-400'
       case 'danger':
         return 'bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-400'
       case 'outline':
         return 'border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:bg-gray-100'
+      case 'gold':
+        return 'bg-yellow-500 text-white hover:bg-yellow-600 disabled:bg-gray-400'
       default:
         return 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400'
     }

@@ -60,7 +60,7 @@ const MediaGallery = ({ images = [], onSetPrimary, onDelete }) => {
               
               {/* Primary badge */}
               {image.is_primary && (
-                <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded flex items-center gap-1 text-xs">
+                <div className="absolute top-2 left-2 bg-yellow-600 text-white px-2 py-1 rounded flex items-center gap-1 text-xs">
                   <FaStar className="text-xs" />
                   Primary
                 </div>
@@ -78,7 +78,7 @@ const MediaGallery = ({ images = [], onSetPrimary, onDelete }) => {
                 {!image.is_primary && (
                   <button
                     onClick={() => onSetPrimary?.(image.id)}
-                    className="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600"
+                    className="bg-yellow-600 text-white p-2 rounded hover:bg-yellow-700"
                     aria-label="Set as primary"
                   >
                     <FaStar />

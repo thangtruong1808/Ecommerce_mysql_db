@@ -413,17 +413,19 @@ export const updateProductStock = async (id, quantity) => {
  * Get clearance products (products marked for clearance)
  * Business logic: Shows all products with is_on_clearance=true
  * If discount fields exist and are active, discounted price is calculated
- * @param {Object} filters - Filter options
+ * Optionally filters by categoryId when provided
+ * @param {Object} filters - Filter options (page, limit, sortBy, sortOrder, categoryId)
  * @returns {Promise<Object>} - Products and pagination info
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 export const getClearanceProducts = async (filters = {}) => {
   const {
     page = 1,
     limit = 15,
     sortBy = 'created_at',
-    sortOrder = 'DESC'
+    sortOrder = 'DESC',
+    categoryId = null
   } = filters
 
   // Ensure limit and offset are valid integers
@@ -474,10 +476,11 @@ export const getClearanceProducts = async (filters = {}) => {
      JOIN subcategories s ON cc.subcategory_id = s.id
      JOIN categories c ON s.category_id = c.id
      WHERE p.is_on_clearance = ?
+     ${categoryId ? 'AND c.id = ?' : ''}
      ${orderBy}
      LIMIT ${safeLimit} OFFSET ${safeOffset}`
   
-  const params = [true]
+  const params = categoryId ? [true, categoryId] : [true]
   
   let rows = []
   try {
@@ -488,15 +491,14 @@ export const getClearanceProducts = async (filters = {}) => {
   }
 
   // Get total count
-  const [countResult] = await db.execute(
-    `SELECT COUNT(*) as total 
+  const countQuery = `SELECT COUNT(*) as total 
      FROM products p
      JOIN child_categories cc ON p.child_category_id = cc.id
      JOIN subcategories s ON cc.subcategory_id = s.id
      JOIN categories c ON s.category_id = c.id
-     WHERE p.is_on_clearance = ?`,
-    [true]
-  )
+     WHERE p.is_on_clearance = ?
+     ${categoryId ? 'AND c.id = ?' : ''}`
+  const [countResult] = await db.execute(countQuery, params)
   const total = countResult[0].total
 
   // Get images for each product

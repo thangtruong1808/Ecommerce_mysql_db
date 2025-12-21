@@ -106,7 +106,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero banner section with features */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 mb-16">
+      <div className="bg-gradient-to-r from-green-800 to-green-900 text-white py-10 mb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero content */}
           <div className="text-center mb-6">

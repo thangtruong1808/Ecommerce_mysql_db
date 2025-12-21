@@ -38,7 +38,7 @@ const ReviewTableRow = ({ review, index, isSelected, onToggle, onEdit, onDelete 
         {[1, 2, 3, 4, 5].map((star) => (
           <FaStar
             key={star}
-            className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}
+            className={star <= rating ? 'text-yellow-600' : 'text-gray-300'}
           />
         ))}
         <span className="ml-1 text-sm text-gray-600">({rating})</span>
