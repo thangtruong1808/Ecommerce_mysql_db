@@ -105,32 +105,29 @@ export const getCategoriesWithSubcategories = async () => {
   })
   
   // Get child categories grouped by subcategory
-  const [childRows] = await db.execute(
-    `SELECT s.id as subcategory_id,
-            JSON_ARRAYAGG(
-              JSON_OBJECT(
-                'id', cc.id,
-                'name', cc.name,
-                'description', cc.description
-              )
-            ) as child_categories
-     FROM subcategories s
-     LEFT JOIN child_categories cc ON s.id = cc.subcategory_id
-     GROUP BY s.id`
+  // Initialize childMap for all subcategories first
+  const childMap = {}
+  subcategoryRows.forEach(sub => {
+    childMap[sub.id] = []
+  })
+  
+  // Fetch all child categories and group by subcategory_id
+  const [childCategoryRows] = await db.execute(
+    `SELECT id, subcategory_id, name, description
+     FROM child_categories
+     ORDER BY subcategory_id, name ASC`
   )
   
-  // Build child categories map
-  const childMap = {}
-  childRows.forEach(row => {
-    if (row.child_categories) {
-      try {
-        childMap[row.subcategory_id] = JSON.parse(row.child_categories)
-      } catch (e) {
-        childMap[row.subcategory_id] = []
-      }
-    } else {
-      childMap[row.subcategory_id] = []
+  // Group child categories by subcategory_id
+  childCategoryRows.forEach(child => {
+    if (!childMap[child.subcategory_id]) {
+      childMap[child.subcategory_id] = []
     }
+    childMap[child.subcategory_id].push({
+      id: child.id,
+      name: child.name,
+      description: child.description
+    })
   })
   
   // Attach subcategories and child categories to categories

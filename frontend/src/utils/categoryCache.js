@@ -1,6 +1,6 @@
 // Category cache utility to dedupe requests across components
 // Author: Thang Truong
-// Date: today
+// Date: 2025-12-17
 
 import axios from 'axios'
 
@@ -8,6 +8,21 @@ let cachedCategories = null
 let inflightPromise = null
 let nextAllowedAt = 0
 
+/**
+ * Clear category cache to force fresh data fetch
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
+export const clearCategoryCache = () => {
+  cachedCategories = null
+}
+
+/**
+ * Load categories with nested subcategories and child categories
+ * @returns {Promise<Array>} Categories array
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
 export const loadCategories = async () => {
   if (cachedCategories) return cachedCategories
   const now = Date.now()

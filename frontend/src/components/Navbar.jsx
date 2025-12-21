@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import logoImage from '../assets/images/Logo.png'
 import { FaUserCircle, FaSignOutAlt, FaShoppingBag, FaFileInvoice, FaUser, FaCog, FaBars, FaTimes, FaSearch, FaHome, FaBoxOpen, FaTag, FaShoppingCart, FaSignInAlt, FaFolder } from 'react-icons/fa'
-import { loadCategories } from '../utils/categoryCache'
+import { loadCategories, clearCategoryCache } from '../utils/categoryCache'
 
 /**
  * Navbar component
@@ -57,13 +57,18 @@ const Navbar = () => {
 
   /**
    * Fetch categories with nested subcategories/child categories
+   * Clears cache on first load to ensure fresh data with child categories
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchCategories = async () => {
-    if (isLoadingCategories || categories.length) return
+    if (isLoadingCategories) return
     try {
       setIsLoadingCategories(true)
+      // Clear cache to ensure we get fresh data with child categories
+      if (categories.length === 0) {
+        clearCategoryCache()
+      }
       const data = await loadCategories()
       setCategories(data || [])
     } catch {} finally { setIsLoadingCategories(false) }
@@ -197,7 +202,7 @@ const Navbar = () => {
                 <div className="fixed left-0 right-0 top-16 bg-white shadow-2xl border-t border-gray-100 z-40" onMouseEnter={handleOpenMega} onMouseLeave={handleCloseMega}>
                   <div className="w-full">
                     {/* Categories grid with CTA */}
-                    <div className="max-w-7xl mx-auto p-6">
+                    <div className="px-4 py-6">
                       <div className="grid md:grid-cols-4 gap-6">
                         {categories.map((category) => {
                           const { icon, color } = getCategoryStyle(category.name)
@@ -208,16 +213,29 @@ const Navbar = () => {
                               <span>{category.name}</span>
                             </Link>
                             <div className="space-y-2">
-                              {(category.subcategories || []).map((sub) => (
-                                <div key={sub.id} className="space-y-1">
-                                  <Link to={`/products?category=${category.id}&subcategory=${sub.id}`} className="block text-sm font-medium text-gray-800 hover:text-blue-600">{sub.name}</Link>
-                                  <div className="flex flex-wrap gap-2">
-                                    {(sub.child_categories || []).map((child) => (
-                                      <Link key={child.id} to={`/products?category=${category.id}&subcategory=${sub.id}&childCategory=${child.id}`} className="text-xs text-gray-600 hover:text-blue-600 bg-gray-50 px-2 py-1 rounded">{child.name}</Link>
-                                    ))}
+                              {(category.subcategories || []).map((sub) => {
+                                // Ensure child_categories is an array
+                                const childCategories = Array.isArray(sub.child_categories) ? sub.child_categories : []
+                                return (
+                                  <div key={sub.id} className="space-y-1">
+                                    <Link to={`/products?category=${category.id}&subcategory=${sub.id}`} className="block text-sm font-medium text-gray-800 hover:text-blue-600">{sub.name}</Link>
+                                    {/* Child categories - displayed as clickable links */}
+                                    {childCategories.length > 0 && (
+                                      <div className="flex flex-wrap gap-2 mt-1">
+                                        {childCategories.map((child) => (
+                                          <Link 
+                                            key={child.id} 
+                                            to={`/products?category=${category.id}&subcategory=${sub.id}&childCategory=${child.id}`} 
+                                            className="text-xs text-gray-600 hover:text-blue-600 bg-gray-50 px-2 py-1 rounded transition-colors"
+                                          >
+                                            {child.name}
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                              ))}
+                                )
+                              })}
                             </div>
                           </div>
                           )
@@ -330,16 +348,30 @@ const Navbar = () => {
                     {categories.map((category) => (
                       <div key={category.id} className="space-y-2">
                         <Link to={`/products?category=${category.id}`} onClick={closeMobileMenu} className="block text-sm font-semibold text-gray-800">{category.name}</Link>
-                        {(category.subcategories || []).map((sub) => (
-                          <div key={sub.id} className="pl-2">
-                            <Link to={`/products?category=${category.id}&subcategory=${sub.id}`} onClick={closeMobileMenu} className="block text-sm text-gray-600 mb-1">{sub.name}</Link>
-                            <div className="pl-2 flex flex-wrap gap-2">
-                              {(sub.child_categories || []).map((child) => (
-                                <Link key={child.id} to={`/products?category=${category.id}&subcategory=${sub.id}&childCategory=${child.id}`} onClick={closeMobileMenu} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">{child.name}</Link>
-                              ))}
+                        {(category.subcategories || []).map((sub) => {
+                          // Ensure child_categories is an array
+                          const childCategories = Array.isArray(sub.child_categories) ? sub.child_categories : []
+                          return (
+                            <div key={sub.id} className="pl-2">
+                              <Link to={`/products?category=${category.id}&subcategory=${sub.id}`} onClick={closeMobileMenu} className="block text-sm text-gray-600 mb-1">{sub.name}</Link>
+                              {/* Child categories - displayed as clickable links */}
+                              {childCategories.length > 0 && (
+                                <div className="pl-2 flex flex-wrap gap-2 mt-1">
+                                  {childCategories.map((child) => (
+                                    <Link 
+                                      key={child.id} 
+                                      to={`/products?category=${category.id}&subcategory=${sub.id}&childCategory=${child.id}`} 
+                                      onClick={closeMobileMenu} 
+                                      className="text-xs text-gray-500 hover:text-blue-600 bg-gray-50 px-2 py-1 rounded transition-colors"
+                                    >
+                                      {child.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     ))}
                   </div>
