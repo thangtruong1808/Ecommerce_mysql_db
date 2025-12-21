@@ -112,25 +112,11 @@ const Home = () => {
           <div className="text-center mb-6">
             <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
             <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices and amazing discounts with our exclusive voucher codes!</p>
-            {/* Button section */}
-            {/* <div className="flex gap-4 justify-center">
-              <Link to="/products" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
-                Shop Now
-              </Link>
-              <Link to="/clearance" className="bg-red-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-600 transition">
-                View Clearance
-              </Link>
-            </div> */}
           </div>
 
           {/* Voucher codes section - centered in hero banner */}
           {vouchers.length > 0 && (
             <div className="text-center">
-              {/* Voucher information text */}
-              {/* <p className="text-base text-blue-100 max-w-full mx-auto mb-4">
-                Unlock amazing savings with our exclusive voucher codes! Apply your discount at checkout.
-              </p> */}
-              {/* Voucher codes section */}
               <div className="max-w-full mx-auto">
                 <div className="flex flex-wrap justify-center items-center gap-3">
                   {vouchers.slice(0, 4).map((voucher, index) => (
@@ -174,9 +160,6 @@ const Home = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Vouchers section - displayed prominently to attract buyers */}
-        {/* <VoucherSection /> */}
-
         {/* Categories section */}
         {categories.length > 0 && (
           <section className="mb-16">
@@ -209,7 +192,7 @@ const Home = () => {
             {loading ? (
               <SkeletonLoader type="card" count={4} />
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {clearanceProducts.map((product) => (
                   <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
                 ))}
@@ -229,7 +212,7 @@ const Home = () => {
           {loading ? (
             <SkeletonLoader type="card" count={10} />
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
               ))}
@@ -241,10 +224,10 @@ const Home = () => {
           <hr />
         </div>
         {/* Recently viewed section */}
-        <RecentlyViewed limit={1000} onAddToCart={handleAddToCart} />
+        <RecentlyViewed onAddToCart={handleAddToCart} />
 
         {/* Recommendations section */}
-        <Recommendations limit={1000} onAddToCart={handleAddToCart} />
+        <Recommendations onAddToCart={handleAddToCart} />
       </div>
     </div>
   )

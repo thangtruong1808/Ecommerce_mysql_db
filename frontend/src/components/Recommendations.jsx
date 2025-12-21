@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { FaThumbsUp } from 'react-icons/fa'
-import ProductCarousel from './ProductCarousel'
+import ProductCard from './ProductCard'
 import SkeletonLoader from './SkeletonLoader'
 
 /**
@@ -28,20 +28,20 @@ const Recommendations = ({ productId = null, limit = 15, showTitle = true, onAdd
   const [loading, setLoading] = useState(true)
 
   /**
-   * Fetch recommendations
+   * Fetch recommendations - maximum 5 latest products
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const fetchRecommendations = async () => {
     try {
       setLoading(true)
       const endpoint = productId 
-        ? `/api/product-views/recommendations/${productId}?limit=${limit}`
-        : `/api/product-views/recommendations?limit=${limit}`
+        ? `/api/product-views/recommendations/${productId}?limit=5`
+        : '/api/product-views/recommendations?limit=5'
       
       const response = await axios.get(endpoint)
       if (response.data && response.data.products) {
-        setProducts(response.data.products)
+        setProducts(response.data.products.slice(0, 5))
       } else {
         setProducts([])
       }
@@ -55,7 +55,7 @@ const Recommendations = ({ productId = null, limit = 15, showTitle = true, onAdd
 
   useEffect(() => {
     fetchRecommendations()
-  }, [productId, limit])
+  }, [productId])
 
   if (loading) {
     return (
@@ -82,7 +82,12 @@ const Recommendations = ({ productId = null, limit = 15, showTitle = true, onAdd
         </h2>
       )}
 
-      <ProductCarousel products={products} onAddToCart={onAddToCart} slidesToShow={5} />
+      {/* Product grid - maximum 5 latest products, no carousel */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+        ))}
+      </div>
     </div>
   )
 }

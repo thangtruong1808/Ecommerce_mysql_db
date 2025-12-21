@@ -1,11 +1,12 @@
 /**
  * Product Carousel Component
- * Multi-slide carousel with infinite loop for displaying products
+ * Carousel with navigation buttons and CSS-only responsive sizing
+ * No JavaScript resize handlers for fast performance
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import ProductCard from './ProductCard'
 
@@ -17,92 +18,47 @@ import ProductCard from './ProductCard'
  * @param {number} props.slidesToShow - Number of products to show at once (default: 5)
  * @returns {JSX.Element} Product carousel component
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-17
  */
 const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const carouselRef = useRef(null)
-  const [itemsPerView, setItemsPerView] = useState(slidesToShow)
-
-  /**
-   * Update items per view based on screen size
-   * @author Thang Truong
-   * @date 2025-12-12
-   */
-  useEffect(() => {
-    const updateItemsPerView = () => {
-      const width = window.innerWidth
-      if (width < 640) setItemsPerView(1)
-      else if (width < 768) setItemsPerView(2)
-      else if (width < 1024) setItemsPerView(3)
-      else if (width < 1280) setItemsPerView(4)
-      else setItemsPerView(5)
-    }
-    updateItemsPerView()
-    window.addEventListener('resize', updateItemsPerView)
-    return () => window.removeEventListener('resize', updateItemsPerView)
-  }, [])
 
   /**
    * Handle previous slide
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handlePrevious = () => {
-    setCurrentIndex((prev) => {
-      const step = Math.min(itemsPerView, products.length)
-      if (step >= products.length) return 0
-      const newIndex = prev - step
-      return newIndex < 0 ? products.length - (products.length % step || step) : newIndex
-    })
+    setCurrentIndex((prev) => (prev - 1 + products.length) % products.length)
   }
 
   /**
    * Handle next slide
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const handleNext = () => {
-    setCurrentIndex((prev) => {
-      const step = Math.min(itemsPerView, products.length)
-      if (step >= products.length) return 0
-      const newIndex = prev + step
-      return newIndex >= products.length ? 0 : newIndex
-    })
+    setCurrentIndex((prev) => (prev + 1) % products.length)
   }
 
   if (products.length === 0) return null
 
-  // For fewer products, use flex layout with same card size as carousel
-  if (products.length <= 4) {
-    // Calculate card width to match carousel (each card is 100/itemsPerView %)
-    const cardWidthPercent = 100 / itemsPerView
-
-    /* Product flex layout for small number of products */
+  // If 5 or fewer products, display as grid (same as Clearance page) - no carousel needed
+  if (products.length <= 5) {
+    /* Product grid for 5 or fewer items - no carousel navigation */
     return (
-      <div className="flex flex-wrap">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
         {products.map((product) => (
-          <div 
-            key={product.id} 
-            className="flex-shrink-0"
-            style={{ width: `${cardWidthPercent}%` }}
-          >
-            <div className="px-2">
-              <ProductCard product={product} onAddToCart={onAddToCart} />
-            </div>
-          </div>
+          <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
         ))}
       </div>
     )
   }
 
-  // Duplicate products for seamless infinite loop
-  const duplicatedProducts = [...products, ...products, ...products]
-  const visibleCount = Math.min(itemsPerView, products.length)
-  const itemWidth = 100 / visibleCount
-  const baseOffset = products.length * itemWidth
-
-  /* Product carousel with multi-slide */
+  // Use CSS responsive classes for item widths - no JavaScript resize handlers needed
+  // Transform moves by 100% of each item's width, CSS handles responsive sizing automatically
+  /* Product carousel with navigation buttons and CSS-only responsive sizing */
   return (
     <div className="w-full relative">
       <button
@@ -118,14 +74,14 @@ const ProductCarousel = ({ products = [], onAddToCart, slidesToShow = 5 }) => {
           ref={carouselRef}
           className="flex transition-transform duration-300 ease-in-out"
           style={{
-            transform: `translateX(-${baseOffset + (currentIndex % products.length) * itemWidth}%)`
+            transform: `translateX(-${currentIndex * 100}%)`,
+            willChange: 'transform'
           }}
         >
-          {duplicatedProducts.map((product, index) => (
+          {products.map((product) => (
             <div
-              key={`${product.id}-${index}`}
-              className="flex-shrink-0"
-              style={{ width: `${itemWidth}%` }}
+              key={product.id}
+              className="flex-shrink-0 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5"
             >
               <div className="px-2">
                 <ProductCard product={product} onAddToCart={onAddToCart} />

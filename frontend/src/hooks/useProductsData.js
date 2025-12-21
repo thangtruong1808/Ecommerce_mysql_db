@@ -194,7 +194,7 @@ export const useProductsData = (searchParams, setSearchParams) => {
           setChildCategories([])
         }
       } else {
-        setChildCategories([])
+      setChildCategories([])
       }
       
       // Don't clear subcategory if it matches the selected category's subcategories
@@ -225,7 +225,7 @@ export const useProductsData = (searchParams, setSearchParams) => {
         }
       } catch (error) {
         if (error?.response?.status !== 429) {
-          toast.error(error.response?.data?.message || 'Failed to load subcategories')
+        toast.error(error.response?.data?.message || 'Failed to load subcategories')
         }
       }
     }
@@ -265,7 +265,7 @@ export const useProductsData = (searchParams, setSearchParams) => {
       } catch (error) {
         // Only show error if it's not a 429 (rate limit)
         if (error?.response?.status !== 429) {
-          toast.error(error.response?.data?.message || 'Failed to load child categories')
+        toast.error(error.response?.data?.message || 'Failed to load child categories')
         }
         setChildCategories([])
       }
@@ -339,7 +339,7 @@ export const useProductsData = (searchParams, setSearchParams) => {
         }
       } catch (error) {
         if (error?.response?.status !== 429) {
-          toast.error(error.response?.data?.message || 'Failed to load child category')
+        toast.error(error.response?.data?.message || 'Failed to load child category')
         }
       }
     }
