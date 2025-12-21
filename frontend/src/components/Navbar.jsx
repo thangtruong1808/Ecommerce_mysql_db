@@ -10,8 +10,7 @@ import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import logoImage from '../assets/images/Logo.png'
-import { FaUserCircle, FaSignOutAlt, FaShoppingBag, FaFileInvoice, FaUser, FaCog, FaBars, FaTimes, FaSearch, FaHome, FaBoxOpen, FaTag, FaShoppingCart, FaSignInAlt, FaLaptop, FaMobile, FaTshirt, FaGamepad, FaTools, FaBook, FaMusic, FaCamera, FaCar, FaBicycle, FaStar, FaHiking } from 'react-icons/fa'
-import { MdSportsTennis } from 'react-icons/md'
+import { FaUserCircle, FaSignOutAlt, FaShoppingBag, FaFileInvoice, FaUser, FaCog, FaBars, FaTimes, FaSearch, FaHome, FaBoxOpen, FaTag, FaShoppingCart, FaSignInAlt, FaFolder } from 'react-icons/fa'
 import { loadCategories } from '../utils/categoryCache'
 
 /**
@@ -148,46 +147,18 @@ const Navbar = () => {
   useEffect(() => { fetchCategories() }, [])
 
   /**
-   * Get category icon and color based on category name
+   * Get category icon and color - returns consistent icon for all categories
    * @param {string} categoryName - Category name
    * @returns {Object} Icon component and color class
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   const getCategoryStyle = (categoryName) => {
-    const name = (categoryName || '').toLowerCase()
-    const iconMap = {
-      tech: <FaLaptop className="mr-2" />, computer: <FaLaptop className="mr-2" />, laptop: <FaLaptop className="mr-2" />, technology: <FaLaptop className="mr-2" />,
-      phone: <FaMobile className="mr-2" />, mobile: <FaMobile className="mr-2" />, electronics: <FaMobile className="mr-2" />,
-      cloth: <FaTshirt className="mr-2" />, fashion: <FaTshirt className="mr-2" />, apparel: <FaTshirt className="mr-2" />, clothing: <FaTshirt className="mr-2" />,
-      game: <FaGamepad className="mr-2" />, gaming: <FaGamepad className="mr-2" />, sports: <FaGamepad className="mr-2" />,
-      tool: <FaTools className="mr-2" />, hardware: <FaTools className="mr-2" />, home: <FaTools className="mr-2" />, garden: <FaTools className="mr-2" />,
-      book: <FaBook className="mr-2" />, books: <FaBook className="mr-2" />, education: <FaBook className="mr-2" />,
-      music: <FaMusic className="mr-2" />, audio: <FaMusic className="mr-2" />, entertainment: <FaMusic className="mr-2" />,
-      camera: <FaCamera className="mr-2" />, photo: <FaCamera className="mr-2" />, photography: <FaCamera className="mr-2" />,
-      car: <FaCar className="mr-2" />, auto: <FaCar className="mr-2" />, automotive: <FaCar className="mr-2" />,
-      bike: <FaBicycle className="mr-2" />, bicycle: <FaBicycle className="mr-2" />, fitness: <FaBicycle className="mr-2" />,
-      badminton: <MdSportsTennis className="mr-2" />,
-      hiking: <FaHiking className="mr-2" />
-    }
-    const colorMap = {
-      tech: 'text-blue-600', computer: 'text-blue-600', technology: 'text-blue-600',
-      phone: 'text-green-600', mobile: 'text-green-600', electronics: 'text-green-600',
-      cloth: 'text-pink-600', fashion: 'text-pink-600', clothing: 'text-pink-600', apparel: 'text-pink-600',
-      game: 'text-purple-600', gaming: 'text-purple-600', sports: 'text-purple-600',
-      tool: 'text-orange-600', hardware: 'text-orange-600', home: 'text-orange-600', garden: 'text-orange-600',
-      book: 'text-indigo-600', books: 'text-indigo-600', education: 'text-indigo-600',
-      music: 'text-yellow-600', audio: 'text-yellow-600', entertainment: 'text-yellow-600',
-      camera: 'text-red-600', photo: 'text-red-600', photography: 'text-red-600',
-      car: 'text-cyan-600', auto: 'text-cyan-600', automotive: 'text-cyan-600',
-      bike: 'text-emerald-600', bicycle: 'text-emerald-600', fitness: 'text-emerald-600',
-      badminton: 'text-blue-500',
-      hiking: 'text-green-700'
-    }
-    const colors = ['text-blue-600', 'text-green-600', 'text-pink-600', 'text-purple-600', 'text-orange-600', 'text-indigo-600', 'text-yellow-600', 'text-red-600', 'text-cyan-600', 'text-emerald-600']
-    for (const key in iconMap) if (name.includes(key)) return { icon: iconMap[key], color: colorMap[key] || colors[name.length % colors.length] }
-    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    return { icon: <FaStar className="mr-2" />, color: colors[hash % colors.length] }
+    // Use consistent icon for all categories
+    const icon = <FaFolder className="mr-2" />
+    // Use consistent color for all categories
+    const color = 'text-blue-600'
+    return { icon, color }
   }
 
   // Menu items configuration
