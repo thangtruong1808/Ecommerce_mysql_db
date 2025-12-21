@@ -251,7 +251,7 @@ const Navbar = () => {
                           </div>
                           )
                         })}
-                        {/* CTA section with background - takes remaining width in row */}
+                        {/* Clearance Sale CTA section - takes remaining width in row */}
                         {(() => {
                           const totalCategories = categories.length
                           const colsPerRow = 4
@@ -260,10 +260,17 @@ const Navbar = () => {
                           const colSpanClass = ctaColSpan === 1 ? 'md:col-span-1' : ctaColSpan === 2 ? 'md:col-span-2' : ctaColSpan === 3 ? 'md:col-span-3' : 'md:col-span-4'
                           return (
                             <div className={colSpanClass}>
-                              <Link to="/clearance" className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-red-500 to-orange-500 hover:opacity-90 transition-opacity group">
+                              <Link 
+                                to="/clearance" 
+                                className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-red-500 to-red-600 hover:opacity-90 transition-opacity group"
+                              >
                                 <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-opacity"></div>
                                 <div className="relative h-full p-6 flex flex-col justify-between text-white">
-                                  <div><FaTag className="text-3xl mb-2" /><h4 className="text-2xl font-bold mb-2">Clearance Sale</h4><p className="text-sm opacity-90">Up to 50% off selected items</p></div>
+                                  <div>
+                                    <FaTag className="text-3xl mb-2" />
+                                    <h4 className="text-2xl font-bold mb-2">Clearance Sale</h4>
+                                    <p className="text-sm opacity-90">Check out our latest deals and discounts</p>
+                                  </div>
                                   <span className="text-sm font-semibold underline">Shop Now →</span>
                                 </div>
                               </Link>

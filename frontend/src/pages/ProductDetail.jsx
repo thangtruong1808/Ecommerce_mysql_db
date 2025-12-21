@@ -183,7 +183,7 @@ const ProductDetail = () => {
                 <span className="text-xl text-gray-400 line-through">${(Number(product.price) || 0).toFixed(2)}</span>
                   <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-semibold flex items-center space-x-1">
                     <FaTag />
-                  <span>{product.discount_type === 'percentage' ? `${product.discount_value}% OFF` : `$${product.discount_value} OFF`}</span>
+                  <span>{product.discount_type === 'percentage' ? `${Math.round(parseFloat(product.discount_value))}% OFF` : `$${parseFloat(product.discount_value).toFixed(2)} OFF`}</span>
                   </span>
               </div>
             ) : (

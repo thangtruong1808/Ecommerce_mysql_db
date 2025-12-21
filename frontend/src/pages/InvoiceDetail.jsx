@@ -153,11 +153,16 @@ const InvoiceDetail = () => {
       <div className="bg-white rounded-lg shadow-md p-8">
         {/* Brand section with logo and description */}
         <div className="mb-8 pb-8 border-b">
-          <div className="flex items-center gap-4 mb-4">
-            <img src={logoImage} alt="Company Logo" className="h-16 w-auto object-contain" />
-            <div>
+          <div className="flex items-start gap-4 mb-4">
+            <img src={logoImage} alt="Company Logo" className="h-[120px] w-auto object-contain flex-shrink-0" />
+            <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900">Ecommerce Store</h2>
-              <p className="text-gray-600 text-sm mt-1">Your trusted online shopping destination. Quality products, exceptional service, and fast delivery.</p>
+              <p className="text-gray-600 text-sm mt-1">Your trusted online shopping destination.</p>
+              <div className="text-gray-600 text-xs mt-2 space-y-1">
+                <p>ABN: 12 345 678 901</p>
+                <p>123 Main Street, Melbourne Victoria 3000, Australia</p>
+                <p>Email: thangtruong1808@gmail.com | Phone: +61 2 9876 5432</p>
+              </div>
             </div>
           </div>
         </div>
@@ -248,6 +253,13 @@ const InvoiceDetail = () => {
               Your order will be delivered within <strong>3-5 business days</strong> from the date of shipment. We will integrate shipping tracking with our provider soon, and you'll receive tracking information via email once your order ships.
             </p>
           </div>
+        </div>
+
+        {/* Footer message */}
+        <div className="mt-8 pt-8 border-t text-center">
+          <p className="text-xs text-gray-500">
+            This ecommerce platform was thoughtfully designed and developed by Thang Truong. Thank you for shopping with us!
+          </p>
         </div>
       </div>
     </div>

@@ -48,8 +48,8 @@ const ProductCard = ({ product, onAddToCart }) => {
           <FaTag />
           <span>
             {product.discount_type === 'percentage'
-              ? `${product.discount_value}% OFF`
-              : `$${product.discount_value} OFF`}
+              ? `${Math.round(parseFloat(product.discount_value))}% OFF`
+              : `$${parseFloat(product.discount_value).toFixed(2)} OFF`}
           </span>
         </div>
       )}

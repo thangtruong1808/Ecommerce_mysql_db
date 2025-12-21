@@ -75,15 +75,18 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>Email: support@store.com</li>
-              <li>Phone: (123) 456-7890</li>
+              <li>ABN: 12 345 678 901</li>
+              <li>123 Main Street</li>
+              <li>Melbourne Victoria 3000, Australia</li>
+              <li>Email: thangtruong1808@gmail.com</li>
+              <li>Phone: +61 2 9876 5432</li>
             </ul>
           </div>
         </div>
 
-        {/* Copyright */}
+        {/* Footer message */}
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 Ecommerce Store. All rights reserved.</p>
+          <p>This ecommerce platform was thoughtfully designed and developed by Thang Truong. Thank you for shopping with us!</p>
         </div>
       </div>
     </footer>

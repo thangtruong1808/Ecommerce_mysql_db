@@ -57,3 +57,30 @@ export const formatDateTime = (dateString) => {
     return 'N/A'
   }
 }
+
+/**
+ * Get relative date string (e.g., "Expires in 3 days")
+ * @param {string|Date} dateString - Date string or Date object
+ * @returns {string} Relative date string
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
+export const getRelativeDate = (dateString) => {
+  if (!dateString) return ''
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return ''
+    
+    const now = new Date()
+    const diff = date - now
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+    
+    if (days < 0) return 'Expired'
+    if (days === 0) return 'Expires today'
+    if (days === 1) return 'Expires tomorrow'
+    return `Expires in ${days} days`
+  } catch (error) {
+    return ''
+  }
+}

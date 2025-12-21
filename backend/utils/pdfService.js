@@ -63,31 +63,36 @@ export const generateInvoicePDF = async (invoice, outputPath) => {
       const logoPath = getLogoPath()
       let headerY = 50
       let textX = 50
+      // Logo height matches from business name (headerY) to email field (headerY + 64)
+      const logoHeight = 120
       if (logoPath) {
         try {
-          doc.image(logoPath, 50, headerY, { width: 64, height: 64, fit: [64, 64] })
-          textX = 130
+          doc.image(logoPath, 50, headerY, { width: logoHeight, height: logoHeight, fit: [logoHeight, logoHeight] })
+          textX = 180
         } catch (err) {
           // If image fails, continue without logo
         }
       }
       doc.fontSize(24).text('Ecommerce Store', textX, headerY, { align: 'left' })
-      doc.fontSize(10).text('Your trusted online shopping destination. Quality products, exceptional service, and fast delivery.', textX, headerY + 25, { width: 300 })
+      doc.fontSize(10).text('Your trusted online shopping destination.', textX, headerY + 20, { width: 300 })
+      doc.fontSize(9).text('ABN: 12 345 678 901', textX, headerY + 35, { width: 300 })
+      doc.fontSize(9).text('123 Main Street, Melbourne Victoria 3000, Australia', textX, headerY + 47, { width: 300 })
+      doc.fontSize(9).text('Email: thangtruong1808@gmail.com | Phone: +61 2 9876 5432', textX, headerY + 59, { width: 300 })
       
       // Invoice title
-      doc.fontSize(20).text('INVOICE', 50, headerY + 60, { align: 'left' })
+      doc.fontSize(20).text('INVOICE', 50, headerY + 80, { align: 'left' })
       
       // Invoice details (right side)
       doc.fontSize(10)
-      doc.text(`Invoice Number: ${invoice.invoice_number}`, 350, headerY + 60, { align: 'right' })
-      doc.text(`Date: ${formatDate(invoice.created_at)}`, 350, headerY + 75, { align: 'right' })
-      doc.text(`Order: ${formatOrderNumber()}`, 350, headerY + 90, { align: 'right' })
+      doc.text(`Invoice Number: ${invoice.invoice_number}`, 350, headerY + 80, { align: 'right' })
+      doc.text(`Date: ${formatDate(invoice.created_at)}`, 350, headerY + 95, { align: 'right' })
+      doc.text(`Order: ${formatOrderNumber()}`, 350, headerY + 110, { align: 'right' })
 
       // Billing and Shipping addresses
       const billingAddr = typeof invoice.billing_address === 'object' ? invoice.billing_address : JSON.parse(invoice.billing_address || '{}')
       const shippingAddr = typeof invoice.shipping_address === 'object' ? invoice.shipping_address : JSON.parse(invoice.shipping_address || '{}')
       
-      let yPos = headerY + 140
+      let yPos = headerY + 160
       doc.fontSize(12).font('Helvetica-Bold').text('Billing Address', 50, yPos)
       doc.font('Helvetica').fontSize(10)
       doc.text(billingAddr.address || '', 50, yPos + 15)
@@ -169,7 +174,7 @@ export const generateInvoicePDF = async (invoice, outputPath) => {
       const bottomMargin = 50
       const footerSpacing = 30
       const footerY = (yPos + footerSpacing < pageHeight - bottomMargin) ? yPos + footerSpacing : pageHeight - bottomMargin
-      doc.fontSize(8).text(`© ${new Date().getFullYear()} Ecommerce Store. All rights reserved.`, 50, footerY, { align: 'center', width: 500 })
+      doc.fontSize(8).text('This ecommerce platform was thoughtfully designed and developed by Thang Truong. Thank you for shopping with us!', 50, footerY, { align: 'center', width: 500 })
 
       doc.end()
       stream.on('finish', () => resolve(outputPath))

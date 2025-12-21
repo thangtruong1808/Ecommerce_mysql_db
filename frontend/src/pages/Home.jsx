@@ -8,12 +8,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import { FaShippingFast, FaShieldAlt, FaUndo, FaArrowRight, FaTag } from 'react-icons/fa'
 import ProductCard from '../components/ProductCard'
 import SkeletonLoader from '../components/SkeletonLoader'
 import RecentlyViewed from '../components/RecentlyViewed'
 import Recommendations from '../components/Recommendations'
 import CategoryCarousel from '../components/CategoryCarousel'
+import VoucherSection from '../components/VoucherSection'
+import VoucherCodeItem from '../components/VoucherCodeItem'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { loadCategories } from '../utils/categoryCache'
@@ -30,25 +33,29 @@ const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [clearanceProducts, setClearanceProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [vouchers, setVouchers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [copiedCodes, setCopiedCodes] = useState(new Set())
 
   /**
-   * Fetch featured products and categories
+   * Fetch featured products, categories, and vouchers
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-17
    */
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [productsRes, clearanceRes, categoriesData] = await Promise.all([
+        const [productsRes, clearanceRes, categoriesData, vouchersRes] = await Promise.all([
           axios.get('/api/products?limit=10&sortBy=created_at&sortOrder=DESC'),
           axios.get('/api/products/clearance?limit=4'),
-          loadCategories()
+          loadCategories(),
+          axios.get('/api/vouchers').catch(() => ({ data: [] }))
         ])
         setFeaturedProducts(productsRes.data.products || [])
         setClearanceProducts(clearanceRes.data.products || [])
         setCategories(categoriesData || [])
+        setVouchers(vouchersRes.data || [])
       } catch (error) {
         // Silent fail for home page
       } finally {
@@ -72,6 +79,29 @@ const Home = () => {
     await addToCart(product.id, 1)
   }
 
+  /**
+   * Handle copy voucher code to clipboard
+   * @param {string} code - Voucher code to copy
+   * @author Thang Truong
+   * @date 2025-12-17
+   */
+  const handleCopyCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedCodes(prev => new Set(prev).add(code))
+      toast.success(`Voucher code ${code} copied!`)
+      setTimeout(() => {
+        setCopiedCodes(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(code)
+          return newSet
+        })
+      }, 2000)
+    } catch (error) {
+      toast.error('Failed to copy code')
+    }
+  }
+
   /* Home page layout */
   return (
     <div className="min-h-screen">
@@ -81,19 +111,47 @@ const Home = () => {
           {/* Hero content */}
           <div className="text-center mb-6">
             <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
-            <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices. Quality you can trust, delivered to your door.</p>
-            <div className="flex gap-4 justify-center">
+            <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices and amazing discounts with our exclusive voucher codes!</p>
+            {/* Button section */}
+            {/* <div className="flex gap-4 justify-center">
               <Link to="/products" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
                 Shop Now
               </Link>
               <Link to="/clearance" className="bg-red-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-600 transition">
                 View Clearance
               </Link>
-            </div>
+            </div> */}
           </div>
 
+          {/* Voucher codes section - centered in hero banner */}
+          {vouchers.length > 0 && (
+            <div className="text-center">
+              {/* Voucher information text */}
+              {/* <p className="text-base text-blue-100 max-w-full mx-auto mb-4">
+                Unlock amazing savings with our exclusive voucher codes! Apply your discount at checkout.
+              </p> */}
+              {/* Voucher codes section */}
+              <div className="max-w-full mx-auto">
+                <div className="flex flex-wrap justify-center items-center gap-3">
+                  {vouchers.slice(0, 4).map((voucher, index) => (
+                    <VoucherCodeItem
+                      key={voucher.id}
+                      voucher={voucher}
+                      isCopied={copiedCodes.has(voucher.code)}
+                      onCopy={handleCopyCode}
+                      showHeader={index === 0}
+                    />
+                  ))}
+                </div>
+                {vouchers.length > 4 && (
+                  <p className="text-sm text-blue-100 mt-3">+{vouchers.length - 4} more voucher{vouchers.length - 4 !== 1 ? 's' : ''} available</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Features section */}
-          <div className="flex flex-wrap justify-center items-center gap-6 mt-8 pt-6 border-t border-blue-400/20">
+          <div className="flex flex-wrap justify-center items-center gap-6 pt-6 border-t border-blue-400/20">
             <div className="flex items-center gap-2">
               <FaShippingFast className="text-white text-sm" />
               <span className="text-sm text-blue-100">Free Shipping over $100</span>
@@ -106,11 +164,19 @@ const Home = () => {
               <FaUndo className="text-white text-sm" />
               <span className="text-sm text-blue-100">Easy Returns</span>
             </div>
+            <div className="flex items-center gap-2">
+              <FaTag className="text-white text-sm" />
+              <span className="text-sm text-blue-100">Exclusive Vouchers & Discounts</span>
+            </div>
           </div>
+          
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {/* Vouchers section - displayed prominently to attract buyers */}
+        {/* <VoucherSection /> */}
+
         {/* Categories section */}
         {categories.length > 0 && (
           <section className="mb-16">
