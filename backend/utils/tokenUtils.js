@@ -8,6 +8,9 @@
 
 import jwt from 'jsonwebtoken'
 
+// Security Note: Fallback secret is used only for development/testing
+// In production, JWT_SECRET environment variable MUST be set
+// TODO: Consider throwing error if JWT_SECRET is not set in production
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_in_production'
 const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m'
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d'

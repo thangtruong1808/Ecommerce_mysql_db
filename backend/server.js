@@ -41,9 +41,7 @@ const envPath = path.join(rootDir, '.env')
 // Load .env file and verify it was loaded
 const envResult = dotenv.config({ path: envPath })
 if (envResult.error) {
-  console.warn(`Warning: Could not load .env file from ${envPath}`)
-  console.warn('Please ensure .env file exists in the project root directory.')
-  console.warn('You can copy backend/env.example to .env and update the values.')
+  // .env file not found - using environment variables or defaults
 }
 
 // Connect to database
@@ -118,7 +116,7 @@ app.get('/api/health', (req, res) => {
  * @date 2025-12-17
  */
 app.use((err, req, res, next) => {
-  console.error(err.stack)
+  // Error handled by error response
   res.status(500).json({ message: 'Something went wrong!', error: err.message })
 })
 

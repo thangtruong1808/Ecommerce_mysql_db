@@ -29,12 +29,14 @@ class ErrorBoundary extends Component {
   }
 
   /**
-   * Log error to console
+   * Handle caught error
    * @param {Error} error - Caught error
    * @param {Object} errorInfo - Error information
+   * @author Thang Truong
+   * @date 2025-01-XX
    */
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+    // Error handled by ErrorBoundary state
   }
 
   /**

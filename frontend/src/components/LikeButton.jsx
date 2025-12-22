@@ -43,7 +43,7 @@ const LikeButton = ({ productId }) => {
         setLiked(likedResponse.data.liked)
       }
     } catch (error) {
-      console.error('Failed to fetch like status:', error)
+      // Silent error handling for like status fetch
     } finally {
       setInitialLoading(false)
     }

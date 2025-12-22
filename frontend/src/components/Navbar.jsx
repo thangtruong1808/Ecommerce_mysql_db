@@ -1,7 +1,7 @@
 /**
  * Navigation Bar Component - Responsive navbar with mobile menu
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -337,14 +337,50 @@ const Navbar = () => {
         {hoveredCategoryId && (() => {
           const hoveredCategory = categories.find(cat => cat.id === hoveredCategoryId)
           if (!hoveredCategory) return null
+          const subcategories = hoveredCategory.subcategories || []
+          const subcategoryCount = subcategories.length
+          /**
+           * Calculate CTA position based on subcategory count
+           * Each row holds up to 4 subcategories, CTA takes remaining columns in that row
+           * @author Thang Truong
+           * @date 2025-01-28
+           */
+          let ctaRow, ctaColSpan, ctaColStart
+          if (subcategoryCount === 0) {
+            // 0 subcats: CTA takes all 4 columns in row 1
+            ctaRow = 1
+            ctaColSpan = 4
+            ctaColStart = 1
+          } else if (subcategoryCount <= 3) {
+            // 1-3 subcats: CTA in row 1, takes remaining columns
+            ctaRow = 1
+            ctaColSpan = 4 - subcategoryCount
+            ctaColStart = subcategoryCount + 1
+          } else {
+            // 4+ subcats: Calculate full rows and remaining subcats in last row
+            const fullRows = Math.floor(subcategoryCount / 4)
+            const remainingInLastRow = subcategoryCount % 4
+            if (remainingInLastRow === 0) {
+              // Last row is full (4 subcats), CTA goes to next row with all 4 columns
+              ctaRow = fullRows + 1
+              ctaColSpan = 4
+              ctaColStart = 1
+            } else {
+              // CTA fits in same row as last subcats, takes remaining columns
+              ctaRow = fullRows + 1
+              ctaColSpan = 4 - remainingInLastRow
+              ctaColStart = remainingInLastRow + 1
+            }
+          }
           return (
             <div className="fixed left-0 right-0 bg-white shadow-2xl border-t border-gray-100 z-40" style={{ top: `${megaMenuTop}px` }} onMouseEnter={() => handleCategoryHover(hoveredCategoryId)} onMouseLeave={handleCategoryLeave}>
               <div className="w-full">
                 {/* Category mega menu content */}
                 <div className="max-w-7xl mx-auto px-4 py-6">
-                  <div className="grid md:grid-cols-4 gap-6">
-                    {/* Subcategories for hovered category */}
-                    {(hoveredCategory.subcategories || []).map((sub) => {
+                  {/* CSS Grid: 4 columns per row, subcategories first, CTA takes remaining columns in appropriate row */}
+                  <div className="grid md:grid-cols-4 gap-6 auto-rows-min">
+                    {/* Subcategories - rendered first, each row holds up to 4 subcategories */}
+                    {subcategories.map((sub) => {
                       const childCategories = Array.isArray(sub.child_categories) ? sub.child_categories : []
                       return (
                         <div key={sub.id} className="space-y-3">
@@ -370,8 +406,13 @@ const Navbar = () => {
                         </div>
                       )
                     })}
-                    {/* Clearance Sale CTA section - category-specific */}
-                    <div className="md:col-span-1">
+                    {/* Clearance Sale CTA - takes remaining columns in appropriate row based on subcategory count */}
+                    <div 
+                      style={{ 
+                        gridRow: ctaRow,
+                        gridColumn: `${ctaColStart} / span ${ctaColSpan}`
+                      }}
+                    >
                       <Link
                         to={`/clearance?category=${hoveredCategory.id}&categoryName=${encodeURIComponent(hoveredCategory.name)}`}
                         className="block relative h-full min-h-[200px] rounded-lg overflow-hidden bg-gradient-to-br from-red-500 to-red-600 hover:opacity-90 transition-opacity group"

@@ -39,11 +39,9 @@ export const AuthProvider = ({ children }) => {
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
 
-  // Suppress 401 errors in browser console for auth endpoints on public pages
+  // Suppress 401 errors for auth endpoints on public pages
   useEffect(() => {
-    const originalError = console.error
-    
-    // Axios response interceptor to silence expected 401 errors
+    // Axios response interceptor to handle expected 401 errors silently
     const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -53,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         const isPublicPage = !isProtected && !isAuthPage
         const isAuthEndpoint = error.config?.url?.includes('/api/auth/') || error.config?.url?.includes('/api/auth/refresh')
         
-        // Silence 401 errors for auth endpoints on public pages or for refresh token checks
+        // Mark 401 errors as silent for auth endpoints on public pages or for refresh token checks
         if ((isPublicPage && isAuthEndpoint) || error.config?._silent) {
           if (error.response?.status === 401) {
             error._silent = true
@@ -62,19 +60,9 @@ export const AuthProvider = ({ children }) => {
         return Promise.reject(error)
       }
     )
-    
-    // Console.error override to suppress silent 401 errors
-    console.error = (...args) => {
-      const error = args[0]
-      if (error?._silent) {
-        return // Suppress silent errors
-      }
-      originalError(...args)
-    }
 
     return () => {
       axios.interceptors.response.eject(responseInterceptor)
-      console.error = originalError
     }
   }, [])
 
@@ -282,17 +270,12 @@ export const AuthProvider = ({ children }) => {
    * @date 2025-12-12
    */
   const login = async (email, password) => {
-    const originalError = console.error
-    const originalWarn = console.warn
-    console.error = console.warn = () => {}
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest()
       xhr.open('POST', '/api/auth/login', true)
       xhr.setRequestHeader('Content-Type', 'application/json')
       xhr.withCredentials = true
       xhr.onload = () => {
-        console.error = originalError
-        console.warn = originalWarn
         try {
           const data = JSON.parse(xhr.responseText || '{}')
           // Check if response has error message (backend returns 200 with message for wrong creds)
@@ -316,8 +299,6 @@ export const AuthProvider = ({ children }) => {
         }
       }
       xhr.onerror = () => {
-        console.error = originalError
-        console.warn = originalWarn
         setError('Login failed. Please try again.')
         resolve({ success: false, error: 'Login failed. Please try again.' })
       }
