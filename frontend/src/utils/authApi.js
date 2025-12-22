@@ -10,15 +10,17 @@ import axios from 'axios'
 /**
  * Fetch current user - silent auth check
  * Uses /api/auth/me which never returns 401, always returns user or null
+ * If fetch fails and refresh token exists, tries to refresh access token first
  * @param {Function} setUser - Function to set user state
  * @param {Function} setError - Function to set error state
  * @param {Function} setLoading - Function to set loading state
  * @param {Object} isFetchingUserRef - Ref to track if fetching user
  * @param {Object} userFetchedTimeRef - Ref to track when user was fetched
+ * @param {Function} hasRefreshToken - Function to check if refresh token exists
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
-export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef) => {
+export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken) => {
   // Prevent duplicate calls (React StrictMode in development)
   if (isFetchingUserRef.current) return
   isFetchingUserRef.current = true
@@ -30,8 +32,13 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
       setUser(response.data.user)
       setError(null)
     } else {
-      setUser(null)
-      setError(null)
+      // Only clear user if no refresh token exists
+      // If refresh token exists, user might just need token refresh
+      if (!hasRefreshToken || !hasRefreshToken()) {
+        setUser(null)
+        setError(null)
+      }
+      // If refresh token exists, keep current user state (don't clear)
     }
   } catch (error) {
     // Handle 429 errors gracefully - don't clear user on rate limit
@@ -46,9 +53,41 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
       userFetchedTimeRef.current = Date.now()
       return
     }
-    // Silent fail - /api/auth/me should never error, but handle gracefully
-    setUser(null)
-    setError(null)
+    // If error occurs but refresh token exists, try to refresh access token first
+    if (hasRefreshToken && hasRefreshToken()) {
+      // Refresh token exists - try to refresh access token, then retry fetchUser
+      try {
+        const refreshResponse = await axios.post('/api/auth/refresh', {}, {
+          validateStatus: (status) => status === 200 || status === 401,
+          _silent: true,
+          withCredentials: true
+        })
+        if (refreshResponse.status === 200) {
+          // Token refreshed successfully - retry fetching user
+          try {
+            const retryResponse = await axios.get('/api/auth/me')
+            if (retryResponse.data.user) {
+              setUser(retryResponse.data.user)
+              setError(null)
+            }
+            // If still no user after refresh, don't clear (keep current state)
+          } catch {
+            // If retry fails, don't clear user - keep current state
+          }
+        } else {
+          // Refresh token expired - clear user
+          setUser(null)
+          setError(null)
+        }
+      } catch {
+        // If refresh fails, don't clear user - keep current state
+        // The token might still be valid, just a network issue
+      }
+    } else {
+      // No refresh token exists - clear user
+      setUser(null)
+      setError(null)
+    }
   } finally {
     setLoading(false)
     isFetchingUserRef.current = false

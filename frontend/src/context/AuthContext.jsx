@@ -10,6 +10,7 @@ import { setupErrorSuppression } from '../utils/errorSuppression.js'
 import { setupRequestInterceptor, setupResponseInterceptor, setupTokenRefreshInterceptor } from '../utils/axiosInterceptors.js'
 import { useTokenRefresh } from '../hooks/useTokenRefresh.js'
 import { fetchUser, login as loginApi, register as registerApi, logout as logoutApi, updateProfile as updateProfileApi } from '../utils/authApi.js'
+import { hasRefreshToken } from '../utils/authUtils.js'
 
 const AuthContext = createContext()
 
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }) => {
   const lastRefreshTimeRef = useRef(0)
   const userFetchedTimeRef = useRef(0)
   const refreshFailureCountRef = useRef(0)
+  const lastLocationRef = useRef(window.location.pathname)
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
@@ -81,9 +83,42 @@ export const AuthProvider = ({ children }) => {
     // Always fetch user on mount to restore authentication state
     // This ensures authenticated users stay logged in after page refresh on all pages
     // 401 errors on public pages for unauthenticated users are suppressed
-    fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef)
+    fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  
+  // Re-fetch user when route changes if user is missing but refresh token exists
+  useEffect(() => {
+    // Detect route changes using window.location and restore user state if needed
+    const checkRouteChange = () => {
+      const currentPath = window.location.pathname
+      if (currentPath !== lastLocationRef.current) {
+        lastLocationRef.current = currentPath
+        
+        // If user is null but refresh token exists, try to restore user state
+        // This handles cases where navigation causes user state to be lost
+        if (!user && hasRefreshToken() && !isFetchingUserRef.current && !loading) {
+          // Small delay to let navigation complete
+          setTimeout(() => {
+            if (!user && hasRefreshToken() && !isFetchingUserRef.current) {
+              fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken)
+            }
+          }, 100)
+        }
+      }
+    }
+    
+    // Check route changes periodically (every 500ms)
+    const interval = setInterval(checkRouteChange, 500)
+    
+    // Also check on popstate (browser back/forward)
+    window.addEventListener('popstate', checkRouteChange)
+    
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('popstate', checkRouteChange)
+    }
+  }, [user, loading])
 
   // Use token refresh hook
   useTokenRefresh(user, refs, setUser, setError, isRedirectingRef)
@@ -144,7 +179,7 @@ export const AuthProvider = ({ children }) => {
     // Prevent duplicate calls - only fetch if not already fetching
     // This prevents 429 rate limit errors from multiple simultaneous requests
     if (!isFetchingUserRef.current) {
-      fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef)
+      fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken)
     }
   }
 
