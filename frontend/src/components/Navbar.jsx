@@ -248,7 +248,7 @@ const Navbar = () => {
             <button type="button" onClick={openFilterDrawer} aria-controls="product-filters-drawer" aria-expanded="false" aria-haspopup="dialog" className="px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors text-white hover:text-blue-100" aria-label="Open product filters">
               <FaSearch className="mr-1" /> <span className="text-md">Filters</span>
             </button>
-            <Link to="/clearance" className={`px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors ${isActive('/clearance') ? 'text-red-700 bg-red-200 font-bold' : 'text-red-800 hover:text-red-900 font-semibold'}`}>
+            <Link to="/clearance" className={`px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-colors ${isActive('/clearance') ? 'bg-red-500 text-white font-bold' : 'bg-red-500 text-white hover:text-white/80 font-semibold'}`}>
               <FaTag className="mr-1.5" /> <span className="text-md">Clearance</span>
             </Link>
             <Link to="/cart" className={`px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center transition-colors ${isActive('/cart') ? 'text-white bg-blue-700 font-semibold' : 'text-white hover:text-blue-100'}`}>

@@ -73,13 +73,20 @@ export const verifyRefreshToken = (token) => {
 
 /**
  * Get token expiration date
+ * Converts JWT expiration timestamp (seconds) to JavaScript Date (milliseconds)
+ * Note: The * 1000 multiplication is correct - JWT stores exp as Unix timestamp in seconds,
+ * while JavaScript Date constructor expects milliseconds. This is a unit conversion,
+ * not related to the number of users. Each token is processed independently.
  * @param {string} token - JWT token
  * @returns {Date|null} - Expiration date or null
+ * @author Thang Truong
+ * @date 2025-01-28
  */
 export const getTokenExpiration = (token) => {
   try {
     const decoded = jwt.decode(token)
     if (decoded && decoded.exp) {
+      // JWT exp is in seconds, JavaScript Date needs milliseconds
       return new Date(decoded.exp * 1000)
     }
     return null
