@@ -6,10 +6,10 @@
 -- Note: All pages should have skeleton loading states for better user experience during data fetching.
 
 -- Create database with explicit collation
-CREATE DATABASE IF NOT EXISTS ecommerce_db 
+CREATE DATABASE IF NOT EXISTS ecommerce-mysql-db 
 CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
-USE ecommerce_db;
+USE ecommerce-mysql-db
 
 -- Users table
 CREATE TABLE users (

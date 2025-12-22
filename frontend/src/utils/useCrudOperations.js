@@ -9,6 +9,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { shouldSuppress401Toast } from './authUtils.js'
 
 /**
  * useCrudOperations hook
@@ -36,7 +37,10 @@ export const useCrudOperations = (endpoint, onSuccess) => {
       setCreateModal({ isOpen: false })
       onSuccess?.()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create')
+      // Suppress toast if 401 error will be handled by token refresh
+      if (!shouldSuppress401Toast(error)) {
+        toast.error(error.response?.data?.message || 'Failed to create')
+      }
     }
   }
 
@@ -54,7 +58,10 @@ export const useCrudOperations = (endpoint, onSuccess) => {
       setEditModal({ isOpen: false, entity: null })
       onSuccess?.()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update')
+      // Suppress toast if 401 error will be handled by token refresh
+      if (!shouldSuppress401Toast(error)) {
+        toast.error(error.response?.data?.message || 'Failed to update')
+      }
     }
   }
 
@@ -71,7 +78,10 @@ export const useCrudOperations = (endpoint, onSuccess) => {
       setDeleteModal({ isOpen: false, entity: null })
       onSuccess?.()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete')
+      // Suppress toast if 401 error will be handled by token refresh
+      if (!shouldSuppress401Toast(error)) {
+        toast.error(error.response?.data?.message || 'Failed to delete')
+      }
     }
   }
 
@@ -90,7 +100,10 @@ export const useCrudOperations = (endpoint, onSuccess) => {
       toast.success(`${ids.length} item(s) deleted successfully`)
       onSuccess?.()
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete items')
+      // Suppress toast if 401 error will be handled by token refresh
+      if (!shouldSuppress401Toast(error)) {
+        toast.error(error.response?.data?.message || 'Failed to delete items')
+      }
     }
   }
 

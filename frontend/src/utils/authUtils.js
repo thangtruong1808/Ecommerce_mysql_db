@@ -45,3 +45,40 @@ export const hasRefreshToken = () => {
   return document.cookie.split(';').some(cookie => cookie.trim().startsWith('refreshToken='))
 }
 
+/**
+ * Check if 401 error toast should be suppressed
+ * Suppresses toast when refresh token exists and error will be handled by token refresh interceptor
+ * @param {Object} error - Error object from axios
+ * @returns {boolean} True if toast should be suppressed
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+export const shouldSuppress401Toast = (error) => {
+  // Only suppress 401 errors
+  if (error?.response?.status !== 401) {
+    return false
+  }
+  
+  // Check if refresh token exists
+  if (!hasRefreshToken()) {
+    return false
+  }
+  
+  // Check if we're on a protected route (where token refresh interceptor will handle it)
+  if (!isProtectedRoute()) {
+    return false
+  }
+  
+  // Don't suppress errors from auth endpoints (login, register, etc.)
+  const url = error?.config?.url || ''
+  if (url.includes('/api/auth/login') || 
+      url.includes('/api/auth/register') || 
+      url.includes('/api/auth/profile') ||
+      url.includes('/api/auth/refresh')) {
+    return false
+  }
+  
+  // Suppress 401 toast - token refresh interceptor will handle it
+  return true
+}
+

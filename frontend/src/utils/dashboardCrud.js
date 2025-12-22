@@ -8,6 +8,7 @@
 
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { shouldSuppress401Toast } from './authUtils.js'
 
 /**
  * Update order status
@@ -24,7 +25,10 @@ export const updateOrderStatus = async (orderId, newStatus) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update order status'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -44,7 +48,10 @@ export const bulkUpdateOrders = async (orderIds, updates) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update orders'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -63,7 +70,10 @@ export const deleteOrder = async (orderId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete order'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -82,7 +92,10 @@ export const quickCreateProduct = async (productData) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to create product'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -102,7 +115,10 @@ export const updateProductStock = async (productId, newStock) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update stock'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -122,7 +138,10 @@ export const updateProductPrice = async (productId, newPrice) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update price'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -142,7 +161,10 @@ export const updateProductStatus = async (productId, isActive) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update product status'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -162,7 +184,10 @@ export const bulkUpdateProducts = async (productIds, updates) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update products'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -181,7 +206,10 @@ export const deleteProduct = async (productId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete product'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -200,7 +228,10 @@ export const quickCreateUser = async (userData) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to create user'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -220,7 +251,10 @@ export const updateUserRole = async (userId, newRole) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update user role'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -239,7 +273,10 @@ export const deleteUser = async (userId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete user'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -258,7 +295,10 @@ export const approveReview = async (reviewId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to approve review'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -277,7 +317,10 @@ export const rejectReview = async (reviewId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to reject review'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -296,7 +339,10 @@ export const deleteReview = async (reviewId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete review'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -315,7 +361,10 @@ export const bulkApproveReviews = async (reviewIds) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to approve reviews'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -334,7 +383,10 @@ export const approveComment = async (commentId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to approve comment'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -353,7 +405,10 @@ export const rejectComment = async (commentId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to reject comment'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -372,7 +427,10 @@ export const deleteComment = async (commentId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete comment'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -391,7 +449,10 @@ export const createVoucher = async (voucherData) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to create voucher'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -411,7 +472,10 @@ export const updateVoucherStatus = async (voucherId, isActive) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update voucher status'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -430,7 +494,10 @@ export const deleteVoucher = async (voucherId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete voucher'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }

@@ -8,6 +8,7 @@
 
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { shouldSuppress401Toast } from './authUtils.js'
 
 /**
  * Get all media for a product
@@ -22,7 +23,10 @@ export const getProductMedia = async (productId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to load media'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -40,7 +44,10 @@ export const getProductImages = async (productId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to load images'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -58,7 +65,10 @@ export const getProductVideos = async (productId) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to load videos'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -91,7 +101,10 @@ export const uploadProductImages = async (productId, files) => {
     return response.data.images
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to upload images'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -127,7 +140,10 @@ export const uploadProductVideo = async (productId, file, metadata = {}) => {
     return response.data.video
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to upload video'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -147,7 +163,10 @@ export const updateImage = async (imageId, data) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update image'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -167,7 +186,10 @@ export const updateVideo = async (videoId, data) => {
     return response.data
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to update video'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -185,7 +207,10 @@ export const deleteImage = async (imageId) => {
     toast.success('Image deleted successfully')
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete image'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -203,7 +228,10 @@ export const deleteVideo = async (videoId) => {
     toast.success('Video deleted successfully')
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete video'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -222,7 +250,10 @@ export const setPrimaryImage = async (productId, imageId) => {
     toast.success('Primary image set successfully')
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to set primary image'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -241,7 +272,10 @@ export const setPrimaryVideo = async (productId, videoId) => {
     toast.success('Primary video set successfully')
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to set primary video'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }
@@ -263,7 +297,10 @@ export const bulkDeleteMedia = async (productId, imageIds = [], videoIds = []) =
     toast.success('Media deleted successfully')
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to delete media'
-    toast.error(message)
+    // Suppress toast if 401 error will be handled by token refresh
+    if (!shouldSuppress401Toast(error)) {
+      toast.error(message)
+    }
     throw error
   }
 }

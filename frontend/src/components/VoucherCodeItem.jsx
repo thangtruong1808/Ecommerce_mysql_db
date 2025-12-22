@@ -40,7 +40,7 @@ const VoucherCodeItem = ({ voucher, isCopied, onCopy, showHeader = false }) => {
       {/* Header text - centered */}
       {showHeader && (
         <div className="text-center mb-2">          
-          <span className="text-md text-yellow-600 font-medium">Available Voucher Codes: {getDiscountText()} OFF</span>
+          <span className="text-md text-yellow-600 font-medium">Available Voucher Codes: {getDiscountText()} OFF Marked Prices</span>
         </div>
       )}
       {/* Main content - inline layout */}
