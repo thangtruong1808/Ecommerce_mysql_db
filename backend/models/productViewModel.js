@@ -152,18 +152,20 @@ export const getRecentlyViewed = async (userId = null, sessionId = null, limit =
 
     // Attach images and calculate discounted prices
     const productsWithImages = products.map(product => {
-      const price = parseFloat(product.price) || 0
-      const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
-      const discountedPrice = isActive && product.is_on_clearance
-        ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
-        : price
+    const price = parseFloat(product.price) || 0
+    const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
+    // Apply discount if active and discount fields exist (independent of clearance status)
+    const hasDiscountFields = product.discount_type && product.discount_value
+    const discountedPrice = isActive && hasDiscountFields
+      ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
+      : price
 
-      return {
-        ...product,
-        price: price,
-        images: imagesMap[product.id] || [],
-        discounted_price: discountedPrice,
-        has_discount: isActive && product.is_on_clearance,
+    return {
+      ...product,
+      price: price,
+      images: imagesMap[product.id] || [],
+      discounted_price: discountedPrice,
+      has_discount: isActive && hasDiscountFields,
         last_viewed_at: rows.find(r => r.product_id === product.id)?.last_viewed_at
       }
     })
@@ -348,7 +350,9 @@ const attachProductMedia = async (products) => {
   return products.map(product => {
     const price = parseFloat(product.price) || 0
     const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
-    const discountedPrice = isActive && product.is_on_clearance
+    // Apply discount if active and discount fields exist (independent of clearance status)
+    const hasDiscountFields = product.discount_type && product.discount_value
+    const discountedPrice = isActive && hasDiscountFields
       ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
       : price
 
@@ -357,7 +361,7 @@ const attachProductMedia = async (products) => {
       price: price,
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
-      has_discount: isActive && product.is_on_clearance,
+      has_discount: isActive && hasDiscountFields,
       rating: parseFloat(product.rating) || 0,
       num_reviews: parseInt(product.num_reviews) || 0
     }

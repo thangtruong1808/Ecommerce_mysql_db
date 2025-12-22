@@ -2,7 +2,7 @@
  * Product Model
  * Handles all database operations related to products
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
 
 import db from '../config/db.js'
@@ -199,7 +199,9 @@ export const getAllProducts = async (filters = {}) => {
     // Convert price from MySQL DECIMAL (string) to number
     const price = parseFloat(product.price) || 0
     const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
-    const discountedPrice = isActive && product.is_on_clearance
+    // Apply discount if active and discount fields exist (independent of clearance status)
+    const hasDiscountFields = product.discount_type && product.discount_value
+    const discountedPrice = isActive && hasDiscountFields
       ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
       : price
     
@@ -208,7 +210,7 @@ export const getAllProducts = async (filters = {}) => {
       price: price, // Ensure price is a number
       images: imagesMap[product.id] || [],
       discounted_price: discountedPrice,
-      has_discount: isActive && product.is_on_clearance,
+      has_discount: isActive && hasDiscountFields,
       likes_count: parseInt(product.likes_count) || 0,
       comments_count: parseInt(product.comments_count) || 0,
       num_reviews: parseInt(product.num_reviews) || 0,
@@ -271,18 +273,48 @@ export const getProductById = async (id) => {
 
   // Calculate discounted price
   const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
-  product.discounted_price = isActive && product.is_on_clearance
+  // Apply discount if active and discount fields exist (independent of clearance status)
+  const hasDiscountFields = product.discount_type && product.discount_value
+  product.discounted_price = isActive && hasDiscountFields
     ? calculateDiscountedPrice(product.price, product.discount_type, product.discount_value)
     : product.price
-  product.has_discount = isActive && product.is_on_clearance
+  product.has_discount = isActive && hasDiscountFields
 
   return product
+}
+
+/**
+ * Format date string for MySQL DATETIME/TIMESTAMP
+ * Converts ISO string to MySQL datetime format (YYYY-MM-DD HH:MM:SS)
+ * @param {string|null|undefined} dateString - ISO date string or null
+ * @returns {string|null} MySQL formatted date or null
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+const formatDateForMySQL = (dateString) => {
+  if (!dateString || dateString === 'null' || dateString === 'undefined') return null
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return null
+    // Convert to MySQL DATETIME format: YYYY-MM-DD HH:MM:SS
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  } catch {
+    return null
+  }
 }
 
 /**
  * Create a new product
  * @param {Object} productData - Product data
  * @returns {Promise<number>} - Inserted product ID
+ * @author Thang Truong
+ * @date 2025-12-12
  */
 export const createProduct = async (productData) => {
   const { 
@@ -311,8 +343,8 @@ export const createProduct = async (productData) => {
       stock,
       discount_type,
       discount_value,
-      discount_start_date,
-      discount_end_date,
+      formatDateForMySQL(discount_start_date),
+      formatDateForMySQL(discount_end_date),
       is_on_clearance
     ]
   )
@@ -359,11 +391,11 @@ export const updateProduct = async (id, updateData) => {
   }
   if (updateData.discount_start_date !== undefined) {
     fields.push('discount_start_date = ?')
-    values.push(updateData.discount_start_date)
+    values.push(formatDateForMySQL(updateData.discount_start_date))
   }
   if (updateData.discount_end_date !== undefined) {
     fields.push('discount_end_date = ?')
-    values.push(updateData.discount_end_date)
+    values.push(formatDateForMySQL(updateData.discount_end_date))
   }
   if (updateData.is_on_clearance !== undefined) {
     fields.push('is_on_clearance = ?')

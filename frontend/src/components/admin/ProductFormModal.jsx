@@ -3,7 +3,7 @@
  * Modal for creating and editing products (admin only)
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
 
 import { useState, useEffect } from 'react'
@@ -127,9 +127,27 @@ const ProductFormModal = ({ isOpen = false, onClose, onSuccess, product = null }
   }, [selectedSubcategory, isOpen, setValue, isEdit])
 
   /**
+   * Format date for datetime-local input
+   * @param {string} dateString - ISO date string
+   * @returns {string} Formatted date string for datetime-local input
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
+  /**
    * Load product data for editing
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-01-28
    */
   useEffect(() => {
     if (isEdit && product && categories.length > 0 && isOpen) {
@@ -137,6 +155,20 @@ const ProductFormModal = ({ isOpen = false, onClose, onSuccess, product = null }
       setValue('description', product.description)
       setValue('price', product.price)
       setValue('stock', product.stock)
+      
+      // Load discount fields
+      if (product.discount_type) {
+        setValue('discount_type', product.discount_type)
+      }
+      if (product.discount_value) {
+        setValue('discount_value', product.discount_value)
+      }
+      if (product.discount_start_date) {
+        setValue('discount_start_date', formatDateForInput(product.discount_start_date))
+      }
+      if (product.discount_end_date) {
+        setValue('discount_end_date', formatDateForInput(product.discount_end_date))
+      }
       
       // Set category and fetch subcategories
       if (product.category_id) {
@@ -173,17 +205,33 @@ const ProductFormModal = ({ isOpen = false, onClose, onSuccess, product = null }
    * Handle form submission
    * @param {Object} data - Form data
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-01-28
    */
   const onSubmit = async (data) => {
     try {
       setLoading(true)
       
+      // Prepare data for submission - convert datetime-local to ISO format
+      const submitData = {
+        ...data,
+        discount_start_date: data.discount_start_date ? new Date(data.discount_start_date).toISOString() : null,
+        discount_end_date: data.discount_end_date ? new Date(data.discount_end_date).toISOString() : null,
+        // Clear discount fields if discount_type is empty
+        discount_type: data.discount_type || null,
+        discount_value: data.discount_type ? data.discount_value : null
+      }
+      
+      // Remove discount dates if no discount type
+      if (!data.discount_type) {
+        submitData.discount_start_date = null
+        submitData.discount_end_date = null
+      }
+      
       if (isEdit) {
-        await axios.put(`/api/products/${product.id}`, data)
+        await axios.put(`/api/products/${product.id}`, submitData)
         toast.success('Product updated successfully')
       } else {
-        await axios.post('/api/products', data)
+        await axios.post('/api/products', submitData)
         toast.success('Product created successfully')
       }
       
@@ -224,6 +272,7 @@ const ProductFormModal = ({ isOpen = false, onClose, onSuccess, product = null }
           <ProductFormFields
             register={register}
             errors={errors}
+            watch={watch}
             categories={categories}
             subcategories={subcategories}
             childCategories={childCategories}

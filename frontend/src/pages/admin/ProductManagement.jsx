@@ -440,8 +440,29 @@ const ProductManagement = () => {
                     {product.rating ? product.rating.toFixed(2) : '0.00'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.num_reviews || 0}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.discount_type || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.discount_value || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {product.discount_type ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="capitalize">{product.discount_type}</span>
+                        {product.has_discount ? (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs w-fit">Active</span>
+                        ) : product.discount_type ? (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs w-fit">Inactive</span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {product.discount_value ? (
+                      product.discount_type === 'percentage' 
+                        ? `${product.discount_value}%`
+                        : `$${parseFloat(product.discount_value).toFixed(2)}`
+                    ) : (
+                      <span className="text-gray-400">N/A</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {product.is_on_clearance ? (
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">Yes</span>

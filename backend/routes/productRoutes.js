@@ -206,6 +206,45 @@ router.post('/', protect, admin, async (req, res) => {
       return res.status(400).json({ message: 'All required fields are missing' })
     }
 
+    // Validate discount fields if provided
+    if (discount_type || discount_value || discount_start_date || discount_end_date) {
+      if (!discount_type || discount_value === undefined || !discount_start_date || !discount_end_date) {
+        return res.status(400).json({ 
+          message: 'If discount is provided, discount_type, discount_value, discount_start_date, and discount_end_date are all required' 
+        })
+      }
+      
+      if (!['percentage', 'fixed'].includes(discount_type)) {
+        return res.status(400).json({ message: 'discount_type must be "percentage" or "fixed"' })
+      }
+      
+      const numDiscountValue = parseFloat(discount_value)
+      if (isNaN(numDiscountValue) || numDiscountValue <= 0) {
+        return res.status(400).json({ message: 'discount_value must be a positive number' })
+      }
+      
+      if (discount_type === 'percentage' && numDiscountValue > 100) {
+        return res.status(400).json({ message: 'Percentage discount cannot exceed 100%' })
+      }
+      
+      if (discount_type === 'fixed') {
+        const numPrice = parseFloat(price)
+        if (numDiscountValue >= numPrice) {
+          return res.status(400).json({ message: 'Fixed discount must be less than product price' })
+        }
+      }
+      
+      const startDate = new Date(discount_start_date)
+      const endDate = new Date(discount_end_date)
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({ message: 'Invalid date format for discount dates' })
+      }
+      
+      if (startDate >= endDate) {
+        return res.status(400).json({ message: 'discount_start_date must be before discount_end_date' })
+      }
+    }
+
     const productId = await productModel.createProduct({
       name,
       description,
@@ -245,6 +284,61 @@ router.put('/:id', protect, admin, async (req, res) => {
     if (req.body.discount_start_date !== undefined) updateData.discount_start_date = req.body.discount_start_date || null
     if (req.body.discount_end_date !== undefined) updateData.discount_end_date = req.body.discount_end_date || null
     if (req.body.is_on_clearance !== undefined) updateData.is_on_clearance = req.body.is_on_clearance
+
+    // Validate discount fields if any discount field is being updated
+    const hasDiscountFields = updateData.discount_type !== undefined || 
+                             updateData.discount_value !== undefined || 
+                             updateData.discount_start_date !== undefined || 
+                             updateData.discount_end_date !== undefined
+    
+    if (hasDiscountFields) {
+      // If any discount field is set, all must be provided (unless clearing discount)
+      const discountType = updateData.discount_type !== undefined ? updateData.discount_type : req.body.discount_type
+      const discountValue = updateData.discount_value !== undefined ? updateData.discount_value : req.body.discount_value
+      const startDate = updateData.discount_start_date !== undefined ? updateData.discount_start_date : req.body.discount_start_date
+      const endDate = updateData.discount_end_date !== undefined ? updateData.discount_end_date : req.body.discount_end_date
+      
+      // Allow clearing discount by setting type to null
+      if (discountType !== null && discountType !== undefined) {
+        if (discountValue === undefined || !startDate || !endDate) {
+          return res.status(400).json({ 
+            message: 'If discount_type is set, discount_value, discount_start_date, and discount_end_date are all required' 
+          })
+        }
+        
+        if (!['percentage', 'fixed'].includes(discountType)) {
+          return res.status(400).json({ message: 'discount_type must be "percentage" or "fixed"' })
+        }
+        
+        const numDiscountValue = parseFloat(discountValue)
+        if (isNaN(numDiscountValue) || numDiscountValue <= 0) {
+          return res.status(400).json({ message: 'discount_value must be a positive number' })
+        }
+        
+        if (discountType === 'percentage' && numDiscountValue > 100) {
+          return res.status(400).json({ message: 'Percentage discount cannot exceed 100%' })
+        }
+        
+        if (discountType === 'fixed') {
+          // Get current product price to validate fixed discount
+          const currentProduct = await productModel.getProductById(productId)
+          const productPrice = updateData.price !== undefined ? parseFloat(updateData.price) : (currentProduct ? parseFloat(currentProduct.price) : 0)
+          if (numDiscountValue >= productPrice) {
+            return res.status(400).json({ message: 'Fixed discount must be less than product price' })
+          }
+        }
+        
+        const startDateObj = new Date(startDate)
+        const endDateObj = new Date(endDate)
+        if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+          return res.status(400).json({ message: 'Invalid date format for discount dates' })
+        }
+        
+        if (startDateObj >= endDateObj) {
+          return res.status(400).json({ message: 'discount_start_date must be before discount_end_date' })
+        }
+      }
+    }
 
     const updatedProduct = await productModel.updateProduct(productId, updateData)
     if (!updatedProduct) {
