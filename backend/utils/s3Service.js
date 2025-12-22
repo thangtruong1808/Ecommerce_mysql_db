@@ -39,8 +39,7 @@ export const uploadFile = async (fileBuffer, fileName, contentType, folder) => {
       Bucket: BUCKET_NAME,
       Key: key,
       Body: fileBuffer,
-      ContentType: contentType,
-      ACL: 'public-read'
+      ContentType: contentType
     })
     
     await s3Client.send(command)
@@ -83,8 +82,7 @@ export const uploadImageWithResize = async (fileBuffer, fileName, productId) => 
       Bucket: BUCKET_NAME,
       Key: key,
       Body: resizedBuffer,
-      ContentType: 'image/jpeg',
-      ACL: 'public-read'
+      ContentType: 'image/jpeg'
     })
     
     await s3Client.send(command)
@@ -174,8 +172,7 @@ export const uploadVideo = async (fileBuffer, fileName, contentType, productId) 
       Bucket: BUCKET_NAME,
       Key: key,
       Body: fileBuffer,
-      ContentType: contentType,
-      ACL: 'public-read'
+      ContentType: contentType
     })
     
     await s3Client.send(command)

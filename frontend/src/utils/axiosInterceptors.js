@@ -7,7 +7,8 @@
 
 import axios from 'axios'
 import { isProtectedRoute } from './errorSuppression.js'
-import { handleTokenExpiration } from './authUtils.js'
+import { handleTokenExpiration, hasRefreshToken } from './authUtils.js'
+import { fetchUser } from './authApi.js'
 
 /**
  * Setup request interceptor to mark refresh token calls as silent
@@ -76,7 +77,7 @@ export const setupResponseInterceptor = () => {
  * @date 2025-01-28
  */
 export const setupTokenRefreshInterceptor = (refs, setUser, setError, isRedirectingRef) => {
-  const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef } = refs
+  const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef, isFetchingUserRef, userFetchedTimeRef, userRef } = refs
   
   const interceptor = axios.interceptors.response.use(
     (response) => {
@@ -155,8 +156,16 @@ export const setupTokenRefreshInterceptor = (refs, setUser, setError, isRedirect
           })
           isRefreshingTokenRef.current = false
           if (refreshResponse.status === 200) {
-            // Token refreshed successfully - reset failure count and retry original request
+            // Token refreshed successfully - reset failure count
             refreshFailureCountRef.current = 0
+            // If user state is null, restore it after successful token refresh
+            // This handles cases where user state was lost due to inactivity
+            if (userRef && !userRef.current && hasRefreshToken()) {
+              // Restore user state after successful token refresh
+              const tempFetchingRef = { current: false }
+              fetchUser(setUser, setError, () => {}, tempFetchingRef, userFetchedTimeRef, hasRefreshToken)
+            }
+            // Retry original request
             return axios(originalRequest)
           } else {
             // Refresh token expired - only logout if on protected route

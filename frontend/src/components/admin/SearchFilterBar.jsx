@@ -47,16 +47,16 @@ const SearchFilterBar = ({
 
   /**
    * Handle search input change
-   * Ensures search term is always treated as text string
+   * Allows spaces to be entered freely in search terms
    * @param {Event} e - Input change event
    * @author Thang Truong
-   * @date 2025-12-17
+   * @date 2025-01-28
    */
   const handleSearchChange = (e) => {
     const value = e.target.value
-    // Always treat as string, even if numeric (e.g., "2.5")
-    const sanitizedValue = String(value).trim()
-    onSearchChange(sanitizedValue)
+    // Allow spaces in search terms - don't trim on every keystroke
+    // Spaces are valid in search queries (e.g., "red shirt", "user name")
+    onSearchChange(String(value))
   }
 
   /* Search and filter bar */

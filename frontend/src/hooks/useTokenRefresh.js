@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react'
 import axios from 'axios'
 import { isProtectedRoute } from '../utils/errorSuppression.js'
 import { handleTokenExpiration, hasRefreshToken } from '../utils/authUtils.js'
+import { fetchUser } from '../utils/authApi.js'
 
 /**
  * Hook to check refresh token expiration periodically
@@ -24,7 +25,9 @@ export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef)
   const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef, userFetchedTimeRef } = refs
 
   useEffect(() => {
-    if (!user) return
+    // Continue checking even if user is null, as long as refresh token exists
+    // This allows restoration of user state after inactivity
+    if (!hasRefreshToken()) return
     
     const checkTokenExpiration = async () => {
       const path = window.location.pathname
@@ -79,6 +82,13 @@ export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef)
         if (response.status === 200) {
           // Reset failure count on successful verification
           refreshFailureCountRef.current = 0
+          // If user is null, try to restore user state after successful refresh
+          // This handles cases where user state was lost due to inactivity
+          if (!user) {
+            // Create a temporary ref to prevent duplicate calls
+            const tempFetchingRef = { current: false }
+            fetchUser(setUser, setError, () => {}, tempFetchingRef, userFetchedTimeRef, hasRefreshToken)
+          }
         } else if (response.status === 401) {
           // Increment failure count
           refreshFailureCountRef.current += 1

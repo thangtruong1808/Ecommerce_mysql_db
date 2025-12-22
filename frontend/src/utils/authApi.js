@@ -32,13 +32,38 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
       setUser(response.data.user)
       setError(null)
     } else {
-      // Only clear user if no refresh token exists
-      // If refresh token exists, user might just need token refresh
-      if (!hasRefreshToken || !hasRefreshToken()) {
+      // If /api/auth/me returns null user, try to refresh access token if refresh token exists
+      // This handles cases where access token expired but refresh token is still valid
+      if (hasRefreshToken && hasRefreshToken()) {
+        // Refresh token exists - try to refresh access token, then retry fetchUser
+        try {
+          const refreshResponse = await axios.post('/api/auth/refresh', {}, {
+            validateStatus: (status) => status === 200 || status === 401,
+            _silent: true,
+            withCredentials: true
+          })
+          if (refreshResponse.status === 200) {
+            // Token refreshed successfully - retry fetching user
+            try {
+              const retryResponse = await axios.get('/api/auth/me')
+              if (retryResponse.data.user) {
+                setUser(retryResponse.data.user)
+                setError(null)
+              }
+              // If still no user after refresh, preserve current user state (don't clear)
+            } catch {
+              // If retry fails, preserve current user state (don't clear)
+            }
+          }
+          // If refresh fails, preserve current user state (don't clear)
+        } catch {
+          // If refresh fails, preserve current user state (don't clear)
+        }
+      } else {
+        // No refresh token exists - clear user
         setUser(null)
         setError(null)
       }
-      // If refresh token exists, keep current user state (don't clear)
     }
   } catch (error) {
     // Handle 429 errors gracefully - don't clear user on rate limit
@@ -75,9 +100,10 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
             // If retry fails, don't clear user - keep current state
           }
         } else {
-          // Refresh token expired - clear user
-          setUser(null)
-          setError(null)
+          // Refresh token returned 401 - don't clear user immediately
+          // The refresh token might still be valid, just a temporary issue
+          // Only clear if we're absolutely sure it's expired (handled by interceptor)
+          // Preserve current user state to prevent unnecessary logout
         }
       } catch {
         // If refresh fails, don't clear user - keep current state

@@ -41,16 +41,29 @@ export const AuthProvider = ({ children }) => {
   const userFetchedTimeRef = useRef(0)
   const refreshFailureCountRef = useRef(0)
   const lastLocationRef = useRef(window.location.pathname)
+  const userRef = useRef(null)
+  const loadingRef = useRef(true)
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    userRef.current = user
+  }, [user])
+  
+  useEffect(() => {
+    loadingRef.current = loading
+  }, [loading])
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true
 
-  // Refs object for token refresh
+  // Refs object for token refresh and user restoration
   const refs = {
     isRefreshingTokenRef,
     lastRefreshTimeRef,
     refreshFailureCountRef,
-    userFetchedTimeRef
+    userFetchedTimeRef,
+    isFetchingUserRef,
+    userRef
   }
 
   // Suppress console errors for silent 401 errors
@@ -87,41 +100,83 @@ export const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   
-  // Re-fetch user when route changes if user is missing but refresh token exists
+  /**
+   * Re-fetch user when route changes to ensure authentication is maintained
+   * Detects navigation and proactively verifies/restores user state on every navigation
+   * Intercepts History API to catch React Router navigation immediately
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
   useEffect(() => {
-    // Detect route changes using window.location and restore user state if needed
-    const checkRouteChange = () => {
+    // Function to verify and restore user state on navigation
+    // Uses refs to avoid stale closure issues
+    const verifyAuthOnNavigation = () => {
       const currentPath = window.location.pathname
       if (currentPath !== lastLocationRef.current) {
         lastLocationRef.current = currentPath
         
-        // If user is null but refresh token exists, try to restore user state
-        // This handles cases where navigation causes user state to be lost
-        if (!user && hasRefreshToken() && !isFetchingUserRef.current && !loading) {
-          // Small delay to let navigation complete
-          setTimeout(() => {
-            if (!user && hasRefreshToken() && !isFetchingUserRef.current) {
-              fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken)
-            }
-          }, 100)
+        // On every navigation, if refresh token exists, immediately verify/restore user state
+        // This ensures authentication is maintained across all navigations
+        // Check even during loading to handle cases where access token expired during inactivity
+        if (hasRefreshToken() && !isFetchingUserRef.current) {
+          // Always try to restore/verify user state on navigation if refresh token exists
+          // This prevents authentication loss during navigation and after inactivity
+          // Don't check loadingRef - we want to restore even if loading
+          fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken)
         }
       }
     }
     
-    // Check route changes periodically (every 500ms)
-    const interval = setInterval(checkRouteChange, 500)
+    // Intercept History API pushState and replaceState to catch React Router navigation
+    const originalPushState = history.pushState
+    const originalReplaceState = history.replaceState
+    
+    history.pushState = function(...args) {
+      originalPushState.apply(history, args)
+      setTimeout(verifyAuthOnNavigation, 50)
+    }
+    
+    history.replaceState = function(...args) {
+      originalReplaceState.apply(history, args)
+      setTimeout(verifyAuthOnNavigation, 50)
+    }
+    
+    // Check route changes periodically (every 500ms) as fallback
+    const interval = setInterval(verifyAuthOnNavigation, 500)
     
     // Also check on popstate (browser back/forward)
-    window.addEventListener('popstate', checkRouteChange)
+    window.addEventListener('popstate', verifyAuthOnNavigation)
     
     return () => {
+      // Restore original History API methods
+      history.pushState = originalPushState
+      history.replaceState = originalReplaceState
       clearInterval(interval)
-      window.removeEventListener('popstate', checkRouteChange)
+      window.removeEventListener('popstate', verifyAuthOnNavigation)
     }
-  }, [user, loading])
+  }, [setUser, setError, setLoading])
 
-  // Use token refresh hook
+  // Use token refresh hook - pass user state but hook will work even if null (if refresh token exists)
   useTokenRefresh(user, refs, setUser, setError, isRedirectingRef)
+
+  /**
+   * Restore user state when page becomes visible after inactivity
+   * This handles cases where access token expired during inactivity
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // When page becomes visible, check if user state needs restoration
+      if (document.visibilityState === 'visible' && hasRefreshToken() && !userRef.current && !isFetchingUserRef.current) {
+        // Restore user state if refresh token exists but user is null
+        fetchUser(setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken)
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [setUser, setError, setLoading])
 
   /**
    * Login user - silently handles 401 errors without console logging

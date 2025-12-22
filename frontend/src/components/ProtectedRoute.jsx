@@ -5,9 +5,10 @@
  * @date 2025-12-12
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { hasRefreshToken } from '../utils/authUtils'
 
 /**
  * ProtectedRoute component
@@ -20,33 +21,53 @@ import { useAuth } from '../context/AuthContext'
  */
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, isAdmin, loading, checkAuth } = useAuth()
+  const [checkingAuth, setCheckingAuth] = useState(false)
 
   /**
-   * Trigger auth check when ProtectedRoute mounts
-   * Ensures auth state is checked on page refresh
-   * Only calls if still loading to avoid duplicate calls with AuthContext fetchUser
+   * Trigger auth check when ProtectedRoute mounts or when user becomes unauthenticated
+   * Ensures auth state is checked on page refresh and navigation
+   * If user is not authenticated but refresh token exists, try to restore auth
    * @author Thang Truong
-   * @date 2025-12-17
+   * @date 2025-01-28
    */
   useEffect(() => {
-    // Only check auth if still loading (initial load)
-    // This prevents duplicate calls with AuthContext fetchUser on page refresh
-    // AuthContext.fetchUser() already runs on mount, so we don't need to call checkAuth
-    // unless the initial fetch hasn't completed yet
-    if (checkAuth && loading) {
-      // Small delay to let AuthContext.fetchUser() complete first
+    // If not authenticated but refresh token exists, try to restore auth
+    if (!isAuthenticated && !loading && !checkingAuth && hasRefreshToken() && checkAuth) {
+      setCheckingAuth(true)
+      // Immediately try to restore auth - don't wait
+      checkAuth()
+      // Give checkAuth time to complete before allowing redirect (5 seconds max)
+      // This ensures we have enough time to restore authentication from refresh token
+      // Especially important after inactivity when access token may have expired
       const timer = setTimeout(() => {
-        if (loading) {
-          checkAuth()
-        }
-      }, 500)
+        setCheckingAuth(false)
+      }, 5000)
       return () => clearTimeout(timer)
     }
-  }, [checkAuth, loading])
+    // Reset checkingAuth if authenticated
+    if (isAuthenticated && checkingAuth) {
+      setCheckingAuth(false)
+    }
+  }, [isAuthenticated, loading, checkAuth, checkingAuth])
+  
+  /**
+   * Also check auth on mount if refresh token exists
+   * This ensures authentication is verified immediately when component mounts
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  useEffect(() => {
+    // On mount, if refresh token exists but not authenticated, check auth immediately
+    // This handles cases where user state was lost due to inactivity
+    // Don't wait for loading to complete - check immediately
+    if (hasRefreshToken() && !isAuthenticated && checkAuth) {
+      checkAuth()
+    }
+  }, []) // Only run on mount
 
   // Show loading spinner while checking authentication
   // This prevents redirects during initial auth check on page refresh
-  if (loading) {
+  if (loading || checkingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         {/* Loading container */}
@@ -58,9 +79,24 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     )
   }
 
-  // Redirect to login if not authenticated (only after loading completes)
-  if (!isAuthenticated) {
+  // Redirect to login if not authenticated (only after loading completes and no refresh token)
+  if (!isAuthenticated && !hasRefreshToken()) {
     return <Navigate to="/login" replace />
+  }
+  
+  // If not authenticated but refresh token exists, show loading while trying to restore
+  // Wait up to 5 seconds to allow authentication restoration
+  if (!isAuthenticated && hasRefreshToken()) {
+    // Keep showing loading state - don't redirect while restoration is in progress
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        {/* Loading container */}
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Restoring session...</p>
+        </div>
+      </div>
+    )
   }
 
   // Redirect to home if admin-only route and user is not admin (only after loading completes)
@@ -76,3 +112,4 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 }
 
 export default ProtectedRoute
+
