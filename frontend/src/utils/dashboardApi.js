@@ -3,7 +3,7 @@
  * Functions to fetch dashboard data
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-12-23
  */
 
 import axios from 'axios'
@@ -12,6 +12,8 @@ import axios from 'axios'
  * Fetch dashboard overview statistics
  * @param {string} period - Time period (today, week, month, year, all)
  * @returns {Promise<Object>} Dashboard overview data
+ * @author Thang Truong
+ * @date 2025-12-23
  */
 export const fetchDashboardOverview = async (period = 'month') => {
   try {
@@ -22,10 +24,14 @@ export const fetchDashboardOverview = async (period = 'month') => {
   } catch (error) {
     // Fallback to basic stats endpoint if overview doesn't exist
     if (error.response?.status === 404) {
-      const response = await axios.get('/api/admin/stats')
-      return response.data
+      try {
+        const response = await axios.get('/api/admin/stats')
+        return response.data
+      } catch (fallbackError) {
+        return null
+      }
     }
-    throw error
+    return null
   }
 }
 
@@ -65,15 +71,18 @@ export const fetchRevenueChart = async (period = 'month') => {
  * Fetch sales by category data
  * @param {string} period - Time period
  * @returns {Promise<Array>} Sales by category data
+ * @author Thang Truong
+ * @date 2025-12-23
  */
 export const fetchSalesByCategory = async (period = 'month') => {
-  // Let axios interceptor handle 401 retries automatically
-  // If request fails after retry, throw error so Promise.allSettled can handle it
-  // This preserves existing state when requests fail
-  const response = await axios.get('/api/admin/stats/revenue-by-category', {
-    params: { period },
-  })
-  return response.data || []
+  try {
+    const response = await axios.get('/api/admin/stats/revenue-by-category', {
+      params: { period },
+    })
+    return response.data || []
+  } catch (error) {
+    return []
+  }
 }
 
 /**
@@ -96,15 +105,18 @@ export const fetchOrderStatistics = async (period = 'month') => {
  * Fetch customer insights
  * @param {string} period - Time period
  * @returns {Promise<Object>} Customer insights data
+ * @author Thang Truong
+ * @date 2025-12-23
  */
 export const fetchCustomerInsights = async (period = 'month') => {
-  // Let axios interceptor handle 401 retries automatically
-  // If request fails after retry, throw error so Promise.allSettled can handle it
-  // This preserves existing state when requests fail
-  const response = await axios.get('/api/admin/stats/customers', {
-    params: { period },
-  })
-  return response.data || null
+  try {
+    const response = await axios.get('/api/admin/stats/customers', {
+      params: { period },
+    })
+    return response.data || null
+  } catch (error) {
+    return null
+  }
 }
 
 /**
@@ -112,36 +124,44 @@ export const fetchCustomerInsights = async (period = 'month') => {
  * @param {string} period - Time period
  * @param {number} limit - Number of products to return
  * @returns {Promise<Array>} Top products data
+ * @author Thang Truong
+ * @date 2025-12-23
  */
 export const fetchTopProducts = async (period = 'month', limit = 10) => {
-  // Let axios interceptor handle 401 retries automatically
-  // If request fails after retry, throw error so Promise.allSettled can handle it
-  // This preserves existing state when requests fail
-  const response = await axios.get('/api/admin/stats/top-products', {
-    params: { period, limit },
-  })
-  return response.data || []
+  try {
+    const response = await axios.get('/api/admin/stats/top-products', {
+      params: { period, limit },
+    })
+    return response.data || []
+  } catch (error) {
+    return []
+  }
 }
 
 /**
  * Fetch recent activity
  * @param {number} limit - Number of activities to return
  * @returns {Promise<Array>} Recent activities
+ * @author Thang Truong
+ * @date 2025-12-23
  */
 export const fetchRecentActivity = async (limit = 15) => {
-  // Let axios interceptor handle 401 retries automatically
-  // If request fails after retry, throw error so Promise.allSettled can handle it
-  // This preserves existing state when requests fail
-  const response = await axios.get('/api/admin/stats/recent-activity', {
-    params: { limit },
-  })
-  return response.data || []
+  try {
+    const response = await axios.get('/api/admin/stats/recent-activity', {
+      params: { limit },
+    })
+    return response.data || []
+  } catch (error) {
+    return []
+  }
 }
 
 /**
  * Fetch performance metrics
  * @param {string} period - Time period
  * @returns {Promise<Object>} Performance metrics
+ * @author Thang Truong
+ * @date 2025-12-23
  */
 export const fetchPerformanceMetrics = async (period = 'month') => {
   try {

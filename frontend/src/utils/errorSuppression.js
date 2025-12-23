@@ -2,8 +2,10 @@
  * Error Suppression Utilities
  * Suppresses console errors for silent 401 errors and expected authentication errors
  * @author Thang Truong
- * @date 2025-01-28
+ * @date 2025-12-23
  */
+
+import { hasRefreshToken } from './authUtils.js'
 
 /**
  * Check if current route is protected (requires authentication)
@@ -28,7 +30,7 @@ const isProtectedRoute = () => {
  * @param {Object} error - Error object
  * @returns {boolean} True if error should be suppressed
  * @author Thang Truong
- * @date 2025-01-28
+ * @date 2025-12-23
  */
 const shouldSuppressError = (error) => {
   // Suppress silent errors
@@ -47,7 +49,14 @@ const shouldSuppressError = (error) => {
     
     // Suppress 401 errors from refresh endpoints (expected during token refresh)
     // or from auth endpoints on public pages
+    // Also suppress 401 errors on protected routes when refresh token exists (token refresh in progress)
     if (isRefreshEndpoint || (isPublicPage && isAuthEndpoint) || error.config?._silent) {
+      return true
+    }
+    
+    // Suppress 401 errors on protected routes when refresh token exists
+    // These occur during token refresh and should be silent
+    if (isProtected && hasRefreshToken()) {
       return true
     }
   }
@@ -60,7 +69,7 @@ const shouldSuppressError = (error) => {
  * Suppresses both JavaScript errors and network request errors from refresh endpoint
  * @returns {Function} Cleanup function
  * @author Thang Truong
- * @date 2025-01-28
+ * @date 2025-12-23
  */
 export const setupErrorSuppression = () => {
   // Override console.error to suppress silent errors
@@ -71,6 +80,30 @@ export const setupErrorSuppression = () => {
     // Check if it's a string error message about refresh endpoint
     if (typeof args[0] === 'string' && args[0].includes('/api/auth/refresh') && args[0].includes('401')) {
       return // Suppress refresh endpoint 401 errors
+    }
+    
+    // Check if it's a 401 error from protected routes when refresh token exists
+    // This catches axios network errors logged to console by browser
+    // Format: "GET http://localhost:3000/api/admin/stats/overview?period=month 401 (Unauthorized)"
+    // Also catches: "Error: Request failed with status code 401" or similar
+    // Also catches errors from dashboardApi.js or other API files
+    const allArgsString = args.map(arg => String(arg)).join(' ')
+    const has401 = allArgsString.includes('401')
+    const hasApiPath = allArgsString.includes('/api/')
+    const hasUnauthorized = allArgsString.includes('Unauthorized')
+    const isDashboardApi = allArgsString.includes('dashboardApi') || allArgsString.includes('stats/')
+    
+    if (has401 && (hasApiPath || hasUnauthorized || isDashboardApi)) {
+      const path = window.location.pathname
+      const isProtected = isProtectedRoute()
+      if (isProtected && hasRefreshToken()) {
+        // Check if it's not from auth endpoints (login, register, etc.)
+        if (!allArgsString.includes('/api/auth/login') && 
+            !allArgsString.includes('/api/auth/register') && 
+            !allArgsString.includes('/api/auth/profile')) {
+          return // Suppress 401 errors on protected routes when refresh token exists
+        }
+      }
     }
     
     if (shouldSuppressError(error)) {

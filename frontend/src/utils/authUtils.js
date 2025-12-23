@@ -2,7 +2,7 @@
  * Authentication Utilities
  * Helper functions for authentication logic
  * @author Thang Truong
- * @date 2025-01-28
+ * @date 2025-12-23
  */
 
 import { toast } from 'react-toastify'
@@ -51,7 +51,7 @@ export const hasRefreshToken = () => {
  * @param {Object} error - Error object from axios
  * @returns {boolean} True if toast should be suppressed
  * @author Thang Truong
- * @date 2025-01-28
+ * @date 2025-12-23
  */
 export const shouldSuppress401Toast = (error) => {
   // Only suppress 401 errors

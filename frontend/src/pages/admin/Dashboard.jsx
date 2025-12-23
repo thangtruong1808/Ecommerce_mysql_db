@@ -25,6 +25,7 @@ import {
   fetchPerformanceMetrics,
 } from '../../utils/dashboardApi'
 import { shouldSuppress401Toast } from '../../utils/authUtils'
+import { ensureValidAccessToken } from '../../utils/tokenUtils'
 
 /**
  * Get activity icon based on activity type
@@ -94,9 +95,11 @@ const Dashboard = () => {
     try {
       setLoading(true)
       
-      // Fetch all dashboard data in parallel - use allSettled to handle partial failures
-      // This ensures that if some requests fail (e.g., due to token refresh), 
-      // successful requests still update their respective state
+      // Ensure valid token before making requests - this queues requests if refresh is needed
+      await ensureValidAccessToken()
+      
+      // Fetch all dashboard data in parallel - requests are queued during refresh
+      // This ensures all requests are made with a valid token, preventing 401 errors
       const results = await Promise.allSettled([
         fetchDashboardOverview(period),
         fetchSalesByCategory(period),

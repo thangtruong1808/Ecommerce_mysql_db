@@ -11,6 +11,7 @@ import { setupRequestInterceptor, setupResponseInterceptor, setupTokenRefreshInt
 import { useTokenRefresh } from '../hooks/useTokenRefresh.js'
 import { fetchUser, login as loginApi, register as registerApi, logout as logoutApi, updateProfile as updateProfileApi } from '../utils/authApi.js'
 import { hasRefreshToken } from '../utils/authUtils.js'
+import { initTokenRefreshRefs } from '../utils/tokenUtils.js'
 
 const AuthContext = createContext()
 
@@ -65,6 +66,11 @@ export const AuthProvider = ({ children }) => {
     isFetchingUserRef,
     userRef
   }
+  
+  // Initialize token refresh refs for ensureValidAccessToken utility
+  useEffect(() => {
+    initTokenRefreshRefs(refs)
+  }, [refs])
 
   // Suppress console errors for silent 401 errors
   useEffect(() => {
@@ -76,10 +82,10 @@ export const AuthProvider = ({ children }) => {
     return setupResponseInterceptor()
   }, [])
 
-  // Setup request interceptor
+  // Setup request interceptor with refs for queuing requests during refresh
   useEffect(() => {
-    return setupRequestInterceptor()
-  }, [])
+    return setupRequestInterceptor(refs)
+  }, [refs])
 
   // Setup token refresh interceptor
   useEffect(() => {
