@@ -57,14 +57,16 @@ const Footer = () => {
             <Link to="/" className="flex items-center space-x-3 mb-4 hover:opacity-80 transition-opacity">
               <img 
                 src={logoImage} 
-                alt="Ecommerce Store Logo" 
-                className="h-10 w-auto object-contain"
+                alt="Badminton Stores Logo" 
+                className="h-full w-auto object-contain"
               />
-              <div className="flex flex-col">
-                <span className="text-lg font-bold text-white">Badminton Stores</span>
+              {/* Company name and description */}
+              
+            </Link>
+            <div className="flex flex-col">
+                <span className="text-2xl font-bold text-white">Badminton Stores</span>
                 <span className="text-xs text-gray-400">Your trusted shopping destination</span>
               </div>
-            </Link>
             <p className="text-gray-400 text-sm mt-2">
               Quality products, exceptional service, and secure shopping experience.
             </p>
