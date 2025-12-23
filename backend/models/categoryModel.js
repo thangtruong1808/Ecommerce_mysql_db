@@ -100,7 +100,8 @@ export const getCategoriesWithSubcategories = async () => {
     subcategoriesByCategory[sub.category_id].push({
       id: sub.id,
       name: sub.name,
-      description: sub.description
+      description: sub.description,
+      photo_url: sub.photo_url
     })
   })
   
@@ -162,12 +163,15 @@ export const getCategoryById = async (id) => {
  * Create a new category
  * @param {string} name - Category name
  * @param {string} description - Category description
+ * @param {string} photo_url - Category photo URL
  * @returns {Promise<number>} - Inserted category ID
+ * @author Thang Truong
+ * @date 2025-01-28
  */
-export const createCategory = async (name, description = null) => {
+export const createCategory = async (name, description = null, photo_url = null) => {
   const [result] = await db.execute(
-    'INSERT INTO categories (name, description) VALUES (?, ?)',
-    [name, description]
+    'INSERT INTO categories (name, description, photo_url) VALUES (?, ?, ?)',
+    [name, description, photo_url]
   )
   return result.insertId
 }
@@ -189,6 +193,10 @@ export const updateCategory = async (id, updateData) => {
   if (updateData.description !== undefined) {
     fields.push('description = ?')
     values.push(updateData.description)
+  }
+  if (updateData.photo_url !== undefined) {
+    fields.push('photo_url = ?')
+    values.push(updateData.photo_url)
   }
 
   if (fields.length === 0) return null

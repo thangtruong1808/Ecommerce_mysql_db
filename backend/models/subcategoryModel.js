@@ -124,12 +124,15 @@ export const getSubcategoryById = async (id) => {
  * @param {number} categoryId - Category ID
  * @param {string} name - Subcategory name
  * @param {string} description - Subcategory description
+ * @param {string} photo_url - Subcategory photo URL
  * @returns {Promise<number>} - Inserted subcategory ID
+ * @author Thang Truong
+ * @date 2025-01-28
  */
-export const createSubcategory = async (categoryId, name, description = null) => {
+export const createSubcategory = async (categoryId, name, description = null, photo_url = null) => {
   const [result] = await db.execute(
-    'INSERT INTO subcategories (category_id, name, description) VALUES (?, ?, ?)',
-    [categoryId, name, description]
+    'INSERT INTO subcategories (category_id, name, description, photo_url) VALUES (?, ?, ?, ?)',
+    [categoryId, name, description, photo_url]
   )
   return result.insertId
 }
@@ -155,6 +158,10 @@ export const updateSubcategory = async (id, updateData) => {
   if (updateData.description !== undefined) {
     fields.push('description = ?')
     values.push(updateData.description)
+  }
+  if (updateData.photo_url !== undefined) {
+    fields.push('photo_url = ?')
+    values.push(updateData.photo_url)
   }
 
   if (fields.length === 0) return null

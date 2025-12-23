@@ -190,6 +190,18 @@ const QuickCreateModal = ({ type, isOpen = false, onClose, onSuccess, onSubmit, 
                       </option>
                     ))}
                   </select>
+                ) : field.type === 'file' ? (
+                  <input
+                    type="file"
+                    name={field.name}
+                    accept={field.accept || '*'}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      setFormData(prev => ({ ...prev, [field.name]: file }))
+                    }}
+                    required={field.required}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
                 ) : (
                   <input
                     type={field.type}

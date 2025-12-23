@@ -1,10 +1,15 @@
 /**
  * Subcategory Edit Modal Component
- * Modal for editing subcategory
+ * Modal for editing subcategory with photo upload support
  * 
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
+
+import { useState, useRef, useEffect } from 'react'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+import { FaTrash, FaTimes } from 'react-icons/fa'
 
 /**
  * SubcategoryEditModal component
@@ -16,32 +21,124 @@
  * @param {Function} props.onSave - Save callback (data)
  * @returns {JSX.Element} Subcategory edit modal component
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
 const SubcategoryEditModal = ({ subcategory, categories, isOpen, onClose, onSave }) => {
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [deletingPhoto, setDeletingPhoto] = useState(false)
+  const fileInputRef = useRef(null)
+
+  // Set photo preview when subcategory changes
+  useEffect(() => {
+    if (isOpen && subcategory?.photo_url) {
+      const photoUrl = subcategory.photo_url.startsWith('http') 
+        ? subcategory.photo_url 
+        : `${window.location.origin}${subcategory.photo_url}`
+      setPhotoPreview(photoUrl)
+    } else if (isOpen && subcategory) {
+      setPhotoPreview(null)
+    }
+    if (isOpen && subcategory) {
+      setSelectedFile(null)
+    }
+  }, [subcategory, isOpen])
+
   if (!isOpen || !subcategory) return null
+
+  /**
+   * Handle file selection
+   * @param {Event} e - File input event
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  /**
+   * Handle delete photo
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  const handleDeletePhoto = async () => {
+    if (!subcategory.photo_url) return
+    
+    try {
+      setDeletingPhoto(true)
+      await axios.delete(`/api/admin/subcategories/${subcategory.id}/photo`)
+      toast.success('Photo deleted successfully')
+      setPhotoPreview(null)
+      setSelectedFile(null)
+      onSave({
+        category_id: subcategory.category_id,
+        name: subcategory.name,
+        description: subcategory.description
+      })
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete photo')
+    } finally {
+      setDeletingPhoto(false)
+    }
+  }
 
   /**
    * Handle form submit
    * @param {Event} e - Form event
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-01-28
    */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const formData = new FormData(e.target)
-    onSave({
-      category_id: formData.get('category_id'),
-      name: formData.get('name'),
-      description: formData.get('description')
-    })
+    
+    try {
+      // First update subcategory data
+      const updateData = {
+        category_id: formData.get('category_id'),
+        name: formData.get('name'),
+        description: formData.get('description')
+      }
+      
+      // If photo is selected, upload it separately
+      if (selectedFile) {
+        const photoFormData = new FormData()
+        photoFormData.append('photo', selectedFile)
+        await axios.post(`/api/admin/subcategories/${subcategory.id}/photo`, photoFormData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        toast.success('Photo uploaded successfully')
+      }
+      
+      onSave(updateData)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save subcategory')
+    }
   }
 
   /* Subcategory edit modal */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">Edit Subcategory</h2>
+      <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Edit Subcategory</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+            aria-label="Close"
+          >
+            <FaTimes />
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Category</label>
@@ -75,6 +172,40 @@ const SubcategoryEditModal = ({ subcategory, categories, isOpen, onClose, onSave
               rows="3"
             />
           </div>
+          
+          {/* Photo upload section */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Photo</label>
+            {photoPreview && (
+              <div className="mb-2 relative inline-block">
+                <img
+                  src={photoPreview}
+                  alt="Subcategory preview"
+                  className="w-24 h-24 object-cover rounded border"
+                />
+                {subcategory.photo_url && !selectedFile && (
+                  <button
+                    type="button"
+                    onClick={handleDeletePhoto}
+                    disabled={deletingPhoto}
+                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                    aria-label="Delete photo"
+                  >
+                    <FaTrash className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full border rounded px-3 py-2"
+            />
+            <p className="text-xs text-gray-500 mt-1">Upload a new photo to replace the current one</p>
+          </div>
+          
           <div className="flex gap-2 justify-end">
             <button
               type="button"

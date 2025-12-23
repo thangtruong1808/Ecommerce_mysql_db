@@ -231,7 +231,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
             <img src={logoImage} alt="Ecommerce Store Logo" className="h-10 w-auto object-contain" />
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-white">Ecommerce Store</span>
+              <span className="text-xl font-bold text-white">Badminton Stores</span>
               <span className="text-xs text-blue-100 hidden sm:block">Your trusted shopping destination</span>
             </div>
           </Link>

@@ -11,6 +11,10 @@ import * as subcategoryModel from '../models/subcategoryModel.js'
 import * as childCategoryModel from '../models/childCategoryModel.js'
 import * as categoryModel from '../models/categoryModel.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
+import { uploadImage } from '../middleware/uploadMiddleware.js'
+import { uploadSubcategoryImage, deleteFile } from '../utils/s3Service.js'
+import path from 'path'
+import fs from 'fs'
 
 const router = express.Router()
 
@@ -40,11 +44,11 @@ router.get('/', async (req, res) => {
 
 /**
  * POST /api/admin/subcategories
- * Create new subcategory
+ * Create new subcategory with optional photo upload
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
-router.post('/', async (req, res) => {
+router.post('/', uploadImage.single('photo'), async (req, res) => {
   try {
     const { category_id, name, description } = req.body
     
@@ -62,10 +66,44 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ message: 'Category not found' })
     }
     
+    let photoUrl = null
+    
+    // Handle photo upload if provided
+    if (req.file) {
+      const useS3 = process.env.USE_AWS_S3 === 'true'
+      
+      if (useS3) {
+        const subcategoryId = await subcategoryModel.createSubcategory(
+          parseInt(category_id),
+          name.trim(),
+          description || null,
+          null
+        )
+        photoUrl = await uploadSubcategoryImage(req.file.buffer, req.file.originalname, subcategoryId)
+        await subcategoryModel.updateSubcategory(subcategoryId, { photo_url: photoUrl })
+        const subcategory = await subcategoryModel.getSubcategoryById(subcategoryId)
+        return res.status(201).json(subcategory)
+      } else {
+        // Local storage handling
+        const uploadsDir = path.join(process.cwd(), 'backend', 'uploads', 'images', 'subcategories')
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true })
+        }
+        
+        const timestamp = Date.now()
+        const fileName = `${timestamp}-${req.file.originalname}`
+        const filePath = path.join(uploadsDir, fileName)
+        
+        fs.writeFileSync(filePath, req.file.buffer)
+        photoUrl = `/uploads/images/subcategories/${fileName}`
+      }
+    }
+    
     const subcategoryId = await subcategoryModel.createSubcategory(
       parseInt(category_id),
       name.trim(),
-      description || null
+      description || null,
+      photoUrl
     )
     const subcategory = await subcategoryModel.getSubcategoryById(subcategoryId)
     res.status(201).json(subcategory)
@@ -79,11 +117,11 @@ router.post('/', async (req, res) => {
 
 /**
  * PUT /api/admin/subcategories/:id
- * Update subcategory
+ * Update subcategory with optional photo upload
  * @author Thang Truong
- * @date 2025-12-12
+ * @date 2025-01-28
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', uploadImage.single('photo'), async (req, res) => {
   try {
     const subcategoryId = parseInt(req.params.id)
     const { category_id, name, description } = req.body
@@ -109,6 +147,38 @@ router.put('/:id', async (req, res) => {
     if (category_id !== undefined) updateData.category_id = parseInt(category_id)
     if (name !== undefined) updateData.name = name.trim()
     if (description !== undefined) updateData.description = description
+    
+    // Handle photo upload if provided
+    if (req.file) {
+      const useS3 = process.env.USE_AWS_S3 === 'true'
+      
+      // Delete old photo if exists
+      if (subcategory.photo_url) {
+        try {
+          await deleteFile(subcategory.photo_url)
+        } catch (error) {
+          // Ignore deletion errors (file might not exist)
+        }
+      }
+      
+      if (useS3) {
+        const photoUrl = await uploadSubcategoryImage(req.file.buffer, req.file.originalname, subcategoryId)
+        updateData.photo_url = photoUrl
+      } else {
+        // Local storage handling
+        const uploadsDir = path.join(process.cwd(), 'backend', 'uploads', 'images', 'subcategories')
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true })
+        }
+        
+        const timestamp = Date.now()
+        const fileName = `${timestamp}-${req.file.originalname}`
+        const filePath = path.join(uploadsDir, fileName)
+        
+        fs.writeFileSync(filePath, req.file.buffer)
+        updateData.photo_url = `/uploads/images/subcategories/${fileName}`
+      }
+    }
     
     const updated = await subcategoryModel.updateSubcategory(subcategoryId, updateData)
     if (!updated) {
@@ -157,6 +227,107 @@ router.delete('/:id', async (req, res) => {
     }
     
     res.json({ message: 'Subcategory deleted successfully' })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * POST /api/admin/subcategories/:id/photo
+ * Upload subcategory photo
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+router.post('/:id/photo', uploadImage.single('photo'), async (req, res) => {
+  try {
+    const subcategoryId = parseInt(req.params.id)
+    
+    if (isNaN(subcategoryId) || subcategoryId <= 0) {
+      return res.status(400).json({ message: 'Invalid subcategory ID' })
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No photo uploaded' })
+    }
+    
+    const subcategory = await subcategoryModel.getSubcategoryById(subcategoryId)
+    if (!subcategory) {
+      return res.status(404).json({ message: 'Subcategory not found' })
+    }
+    
+    // Delete old photo if exists
+    if (subcategory.photo_url) {
+      try {
+        await deleteFile(subcategory.photo_url)
+      } catch (error) {
+        // Ignore deletion errors (file might not exist)
+      }
+    }
+    
+    const useS3 = process.env.USE_AWS_S3 === 'true'
+    let photoUrl
+    
+    if (useS3) {
+      photoUrl = await uploadSubcategoryImage(req.file.buffer, req.file.originalname, subcategoryId)
+    } else {
+      // Local storage handling
+      const uploadsDir = path.join(process.cwd(), 'backend', 'uploads', 'images', 'subcategories')
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true })
+      }
+      
+      const timestamp = Date.now()
+      const fileName = `${timestamp}-${req.file.originalname}`
+      const filePath = path.join(uploadsDir, fileName)
+      
+      fs.writeFileSync(filePath, req.file.buffer)
+      photoUrl = `/uploads/images/subcategories/${fileName}`
+    }
+    
+    await subcategoryModel.updateSubcategory(subcategoryId, { photo_url: photoUrl })
+    const updated = await subcategoryModel.getSubcategoryById(subcategoryId)
+    
+    res.json(updated)
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * DELETE /api/admin/subcategories/:id/photo
+ * Delete subcategory photo
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+router.delete('/:id/photo', async (req, res) => {
+  try {
+    const subcategoryId = parseInt(req.params.id)
+    
+    if (isNaN(subcategoryId) || subcategoryId <= 0) {
+      return res.status(400).json({ message: 'Invalid subcategory ID' })
+    }
+    
+    const subcategory = await subcategoryModel.getSubcategoryById(subcategoryId)
+    if (!subcategory) {
+      return res.status(404).json({ message: 'Subcategory not found' })
+    }
+    
+    if (!subcategory.photo_url) {
+      return res.status(400).json({ message: 'Subcategory has no photo' })
+    }
+    
+    // Delete photo from S3 or local storage
+    try {
+      await deleteFile(subcategory.photo_url)
+    } catch (error) {
+      // Ignore deletion errors (file might not exist)
+    }
+    
+    // Set photo_url to NULL in database
+    await subcategoryModel.updateSubcategory(subcategoryId, { photo_url: null })
+    const updated = await subcategoryModel.getSubcategoryById(subcategoryId)
+    
+    res.json(updated)
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

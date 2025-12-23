@@ -187,3 +187,89 @@ export const uploadVideo = async (fileBuffer, fileName, contentType, productId) 
     throw new Error(`Failed to upload video to S3: ${error.message}`)
   }
 }
+
+/**
+ * Upload category image with resize to S3
+ * @param {Buffer} fileBuffer - Image buffer
+ * @param {string} fileName - File name
+ * @param {number} categoryId - Category ID for folder structure
+ * @returns {Promise<string>} S3 file URL
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+export const uploadCategoryImage = async (fileBuffer, fileName, categoryId) => {
+  try {
+    // Resize image to 500x500
+    const resizedBuffer = await sharp(fileBuffer)
+      .resize(1400, 800, {
+        fit: 'cover',
+        position: 'center'
+      })
+      .jpeg({ quality: 85 })
+      .toBuffer()
+    
+    const timestamp = Date.now()
+    const key = `images/categories/${categoryId}/${timestamp}-${fileName}`
+    
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      Body: resizedBuffer,
+      ContentType: 'image/jpeg'
+    })
+    
+    await s3Client.send(command)
+    
+    // Return full S3 URL
+    const url = BUCKET_URL 
+      ? `${BUCKET_URL}/${key}`
+      : `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`
+    
+    return url
+  } catch (error) {
+    throw new Error(`Failed to upload and resize category image to S3: ${error.message}`)
+  }
+}
+
+/**
+ * Upload subcategory image with resize to S3
+ * @param {Buffer} fileBuffer - Image buffer
+ * @param {string} fileName - File name
+ * @param {number} subcategoryId - Subcategory ID for folder structure
+ * @returns {Promise<string>} S3 file URL
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+export const uploadSubcategoryImage = async (fileBuffer, fileName, subcategoryId) => {
+  try {
+    // Resize image to 500x500
+    const resizedBuffer = await sharp(fileBuffer)
+      .resize(400, 200, {
+        fit: 'cover',
+        position: 'center'
+      })
+      .jpeg({ quality: 85 })
+      .toBuffer()
+    
+    const timestamp = Date.now()
+    const key = `images/subcategories/${subcategoryId}/${timestamp}-${fileName}`
+    
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      Body: resizedBuffer,
+      ContentType: 'image/jpeg'
+    })
+    
+    await s3Client.send(command)
+    
+    // Return full S3 URL
+    const url = BUCKET_URL 
+      ? `${BUCKET_URL}/${key}`
+      : `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`
+    
+    return url
+  } catch (error) {
+    throw new Error(`Failed to upload and resize subcategory image to S3: ${error.message}`)
+  }
+}

@@ -36,6 +36,19 @@ const CategoryTableRow = ({ category, index, isSelected, onToggle, onEdit, onDel
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{category.id}</td>
+      <td className="px-6 py-4">
+        {category.photo_url ? (
+          <img
+            src={category.photo_url.startsWith('http') ? category.photo_url : `${window.location.origin}${category.photo_url}`}
+            alt={category.name}
+            className="w-12 h-12 object-cover rounded"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
+            No photo
+          </div>
+        )}
+      </td>
       <td className="px-6 py-4 text-sm font-medium text-gray-900">{category.name}</td>
       <td className="px-6 py-4 text-sm text-gray-500">
         {category.description || <span className="text-gray-400">No description</span>}

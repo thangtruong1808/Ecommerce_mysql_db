@@ -93,6 +93,31 @@ const SubcategoryManagement = () => {
   const crud = useCrudOperations('/api/admin/subcategories', fetchSubcategories)
 
   /**
+   * Handle subcategory creation with photo upload
+   * @param {Object} data - Subcategory data
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  const handleCreateSubcategory = async (data) => {
+    try {
+      const formData = new FormData()
+      formData.append('category_id', data.category_id)
+      formData.append('name', data.name)
+      if (data.description) formData.append('description', data.description)
+      if (data.photo) formData.append('photo', data.photo)
+      
+      await axios.post('/api/admin/subcategories', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      toast.success('Subcategory created successfully')
+      crud.setCreateModal({ isOpen: false })
+      fetchSubcategories()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create subcategory')
+    }
+  }
+
+  /**
    * Fetch categories for filter dropdown
    * @author Thang Truong
    * @date 2025-12-17
@@ -241,6 +266,7 @@ const SubcategoryManagement = () => {
                   sortOrder={sortOrder}
                   onSort={handleSort}
                 />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Photo</th>
                 <SortableTableHeader
                   label="Name"
                   field="name"
@@ -289,7 +315,7 @@ const SubcategoryManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {subcategories.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center">
+                  <td colSpan="11" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <p className="text-gray-500 text-lg font-medium">
                         {searchTerm 
@@ -341,7 +367,7 @@ const SubcategoryManagement = () => {
           categories={categories}
           isOpen={crud.createModal.isOpen}
           onClose={() => crud.setCreateModal({ isOpen: false })}
-          onSave={crud.handleCreate}
+          onSave={handleCreateSubcategory}
         />
 
         {/* Edit modal */}

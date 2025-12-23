@@ -36,6 +36,19 @@ const SubcategoryTableRow = ({ subcategory, index, isSelected, onToggle, onEdit,
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{subcategory.id}</td>
+      <td className="px-6 py-4">
+        {subcategory.photo_url ? (
+          <img
+            src={subcategory.photo_url.startsWith('http') ? subcategory.photo_url : `${window.location.origin}${subcategory.photo_url}`}
+            alt={subcategory.name}
+            className="w-12 h-12 object-cover rounded"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
+            No photo
+          </div>
+        )}
+      </td>
       <td className="px-6 py-4 text-sm font-medium text-gray-900">{subcategory.name}</td>
       <td className="px-6 py-4 text-sm text-gray-500">{subcategory.category_name}</td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subcategory.category_id}</td>

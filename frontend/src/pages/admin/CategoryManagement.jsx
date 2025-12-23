@@ -89,6 +89,30 @@ const CategoryManagement = () => {
 
   const crud = useCrudOperations('/api/admin/categories', fetchCategories)
 
+  /**
+   * Handle category creation with photo upload
+   * @param {Object} data - Category data
+   * @author Thang Truong
+   * @date 2025-01-28
+   */
+  const handleCreateCategory = async (data) => {
+    try {
+      const formData = new FormData()
+      formData.append('name', data.name)
+      if (data.description) formData.append('description', data.description)
+      if (data.photo) formData.append('photo', data.photo)
+      
+      await axios.post('/api/admin/categories', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      toast.success('Category created successfully')
+      crud.setCreateModal({ isOpen: false })
+      fetchCategories()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create category')
+    }
+  }
+
   useEffect(() => {
     fetchCategories()
   }, [page, entriesPerPage, searchTerm, sortBy, sortOrder])
@@ -211,6 +235,7 @@ const CategoryManagement = () => {
                   sortOrder={sortOrder}
                   onSort={handleSort}
                 />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Photo</th>
                 <SortableTableHeader
                   label="Name"
                   field="name"
@@ -245,7 +270,7 @@ const CategoryManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {categories.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="9" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <p className="text-gray-500 text-lg font-medium">
                         {searchTerm 
@@ -296,11 +321,12 @@ const CategoryManagement = () => {
         <QuickCreateModal
           isOpen={crud.createModal.isOpen}
           onClose={() => crud.setCreateModal({ isOpen: false })}
-          onSubmit={crud.handleCreate}
+          onSubmit={handleCreateCategory}
           title="Create Category"
           fields={[
             { name: 'name', label: 'Name', type: 'text', required: true },
-            { name: 'description', label: 'Description', type: 'textarea' }
+            { name: 'description', label: 'Description', type: 'textarea' },
+            { name: 'photo', label: 'Photo', type: 'file', accept: 'image/*' }
           ]}
         />
 

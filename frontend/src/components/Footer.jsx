@@ -61,7 +61,7 @@ const Footer = () => {
                 className="h-10 w-auto object-contain"
               />
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-white">Ecommerce Store</span>
+                <span className="text-lg font-bold text-white">Badminton Stores</span>
                 <span className="text-xs text-gray-400">Your trusted shopping destination</span>
               </div>
             </Link>
