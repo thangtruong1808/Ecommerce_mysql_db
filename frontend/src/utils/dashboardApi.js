@@ -67,14 +67,13 @@ export const fetchRevenueChart = async (period = 'month') => {
  * @returns {Promise<Array>} Sales by category data
  */
 export const fetchSalesByCategory = async (period = 'month') => {
-  try {
-    const response = await axios.get('/api/admin/stats/revenue-by-category', {
-      params: { period },
-    })
-    return response.data
-  } catch (error) {
-    return []
-  }
+  // Let axios interceptor handle 401 retries automatically
+  // If request fails after retry, throw error so Promise.allSettled can handle it
+  // This preserves existing state when requests fail
+  const response = await axios.get('/api/admin/stats/revenue-by-category', {
+    params: { period },
+  })
+  return response.data || []
 }
 
 /**
@@ -99,14 +98,13 @@ export const fetchOrderStatistics = async (period = 'month') => {
  * @returns {Promise<Object>} Customer insights data
  */
 export const fetchCustomerInsights = async (period = 'month') => {
-  try {
-    const response = await axios.get('/api/admin/stats/customers', {
-      params: { period },
-    })
-    return response.data
-  } catch (error) {
-    return null
-  }
+  // Let axios interceptor handle 401 retries automatically
+  // If request fails after retry, throw error so Promise.allSettled can handle it
+  // This preserves existing state when requests fail
+  const response = await axios.get('/api/admin/stats/customers', {
+    params: { period },
+  })
+  return response.data || null
 }
 
 /**
@@ -116,14 +114,13 @@ export const fetchCustomerInsights = async (period = 'month') => {
  * @returns {Promise<Array>} Top products data
  */
 export const fetchTopProducts = async (period = 'month', limit = 10) => {
-  try {
-    const response = await axios.get('/api/admin/stats/top-products', {
-      params: { period, limit },
-    })
-    return response.data
-  } catch (error) {
-    return []
-  }
+  // Let axios interceptor handle 401 retries automatically
+  // If request fails after retry, throw error so Promise.allSettled can handle it
+  // This preserves existing state when requests fail
+  const response = await axios.get('/api/admin/stats/top-products', {
+    params: { period, limit },
+  })
+  return response.data || []
 }
 
 /**
@@ -132,14 +129,13 @@ export const fetchTopProducts = async (period = 'month', limit = 10) => {
  * @returns {Promise<Array>} Recent activities
  */
 export const fetchRecentActivity = async (limit = 15) => {
-  try {
-    const response = await axios.get('/api/admin/stats/recent-activity', {
-      params: { limit },
-    })
-    return response.data
-  } catch (error) {
-    return []
-  }
+  // Let axios interceptor handle 401 retries automatically
+  // If request fails after retry, throw error so Promise.allSettled can handle it
+  // This preserves existing state when requests fail
+  const response = await axios.get('/api/admin/stats/recent-activity', {
+    params: { limit },
+  })
+  return response.data || []
 }
 
 /**

@@ -24,6 +24,7 @@ import {
   fetchRecentActivity,
   fetchPerformanceMetrics,
 } from '../../utils/dashboardApi'
+import { shouldSuppress401Toast } from '../../utils/authUtils'
 
 /**
  * Get activity icon based on activity type
@@ -85,6 +86,7 @@ const Dashboard = () => {
   /**
    * Fetch all dashboard data
    * Loads overview, categories, customer data, products, activities, and performance metrics
+   * Uses Promise.allSettled to handle partial failures and preserve existing state
    * @author Thang Truong
    * @date 2025-12-17
    */
@@ -92,15 +94,10 @@ const Dashboard = () => {
     try {
       setLoading(true)
       
-      // Fetch all dashboard data in parallel
-      const [
-        overviewData,
-        categories,
-        customerData,
-        products,
-        activities,
-        performance,
-      ] = await Promise.all([
+      // Fetch all dashboard data in parallel - use allSettled to handle partial failures
+      // This ensures that if some requests fail (e.g., due to token refresh), 
+      // successful requests still update their respective state
+      const results = await Promise.allSettled([
         fetchDashboardOverview(period),
         fetchSalesByCategory(period),
         fetchCustomerInsights(period),
@@ -109,15 +106,56 @@ const Dashboard = () => {
         fetchPerformanceMetrics(period),
       ])
 
-      setStats(overviewData)
-      setCategoryData(categories || [])
-      setCustomerGrowthData(customerData?.growthData || [])
-      setTopProducts(products || [])
-      setRecentActivities(activities || [])
-      setPerformanceMetrics(performance)
+      // Update state only for successful requests with data - preserve existing state for failures
+      // This prevents data loss when token refresh happens and some requests succeed
+      // Critical: Only update if promise is fulfilled AND has valid data
+      // If promise is rejected or returns empty/null, preserve existing state
+      if (results[0].status === 'fulfilled' && results[0].value) {
+        setStats(results[0].value)
+      }
+      // Don't update if rejected - preserves existing stats data
+      
+      if (results[1].status === 'fulfilled' && Array.isArray(results[1].value) && results[1].value.length > 0) {
+        setCategoryData(results[1].value)
+      }
+      // Don't update if rejected or empty - preserves existing categoryData
+      
+      if (results[2].status === 'fulfilled' && results[2].value?.growthData && Array.isArray(results[2].value.growthData) && results[2].value.growthData.length > 0) {
+        setCustomerGrowthData(results[2].value.growthData)
+      }
+      // Don't update if rejected or empty - preserves existing customerGrowthData
+      
+      if (results[3].status === 'fulfilled' && Array.isArray(results[3].value) && results[3].value.length > 0) {
+        setTopProducts(results[3].value)
+      }
+      // Don't update if rejected or empty - preserves existing topProducts
+      
+      if (results[4].status === 'fulfilled' && Array.isArray(results[4].value) && results[4].value.length > 0) {
+        setRecentActivities(results[4].value)
+      }
+      // Don't update if rejected or empty - preserves existing recentActivities
+      
+      if (results[5].status === 'fulfilled' && results[5].value) {
+        setPerformanceMetrics(results[5].value)
+      }
+      // Don't update if rejected - preserves existing performanceMetrics
+
+      // Only show error toast if all requests failed (not during token refresh)
+      const allFailed = results.every(r => r.status === 'rejected')
+      if (allFailed) {
+        const firstError = results.find(r => r.status === 'rejected')?.reason
+        if (firstError && !shouldSuppress401Toast(firstError)) {
+          toast.error(firstError.response?.data?.message || 'Failed to load dashboard data')
+        }
+      }
+
       setLastUpdated(new Date())
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load dashboard data')
+      // This catch should rarely execute since we use allSettled
+      // Only suppress toast if it's a 401 that will be handled by token refresh
+      if (!shouldSuppress401Toast(error)) {
+        toast.error(error.response?.data?.message || 'Failed to load dashboard data')
+      }
     } finally {
       setLoading(false)
     }
