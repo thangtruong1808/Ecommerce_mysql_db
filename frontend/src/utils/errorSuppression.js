@@ -82,27 +82,19 @@ export const setupErrorSuppression = () => {
       return // Suppress refresh endpoint 401 errors
     }
     
-    // Check if it's a 401 error from protected routes when refresh token exists
-    // This catches axios network errors logged to console by browser
-    // Format: "GET http://localhost:3000/api/admin/stats/overview?period=month 401 (Unauthorized)"
-    // Also catches: "Error: Request failed with status code 401" or similar
-    // Also catches errors from dashboardApi.js or other API files
-    const allArgsString = args.map(arg => String(arg)).join(' ')
-    const has401 = allArgsString.includes('401')
-    const hasApiPath = allArgsString.includes('/api/')
-    const hasUnauthorized = allArgsString.includes('Unauthorized')
-    const isDashboardApi = allArgsString.includes('dashboardApi') || allArgsString.includes('stats/')
+    // Check if it's a 401 error from protected routes when a refresh token exists.
+    // This catches axios network errors that are logged to the console by the browser.
+    // Example format: "GET http://localhost:3000/api/admin/stats 401 (Unauthorized)"
+    const allArgsString = args.map(arg => String(arg)).join(' ');
+    const has401 = allArgsString.includes('401');
+    const hasApiPath = allArgsString.includes('/api/');
     
-    if (has401 && (hasApiPath || hasUnauthorized || isDashboardApi)) {
-      const path = window.location.pathname
-      const isProtected = isProtectedRoute()
-      if (isProtected && hasRefreshToken()) {
-        // Check if it's not from auth endpoints (login, register, etc.)
-        if (!allArgsString.includes('/api/auth/login') && 
-            !allArgsString.includes('/api/auth/register') && 
-            !allArgsString.includes('/api/auth/profile')) {
-          return // Suppress 401 errors on protected routes when refresh token exists
-        }
+    if (has401 && hasApiPath) {
+      const isProtected = isProtectedRoute();
+      // On a protected route, if a refresh token exists, a 401 is an expected part of the refresh flow. Suppress it.
+      // We don't want to suppress 401s on the login page, because that's a real failed login attempt.
+      if (isProtected && hasRefreshToken() && !window.location.pathname.startsWith('/login')) {
+          return; // Suppress the error silently.
       }
     }
     

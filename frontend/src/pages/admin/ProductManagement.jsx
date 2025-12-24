@@ -24,6 +24,7 @@ import Pagination from '../../components/admin/Pagination'
 import SortableTableHeader from '../../components/admin/SortableTableHeader'
 import { useSelection } from '../../utils/useSelection'
 import { formatDate } from '../../utils/dateUtils'
+import { shouldSuppress401Toast } from '../../utils/authUtils'
 import {
   quickCreateProduct,
   updateProductStock,
@@ -88,12 +89,15 @@ const ProductManagement = () => {
       }
       setInitialLoad(false)
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'No products found matching your search'
-      toast.error(errorMessage)
+      if (!shouldSuppress401Toast(error)) {
+        const errorMessage = error.response?.data?.message || 'No products found matching your search'
+        toast.error(errorMessage)
+      }
       setProducts([])
       setTotalPages(1)
       setTotalItems(0)
       setInitialLoad(false)
+      throw error;
     } finally {
       setLoading(false)
     }

@@ -1,19 +1,20 @@
 /**
  * Token Utilities
  * Helper functions for JWT token generation and validation
- * 
+ *
  * @author Thang Truong
  * @date 2024-12-19
  */
 
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 
 // Security Note: Fallback secret is used only for development/testing
 // In production, JWT_SECRET environment variable MUST be set
 // TODO: Consider throwing error if JWT_SECRET is not set in production
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_in_production'
-const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m'
-const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d'
+const JWT_SECRET =
+  process.env.JWT_SECRET || "fallback_secret_change_in_production";
+const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "1m";
+const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 /**
  * Generate access token
@@ -21,10 +22,10 @@ const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d'
  * @returns {string} - JWT access token
  */
 export const generateAccessToken = (userId) => {
-  return jwt.sign({ id: userId, type: 'access' }, JWT_SECRET, {
+  return jwt.sign({ id: userId, type: "access" }, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRY,
-  })
-}
+  });
+};
 
 /**
  * Generate refresh token
@@ -32,10 +33,10 @@ export const generateAccessToken = (userId) => {
  * @returns {string} - JWT refresh token
  */
 export const generateRefreshToken = (userId) => {
-  return jwt.sign({ id: userId, type: 'refresh' }, JWT_SECRET, {
+  return jwt.sign({ id: userId, type: "refresh" }, JWT_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
-  })
-}
+  });
+};
 
 /**
  * Verify access token
@@ -44,15 +45,15 @@ export const generateRefreshToken = (userId) => {
  */
 export const verifyAccessToken = (token) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    if (decoded.type !== 'access') {
-      return null
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.type !== "access") {
+      return null;
     }
-    return decoded
+    return decoded;
   } catch (error) {
-    return null
+    return null;
   }
-}
+};
 
 /**
  * Verify refresh token
@@ -61,15 +62,15 @@ export const verifyAccessToken = (token) => {
  */
 export const verifyRefreshToken = (token) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    if (decoded.type !== 'refresh') {
-      return null
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.type !== "refresh") {
+      return null;
     }
-    return decoded
+    return decoded;
   } catch (error) {
-    return null
+    return null;
   }
-}
+};
 
 /**
  * Get token expiration date
@@ -84,14 +85,13 @@ export const verifyRefreshToken = (token) => {
  */
 export const getTokenExpiration = (token) => {
   try {
-    const decoded = jwt.decode(token)
+    const decoded = jwt.decode(token);
     if (decoded && decoded.exp) {
       // JWT exp is in seconds, JavaScript Date needs milliseconds
-      return new Date(decoded.exp * 1000)
+      return new Date(decoded.exp * 1000);
     }
-    return null
+    return null;
   } catch (error) {
-    return null
+    return null;
   }
-}
-
+};
