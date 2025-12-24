@@ -114,9 +114,9 @@ const CategoryCarousel = ({ categories = [] }) => {
       <div className="w-full bg-white rounded-lg shadow-md overflow-hidden" ref={carouselRef}>
         <Link
           to={`/products?category=${currentCategory.id}`}
-          className="block w-full h-full hover:opacity-90 transition"
+          className="block w-full h-auto hover:opacity-90 transition"
         >
-          <div className="w-full h-[300px] flex overflow-hidden">
+          <div className="w-full h-auto flex overflow-hidden">
             {/* Image column */}
             <div className="max-w-full h-full flex items-center justify-center bg-gray-100 overflow-hidden ">
               {showCurrentPhoto ? (

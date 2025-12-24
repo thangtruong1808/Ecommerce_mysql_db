@@ -72,12 +72,12 @@ const ImageGallery = ({ images = [] }) => {
     /* Image gallery container */
     <div>
       {/* Main image display - 500x500 resolution */}
-      <div className="w-full max-w-[500px] aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
+      <div className="w-full max-w-[600px] aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
         {displayImageUrl && !imageErrors[selectedIndex] ? (
           <img
             src={displayImageUrl}
             alt="Product"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-fill"
             onError={(e) => {
               if (e.target.src !== comingSoon) {
                 e.target.src = comingSoon

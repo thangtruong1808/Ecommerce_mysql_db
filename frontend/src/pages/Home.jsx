@@ -110,7 +110,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero content */}
           <div className="text-center mb-6">
-            <h1 className="text-5xl font-bold mb-6">Welcome to Ecommerce Store</h1>
+            <h1 className="text-5xl font-bold mb-6">Welcome to Badminton Stores</h1>
             <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices and amazing discounts with our exclusive voucher codes!</p>
           </div>
 

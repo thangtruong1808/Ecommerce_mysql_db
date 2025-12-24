@@ -201,7 +201,7 @@ export const uploadCategoryImage = async (fileBuffer, fileName, categoryId) => {
   try {
     // Resize image to 500x500
     const resizedBuffer = await sharp(fileBuffer)
-      .resize(1400, 800, {
+      .resize(1700, 750, {
         fit: 'cover',
         position: 'center'
       })

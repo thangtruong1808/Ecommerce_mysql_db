@@ -56,21 +56,21 @@ const ProductCard = ({ product, onAddToCart }) => {
 
       {/* Product image */}
       <Link to={`/products/${product.id}`}>
-        <div className="w-full aspect-square bg-gray-200 overflow-hidden flex items-center justify-center relative">
+        <div className="w-full aspect-square bg-white overflow-hidden flex items-center justify-center relative">
           <img
             src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover"
-            loading="lazy"
+            loading="eager"
             decoding="async"
-            style={{ aspectRatio: '1 / 1' }}
+            // style={{ aspectRatio: '6 / 7' }}
             onError={(e) => { if (e.target.src !== comingSoon) e.target.src = comingSoon }}
           />
         </div>
       </Link>
       
       {/* Product info */}
-      <div className="p-2">
+      <div className="p-2 border-t border-gray-200">
         <div className="flex items-center justify-between">
         <Link to={`/products/${product.id}`}>
             <h3 className="font-semibold text-sm leading-5 hover:text-blue-600 line-clamp-2">{product.name}</h3>
