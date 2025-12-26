@@ -83,16 +83,18 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/invoices", invoiceRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api", commentRoutes);
 app.use("/api", likeRoutes);
 app.use("/api", voucherRoutes);
+app.use("/api/product-views", productViewRoutes); // Product view tracking
+
+// Admin routes
+app.use("/api/admin", adminRoutes);
 app.use("/api/admin", mediaRoutes);
 app.use("/api/admin/categories", categoryRoutes);
 app.use("/api/admin/subcategories", subcategoryRoutes);
 app.use("/api/admin/child-categories", childCategoryRoutes);
 app.use("/api/admin/carts", cartAdminRoutes);
-app.use("/api/product-views", productViewRoutes);
 
 /**
  * Health check endpoint

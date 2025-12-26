@@ -336,7 +336,8 @@ const Dashboard = () => {
                     key={`top-product-${
                       product.id || product.product_id || index
                     }`}
-                    to={`/admin/products/${product.id}`}
+                    // to={`/admin/products/${product.id}`}
+                    to={`/products/${product.id}`}
                     className="flex justify-between items-center p-2 hover:bg-gray-50 rounded"
                   >
                     <span className="text-sm font-medium text-blue-600">
@@ -375,7 +376,8 @@ const Dashboard = () => {
                   return (
                     <Link
                       key={`recent-order-${order.id || orderIndex}`}
-                      to={`/admin/orders/${order.id}`}
+                      // to={`/admin/orders/${order.id}`}
+                      to={`/orders/${order.id}`}
                       className="block p-3 border rounded hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex justify-between items-center">
@@ -430,7 +432,8 @@ const Dashboard = () => {
                 {stats.lowStockProducts.map((product, productIndex) => (
                   <Link
                     key={`low-stock-${product.id || productIndex}`}
-                    to={`/admin/products/${product.id}`}
+                    // to={`/admin/products/${product.id}`}
+                    to={`/products/${product.id}`}
                     className="block p-3 border rounded hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex justify-between items-center">
