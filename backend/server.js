@@ -42,10 +42,13 @@ const envPath = path.join(rootDir, ".env");
 const envResult = dotenv.config({ path: envPath });
 if (envResult.error) {
   // .env file not found - using environment variables or defaults
+  console.warn(".env file not found, using environment variables or defaults");
 }
+console.log("Environment variables loaded successfully.");
 
 // Connect to database
 connectDB();
+console.log("Database connected successfully.");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -126,4 +129,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   // Server started successfully
+  console.log(`Server running on port ${PORT}`);
+  console.log(`The endpoint health check: ${process.env.VITE_API_URL}/health`);
 });

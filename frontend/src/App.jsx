@@ -60,7 +60,10 @@ import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
  * @date 2025-12-12
  */
 const AppContent = () => {
+  // Determine if current route is an admin page
   const location = useLocation();
+
+  // Check if the current path starts with /admin
   const isAdminPage = location.pathname.startsWith("/admin");
 
   /* Main application container */
@@ -283,7 +286,7 @@ const AppContent = () => {
       {/* Toast notifications container with 10 second auto-close and progress bar */}
       <ToastContainer
         position="top-left"
-        autoClose={2000}
+        autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
@@ -312,7 +315,14 @@ function App() {
       <CartProvider>
         <Router
           future={{
+            // Enable startTransition for route changes
+            // Uses React 18 transitions for navigation
+            // Smoother UI, non-blocking updates
             v7_startTransition: true,
+
+            // Enable relative splat paths
+            // Fixes splat route path resolution
+            // More predictable routing, future v7 default
             v7_relativeSplatPath: true,
           }}
         >
