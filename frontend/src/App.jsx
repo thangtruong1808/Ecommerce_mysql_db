@@ -17,7 +17,9 @@ import "react-toastify/dist/ReactToastify.css";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+// import { AuthProvider } from "./context/2AuthContext";
 import { AuthProvider } from "./context/AuthContext";
+
 import { CartProvider } from "./context/CartContext";
 import CartManagement from "./pages/admin/CartManagement";
 import CategoryManagement from "./pages/admin/CategoryManagement";

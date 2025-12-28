@@ -5,12 +5,12 @@
  * @date 2025-12-12
  */
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import axios from 'axios'
-import { useAuth } from '../context/AuthContext'
-import { toast } from 'react-toastify'
-import StarRating from './StarRating'
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
+import StarRating from "./StarRating";
 
 /**
  * ReviewForm component
@@ -22,18 +22,18 @@ import StarRating from './StarRating'
  * @date 2025-12-12
  */
 const ReviewForm = ({ productId, onReviewSubmitted }) => {
-  const { isAuthenticated, user } = useAuth()
-  const [rating, setRating] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [hasReviewed, setHasReviewed] = useState(false)
-  const [isEligible, setIsEligible] = useState(false)
-  const [checkingEligibility, setCheckingEligibility] = useState(true)
+  const { isAuthenticated, user } = useAuth();
+  const [rating, setRating] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [isEligible, setIsEligible] = useState(false);
+  const [checkingEligibility, setCheckingEligibility] = useState(true);
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm()
+  } = useForm();
 
   /**
    * Check if user is eligible to review (has purchased) and if already reviewed
@@ -43,30 +43,34 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
   useEffect(() => {
     const checkReviewStatus = async () => {
       if (!isAuthenticated || !user || !productId) {
-        setCheckingEligibility(false)
-        return
+        setCheckingEligibility(false);
+        return;
       }
       try {
         const [reviewResponse, eligibilityResponse] = await Promise.all([
-          axios.get(`/api/products/${productId}/reviews/my`, {
-            withCredentials: true
-          }).catch(() => ({ data: null })),
-          axios.get(`/api/products/${productId}/reviews/eligibility`, {
-            withCredentials: true
-          }).catch(() => ({ data: { eligible: false } }))
-        ])
+          axios
+            .get(`/api/products/${productId}/reviews/my`, {
+              withCredentials: true,
+            })
+            .catch(() => ({ data: null })),
+          axios
+            .get(`/api/products/${productId}/reviews/eligibility`, {
+              withCredentials: true,
+            })
+            .catch(() => ({ data: { eligible: false } })),
+        ]);
         if (reviewResponse.data) {
-          setHasReviewed(true)
+          setHasReviewed(true);
         }
-        setIsEligible(eligibilityResponse.data?.eligible || false)
+        setIsEligible(eligibilityResponse.data?.eligible || false);
       } catch (error) {
-        setIsEligible(false)
+        setIsEligible(false);
       } finally {
-        setCheckingEligibility(false)
+        setCheckingEligibility(false);
       }
-    }
-    checkReviewStatus()
-  }, [isAuthenticated, user, productId])
+    };
+    checkReviewStatus();
+  }, [isAuthenticated, user, productId]);
 
   /**
    * Handle form submission
@@ -76,42 +80,47 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
    */
   const onSubmit = async (data) => {
     if (!isAuthenticated) {
-      toast.error('Please login to submit a review')
-      return
+      toast.error("Please login to submit a review");
+      return;
     }
 
     if (rating === 0) {
-      toast.error('Please select a rating')
-      return
+      toast.error("Please select a rating");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      await axios.post(`/api/products/${productId}/reviews`, {
-        rating,
-        comment: data.comment,
-      }, {
-        withCredentials: true
-      })
-      toast.success('Review submitted successfully!')
-      setHasReviewed(true)
-      reset()
-      setRating(0)
+      await axios.post(
+        `/api/products/${productId}/reviews`,
+        {
+          rating,
+          comment: data.comment,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Review submitted successfully!");
+      setHasReviewed(true);
+      reset();
+      setRating(0);
       if (onReviewSubmitted) {
-        onReviewSubmitted()
+        onReviewSubmitted();
       }
     } catch (error) {
       // Handle 401 errors
       if (error.response?.status === 401) {
-        toast.error('Your session expired. Please try again.')
+        toast.error("Your session expired. Please try again.");
       } else {
-        const message = error.response?.data?.message || 'Failed to submit review'
-        toast.error(message)
+        const message =
+          error.response?.data?.message || "Failed to submit review";
+        toast.error(message);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -119,7 +128,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
         {/* Not authenticated message */}
         <p className="text-gray-600">Please login to write a review</p>
       </div>
-    )
+    );
   }
 
   if (checkingEligibility) {
@@ -128,7 +137,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
         {/* Checking eligibility message */}
         <p className="text-gray-600">Checking review eligibility...</p>
       </div>
-    )
+    );
   }
 
   if (!isEligible) {
@@ -139,19 +148,23 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
           <strong>Review this product</strong>
         </p>
         <p className="text-sm text-gray-600">
-          To write a review, you must have purchased this product. Once you've made a purchase, you'll be able to share your experience and help other customers make informed decisions.
+          To write a review, you must have purchased this product. Once you've
+          made a purchase, you'll be able to share your experience and help
+          other customers make informed decisions.
         </p>
       </div>
-    )
+    );
   }
 
   if (hasReviewed) {
     return (
       <div className="bg-gray-50 p-4 rounded-md text-center">
         {/* Already reviewed message */}
-        <p className="text-gray-600">You have already submitted a review for this product.</p>
+        <p className="text-gray-600">
+          You have already submitted a review for this product.
+        </p>
       </div>
-    )
+    );
   }
 
   /* Review form layout */
@@ -173,17 +186,22 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
 
         {/* Comment input */}
         <div>
-          <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="comment"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Your Review
           </label>
           <textarea
-            {...register('comment', { required: 'Review comment is required' })}
+            {...register("comment", { required: "Review comment is required" })}
             rows="4"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Write your review here..."
           />
           {errors.comment && (
-            <p className="mt-1 text-sm text-red-600">{errors.comment.message}</p>
+            <p className="mt-1 text-sm text-red-600">
+              {errors.comment.message}
+            </p>
           )}
         </div>
 
@@ -197,8 +215,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
         </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default ReviewForm
-
+export default ReviewForm;

@@ -5,10 +5,10 @@
  * @date 2025-12-12
  */
 
-import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { hasRefreshToken } from '../utils/authUtils'
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { hasRefreshToken } from "../utils/authUtils";
 
 /**
  * ProtectedRoute component
@@ -20,8 +20,8 @@ import { hasRefreshToken } from '../utils/authUtils'
  * @date 2025-12-12
  */
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isAdmin, loading, checkAuth } = useAuth()
-  const [checkingAuth, setCheckingAuth] = useState(false)
+  const { isAuthenticated, isAdmin, loading, checkAuth } = useAuth();
+  const [checkingAuth, setCheckingAuth] = useState(false);
 
   /**
    * Trigger auth check when ProtectedRoute mounts or when user becomes unauthenticated
@@ -32,24 +32,30 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
    */
   useEffect(() => {
     // If not authenticated but refresh token exists, try to restore auth
-    if (!isAuthenticated && !loading && !checkingAuth && hasRefreshToken() && checkAuth) {
-      setCheckingAuth(true)
+    if (
+      !isAuthenticated &&
+      !loading &&
+      !checkingAuth &&
+      hasRefreshToken() &&
+      checkAuth
+    ) {
+      setCheckingAuth(true);
       // Immediately try to restore auth - don't wait
-      checkAuth()
+      checkAuth();
       // Give checkAuth time to complete before allowing redirect (5 seconds max)
       // This ensures we have enough time to restore authentication from refresh token
       // Especially important after inactivity when access token may have expired
       const timer = setTimeout(() => {
-        setCheckingAuth(false)
-      }, 5000)
-      return () => clearTimeout(timer)
+        setCheckingAuth(false);
+      }, 5000);
+      return () => clearTimeout(timer);
     }
     // Reset checkingAuth if authenticated
     if (isAuthenticated && checkingAuth) {
-      setCheckingAuth(false)
+      setCheckingAuth(false);
     }
-  }, [isAuthenticated, loading, checkAuth, checkingAuth])
-  
+  }, [isAuthenticated, loading, checkAuth, checkingAuth]);
+
   /**
    * Also check auth on mount if refresh token exists
    * This ensures authentication is verified immediately when component mounts
@@ -61,9 +67,9 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     // This handles cases where user state was lost due to inactivity
     // Don't wait for loading to complete - check immediately
     if (hasRefreshToken() && !isAuthenticated && checkAuth) {
-      checkAuth()
+      checkAuth();
     }
-  }, []) // Only run on mount
+  }, []); // Only run on mount
 
   // Show loading spinner while checking authentication
   // This prevents redirects during initial auth check on page refresh
@@ -76,14 +82,14 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Redirect to login if not authenticated (only after loading completes and no refresh token)
   if (!isAuthenticated && !hasRefreshToken()) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
-  
+
   // If not authenticated but refresh token exists, show loading while trying to restore
   // Wait up to 5 seconds to allow authentication restoration
   if (!isAuthenticated && hasRefreshToken()) {
@@ -96,20 +102,19 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
           <p className="mt-4 text-gray-600">Restoring session...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Redirect to home if admin-only route and user is not admin (only after loading completes)
   if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/" replace />;
   }
 
   // Render protected content
   return (
     /* Protected route content */
     children
-  )
-}
+  );
+};
 
-export default ProtectedRoute
-
+export default ProtectedRoute;

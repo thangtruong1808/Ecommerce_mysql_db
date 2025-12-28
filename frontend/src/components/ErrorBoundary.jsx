@@ -1,13 +1,13 @@
 /**
  * Error Boundary Component
  * Catches JavaScript errors in child components and displays fallback UI
- * 
+ *
  * @author Thang Truong
  * @date 2024-12-19
  */
 
-import { Component } from 'react'
-import Button from './Button'
+import { Component } from "react";
+import Button from "./Button";
 
 /**
  * ErrorBoundary class component
@@ -15,8 +15,8 @@ import Button from './Button'
  */
 class ErrorBoundary extends Component {
   constructor(props) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   /**
@@ -25,7 +25,7 @@ class ErrorBoundary extends Component {
    * @returns {Object} Updated state
    */
   static getDerivedStateFromError(error) {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   /**
@@ -43,8 +43,8 @@ class ErrorBoundary extends Component {
    * Navigate to home page
    */
   handleGoHome = () => {
-    window.location.href = '/'
-  }
+    window.location.href = "/";
+  };
 
   /**
    * Render error UI or children
@@ -56,19 +56,18 @@ class ErrorBoundary extends Component {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           {/* Error display container */}
           <div className="text-center max-w-md">
-            <h1 className="text-4xl font-bold text-red-600 mb-4">Something went wrong</h1>
+            <h1 className="text-4xl font-bold text-red-600 mb-4">
+              Something went wrong
+            </h1>
             <p className="text-gray-600 mb-6">
               We're sorry, but something unexpected happened. Please try again.
             </p>
-            <div className="space-y-3">
-              <Button
-                onClick={() => window.location.reload()}
-                icon="check"
-              >
+            <div className="space-y-3 flex flex-col sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4">
+              <Button onClick={() => window.location.reload()} icon="check">
                 Reload Page
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 icon="home"
                 onClick={this.handleGoHome}
               >
@@ -77,12 +76,11 @@ class ErrorBoundary extends Component {
             </div>
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
-export default ErrorBoundary
-
+export default ErrorBoundary;

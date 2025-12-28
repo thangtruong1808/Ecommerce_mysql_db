@@ -1,27 +1,27 @@
 /**
  * Invoice List Page Component
  * Displays list of user's invoices
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { useAuth } from '../context/AuthContext'
-import ProtectedRoute from '../components/ProtectedRoute'
-import SkeletonLoader from '../components/SkeletonLoader'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
+import ProtectedRoute from "../components/ProtectedRoute";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 /**
  * InvoiceList component
  * @returns {JSX.Element} Invoice list page
  */
 const InvoiceList = () => {
-  const { isAuthenticated } = useAuth()
-  const [invoices, setInvoices] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { isAuthenticated } = useAuth();
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   /**
    * Fetch user invoices
@@ -30,21 +30,21 @@ const InvoiceList = () => {
    */
   useEffect(() => {
     const fetchInvoices = async () => {
-      if (!isAuthenticated) return
+      if (!isAuthenticated) return;
 
       try {
-        setLoading(true)
-        const response = await axios.get('/api/invoices')
-        setInvoices(response.data.invoices || [])
+        setLoading(true);
+        const response = await axios.get("/api/invoices");
+        setInvoices(response.data.invoices || []);
       } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to load invoices')
+        toast.error(error.response?.data?.message || "Failed to load invoices");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchInvoices()
-  }, [isAuthenticated])
+    fetchInvoices();
+  }, [isAuthenticated]);
 
   /**
    * Format date to dd-MMM-yyyy, hh:mm AM/PM format (e.g., 13-Dec-2025, 2:30 PM)
@@ -54,18 +54,31 @@ const InvoiceList = () => {
    * @date 2025-12-12
    */
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const month = months[date.getMonth()]
-    const year = date.getFullYear()
-    let hours = date.getHours()
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    const ampm = hours >= 12 ? 'PM' : 'AM'
-    hours = hours % 12 || 12
-    return `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`
-  }
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`;
+  };
 
   /**
    * Format order number for display
@@ -76,16 +89,20 @@ const InvoiceList = () => {
    */
   const formatOrderNumber = (invoice) => {
     if (invoice.order_number) {
-      return invoice.order_number
+      return invoice.order_number;
     }
     // Fallback for existing orders without order_number
-    const date = new Date(invoice.created_at)
-    const datePart = date.toISOString().slice(0, 10).replace(/-/g, '')
-    return `ORD-${datePart}-${String(invoice.order_id).padStart(5, '0')}`
-  }
+    const date = new Date(invoice.created_at);
+    const datePart = date.toISOString().slice(0, 10).replace(/-/g, "");
+    return `ORD-${datePart}-${String(invoice.order_id).padStart(5, "0")}`;
+  };
 
   if (!isAuthenticated) {
-    return <ProtectedRoute><div></div></ProtectedRoute>
+    return (
+      <ProtectedRoute>
+        <div></div>
+      </ProtectedRoute>
+    );
   }
 
   if (loading) {
@@ -95,7 +112,7 @@ const InvoiceList = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">My Invoices</h1>
         <SkeletonLoader type="list" count={5} />
       </div>
-    )
+    );
   }
 
   /* Invoice list page layout */
@@ -127,9 +144,12 @@ const InvoiceList = () => {
               <div className="flex justify-between items-center">
                 {/* Invoice info */}
                 <div>
-                  <h3 className="text-lg font-semibold">Invoice {invoice.invoice_number}</h3>
+                  <h3 className="text-lg font-semibold">
+                    Invoice {invoice.invoice_number}
+                  </h3>
                   <p className="text-gray-600 text-sm">
-                    Order {formatOrderNumber(invoice)} • {formatDate(invoice.created_at)}
+                    Order {formatOrderNumber(invoice)} •{" "}
+                    {formatDate(invoice.created_at)}
                   </p>
                 </div>
 
@@ -148,8 +168,7 @@ const InvoiceList = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default InvoiceList
-
+export default InvoiceList;

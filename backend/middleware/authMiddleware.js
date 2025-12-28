@@ -1,13 +1,13 @@
 /**
  * Authentication Middleware
  * Protects routes by verifying JWT tokens from HTTP-only cookies
- * 
+ *
  * @author Thang Truong
- * @date 2024-12-19
+ * @date 2025-12-19
  */
 
-import * as userModel from '../models/userModel.js'
-import { verifyAccessToken } from '../utils/tokenUtils.js'
+import * as userModel from "../models/userModel.js";
+import { verifyAccessToken } from "../utils/tokenUtils.js";
 
 /**
  * Protect route - verify access token from cookie
@@ -17,30 +17,32 @@ import { verifyAccessToken } from '../utils/tokenUtils.js'
  */
 export const protect = async (req, res, next) => {
   try {
-    const accessToken = req.cookies?.accessToken
+    const accessToken = req.cookies?.accessToken;
 
     if (!accessToken) {
-      return res.status(401).json({ message: 'Not authorized, no token' })
+      return res.status(401).json({ message: "Not authorized, no token" });
     }
 
     // Verify access token
-    const decoded = verifyAccessToken(accessToken)
+    const decoded = verifyAccessToken(accessToken);
     if (!decoded) {
-      return res.status(401).json({ message: 'Not authorized, invalid token' })
+      return res.status(401).json({ message: "Not authorized, invalid token" });
     }
 
     // Get user from database
-    const user = await userModel.findUserById(decoded.id)
+    const user = await userModel.findUserById(decoded.id);
     if (!user) {
-      return res.status(401).json({ message: 'Not authorized, user not found' })
+      return res
+        .status(401)
+        .json({ message: "Not authorized, user not found" });
     }
 
-    req.user = user
-    next()
+    req.user = user;
+    next();
   } catch (error) {
-    res.status(401).json({ message: 'Not authorized, token failed' })
+    res.status(401).json({ message: "Not authorized, token failed" });
   }
-}
+};
 
 /**
  * Optional authentication middleware - sets req.user if token is valid, but doesn't require it
@@ -52,21 +54,21 @@ export const protect = async (req, res, next) => {
  */
 export const optionalAuth = async (req, res, next) => {
   try {
-    const accessToken = req.cookies?.accessToken
+    const accessToken = req.cookies?.accessToken;
     if (accessToken) {
-      const decoded = verifyAccessToken(accessToken)
+      const decoded = verifyAccessToken(accessToken);
       if (decoded) {
-        const user = await userModel.findUserById(decoded.id)
+        const user = await userModel.findUserById(decoded.id);
         if (user) {
-          req.user = user
+          req.user = user;
         }
       }
     }
-    next()
+    next();
   } catch (error) {
-    next()
+    next();
   }
-}
+};
 
 /**
  * Admin only middleware - check if user is admin
@@ -76,9 +78,9 @@ export const optionalAuth = async (req, res, next) => {
  * @param {Function} next - Express next middleware
  */
 export const admin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next()
+  if (req.user && req.user.role === "admin") {
+    next();
   } else {
-    res.status(403).json({ message: 'Not authorized as an admin' })
+    res.status(403).json({ message: "Not authorized as an admin" });
   }
-}
+};

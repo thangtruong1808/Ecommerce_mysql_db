@@ -1,20 +1,20 @@
 /**
  * Sidebar Navigation Component
  * Toggleable sidebar navigation for admin panel with logo and logout
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
 
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import logoImage from '../../assets/images/Logo.png'
-import { 
-  FaTachometerAlt, 
-  FaBox, 
-  FaShoppingCart, 
-  FaUsers, 
-  FaTag, 
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import logoImage from "../../assets/images/Logo.png";
+import {
+  FaTachometerAlt,
+  FaBox,
+  FaShoppingCart,
+  FaUsers,
+  FaTag,
   FaComment,
   FaHome,
   FaSignOutAlt,
@@ -29,8 +29,8 @@ import {
   FaList,
   FaStar,
   FaFileInvoice,
-  FaEye
-} from 'react-icons/fa'
+  FaEye,
+} from "react-icons/fa";
 
 /**
  * SidebarNavigation component
@@ -42,9 +42,9 @@ import {
  * @date 2025-12-12
  */
 const SidebarNavigation = ({ isOpen, onToggle }) => {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { logout } = useAuth()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   /**
    * Check if route is active
@@ -54,8 +54,10 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
    * @date 2025-12-12
    */
   const isActive = (path) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/')
-  }
+    return (
+      location.pathname === path || location.pathname.startsWith(path + "/")
+    );
+  };
 
   /**
    * Handle logout
@@ -63,9 +65,9 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
    * @date 2025-12-12
    */
   const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
+    await logout();
+    navigate("/login");
+  };
 
   /**
    * Navigation items configuration
@@ -74,22 +76,30 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
    * @date 2025-12-12
    */
   const navItems = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: FaTachometerAlt },
-    { path: '/admin/products', label: 'Products', icon: FaBox },
-    { path: '/admin/categories', label: 'Categories', icon: FaFolder },
-    { path: '/admin/subcategories', label: 'Subcategories', icon: FaFolderOpen },
-    { path: '/admin/child-categories', label: 'Child Categories', icon: FaSitemap },
-    { path: '/admin/orders', label: 'Orders', icon: FaShoppingCart },
-    { path: '/admin/carts', label: 'Carts', icon: FaShoppingBag },
-    { path: '/admin/users', label: 'Users', icon: FaUsers },
-    { path: '/admin/reviews', label: 'Reviews', icon: FaStar },
-    { path: '/admin/product-views', label: 'Product Views', icon: FaEye },
-    { path: '/admin/invoices', label: 'Invoices', icon: FaFileInvoice },
-    { path: '/admin/vouchers', label: 'Vouchers', icon: FaTag },
-    { path: '/admin/comments', label: 'Comments', icon: FaComment },
-    { path: '/admin/images', label: 'Images', icon: FaImages },
-    { path: '/admin/videos', label: 'Videos', icon: FaVideo },
-  ]
+    { path: "/admin/dashboard", label: "Dashboard", icon: FaTachometerAlt },
+    { path: "/admin/products", label: "Products", icon: FaBox },
+    { path: "/admin/categories", label: "Categories", icon: FaFolder },
+    {
+      path: "/admin/subcategories",
+      label: "Subcategories",
+      icon: FaFolderOpen,
+    },
+    {
+      path: "/admin/child-categories",
+      label: "Child Categories",
+      icon: FaSitemap,
+    },
+    { path: "/admin/orders", label: "Orders", icon: FaShoppingCart },
+    { path: "/admin/carts", label: "Carts", icon: FaShoppingBag },
+    { path: "/admin/users", label: "Users", icon: FaUsers },
+    { path: "/admin/reviews", label: "Reviews", icon: FaStar },
+    { path: "/admin/product-views", label: "Product Views", icon: FaEye },
+    { path: "/admin/invoices", label: "Invoices", icon: FaFileInvoice },
+    { path: "/admin/vouchers", label: "Vouchers", icon: FaTag },
+    { path: "/admin/comments", label: "Comments", icon: FaComment },
+    { path: "/admin/images", label: "Images", icon: FaImages },
+    { path: "/admin/videos", label: "Videos", icon: FaVideo },
+  ];
 
   /* Sidebar navigation */
   return (
@@ -99,9 +109,9 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
         <button
           onClick={onToggle}
           className="fixed top-4 left-4 z-[100] bg-gray-900 text-white p-2.5 rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg flex items-center justify-center"
-          style={{ 
-            minWidth: '40px',
-            minHeight: '40px'
+          style={{
+            minWidth: "40px",
+            minHeight: "40px",
           }}
           aria-label="Toggle sidebar"
         >
@@ -110,15 +120,19 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} fixed left-0 top-0 h-full w-64 bg-gray-900 transition-transform duration-300 z-40`}>
+      <div
+        className={`${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed left-0 top-0 h-full w-64 bg-gray-900 transition-transform duration-300 z-40`}
+      >
         <div className="p-4 h-full flex flex-col">
           {/* Header with toggle button and logo */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div className="flex-1 flex items-center justify-center">
-                <img 
-                  src={logoImage} 
-                  alt="Ecommerce Store Logo" 
+                <img
+                  src={logoImage}
+                  alt="Ecommerce Store Logo"
                   className="h-12 w-auto object-contain"
                 />
               </div>
@@ -126,9 +140,9 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
                 <button
                   onClick={onToggle}
                   className="ml-2 bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
-                  style={{ 
-                    minWidth: '36px',
-                    minHeight: '36px'
+                  style={{
+                    minWidth: "36px",
+                    minHeight: "36px",
                   }}
                   aria-label="Toggle sidebar"
                 >
@@ -143,21 +157,21 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
           {/* Navigation items */}
           <nav className="flex-1 space-y-2">
             {navItems.map((item) => {
-              const Icon = item.icon
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? 'bg-blue-600 text-white text-lg'
-                      : 'text-lg text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? "bg-blue-600 text-white text-lg"
+                      : "text-lg text-gray-300 hover:bg-gray-800 hover:text-white"
                   }`}
                 >
                   <Icon className="mr-3" />
                   <span>{item.label}</span>
                 </Link>
-              )
+              );
             })}
           </nav>
 
@@ -189,7 +203,7 @@ const SidebarNavigation = ({ isOpen, onToggle }) => {
         />
       )}
     </>
-  )
-}
+  );
+};
 
-export default SidebarNavigation
+export default SidebarNavigation;

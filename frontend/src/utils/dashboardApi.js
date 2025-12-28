@@ -4,12 +4,12 @@
  * These functions now allow errors to propagate to be handled by axios interceptors
  * and the calling component, which prevents silent failures and ensures
  * the token refresh mechanism works correctly.
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-24
  */
 
-import axios from 'axios';
+import axios from "axios";
 
 /**
  * Fetch dashboard overview statistics.
@@ -18,8 +18,12 @@ import axios from 'axios';
  * @author Thang Truong
  * @date 2025-12-24
  */
-export const fetchDashboardOverview = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/overview', {
+export const fetchDashboardOverview = async (period = "month") => {
+  // const API_BASE_URL = process.env.VITE_API_URL || "http://localhost:5000";
+  // const response = await axios.get(`${API_BASE_URL}/api/admin/stats/overview`, {
+  //   params: { period },
+  // });
+  const response = await axios.get("/api/admin/stats/overview", {
     params: { period },
   });
   return response.data;
@@ -30,8 +34,8 @@ export const fetchDashboardOverview = async (period = 'month') => {
  * @param {string} period - Time period.
  * @returns {Promise<Object>} Sales analytics data.
  */
-export const fetchSalesAnalytics = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/sales', {
+export const fetchSalesAnalytics = async (period = "month") => {
+  const response = await axios.get("/api/admin/stats/sales", {
     params: { period },
   });
   return response.data;
@@ -42,8 +46,8 @@ export const fetchSalesAnalytics = async (period = 'month') => {
  * @param {string} period - Time period.
  * @returns {Promise<Array>} Revenue chart data.
  */
-export const fetchRevenueChart = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/revenue-chart', {
+export const fetchRevenueChart = async (period = "month") => {
+  const response = await axios.get("/api/admin/stats/revenue-chart", {
     params: { period },
   });
   return response.data || [];
@@ -56,8 +60,8 @@ export const fetchRevenueChart = async (period = 'month') => {
  * @author Thang Truong
  * @date 2025-12-24
  */
-export const fetchSalesByCategory = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/revenue-by-category', {
+export const fetchSalesByCategory = async (period = "month") => {
+  const response = await axios.get("/api/admin/stats/revenue-by-category", {
     params: { period },
   });
   return response.data || [];
@@ -68,8 +72,8 @@ export const fetchSalesByCategory = async (period = 'month') => {
  * @param {string} period - Time period.
  * @returns {Promise<Object>} Order statistics.
  */
-export const fetchOrderStatistics = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/orders', {
+export const fetchOrderStatistics = async (period = "month") => {
+  const response = await axios.get("/api/admin/stats/orders", {
     params: { period },
   });
   return response.data;
@@ -82,8 +86,8 @@ export const fetchOrderStatistics = async (period = 'month') => {
  * @author Thang Truong
  * @date 2025-12-24
  */
-export const fetchCustomerInsights = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/customers', {
+export const fetchCustomerInsights = async (period = "month") => {
+  const response = await axios.get("/api/admin/stats/customers", {
     params: { period },
   });
   return response.data || null;
@@ -97,8 +101,8 @@ export const fetchCustomerInsights = async (period = 'month') => {
  * @author Thang Truong
  * @date 2025-12-24
  */
-export const fetchTopProducts = async (period = 'month', limit = 10) => {
-  const response = await axios.get('/api/admin/stats/top-products', {
+export const fetchTopProducts = async (period = "month", limit = 10) => {
+  const response = await axios.get("/api/admin/stats/top-products", {
     params: { period, limit },
   });
   return response.data || [];
@@ -112,7 +116,7 @@ export const fetchTopProducts = async (period = 'month', limit = 10) => {
  * @date 2025-12-24
  */
 export const fetchRecentActivity = async (limit = 15) => {
-  const response = await axios.get('/api/admin/stats/recent-activity', {
+  const response = await axios.get("/api/admin/stats/recent-activity", {
     params: { limit },
   });
   return response.data || [];
@@ -125,8 +129,8 @@ export const fetchRecentActivity = async (limit = 15) => {
  * @author Thang Truong
  * @date 2025-12-24
  */
-export const fetchPerformanceMetrics = async (period = 'month') => {
-  const response = await axios.get('/api/admin/stats/performance', {
+export const fetchPerformanceMetrics = async (period = "month") => {
+  const response = await axios.get("/api/admin/stats/performance", {
     params: { period },
   });
   return response.data;

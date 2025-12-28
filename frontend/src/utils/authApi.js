@@ -5,7 +5,7 @@
  * @date 2025-01-28
  */
 
-import axios from 'axios'
+import axios from "axios";
 
 /**
  * Fetch current user - silent auth check
@@ -20,35 +20,46 @@ import axios from 'axios'
  * @author Thang Truong
  * @date 2025-01-28
  */
-export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef, userFetchedTimeRef, hasRefreshToken) => {
+export const fetchUser = async (
+  setUser,
+  setError,
+  setLoading,
+  isFetchingUserRef,
+  userFetchedTimeRef,
+  hasRefreshToken
+) => {
   // Prevent duplicate calls (React StrictMode in development)
-  if (isFetchingUserRef.current) return
-  isFetchingUserRef.current = true
+  if (isFetchingUserRef.current) return;
+  isFetchingUserRef.current = true;
 
   try {
     // Use silent auth check endpoint that never returns 401
-    const response = await axios.get('/api/auth/me')
+    const response = await axios.get("/api/auth/me");
     if (response.data.user) {
-      setUser(response.data.user)
-      setError(null)
+      setUser(response.data.user);
+      setError(null);
     } else {
       // If /api/auth/me returns null user, try to refresh access token if refresh token exists
       // This handles cases where access token expired but refresh token is still valid
       if (hasRefreshToken && hasRefreshToken()) {
         // Refresh token exists - try to refresh access token, then retry fetchUser
         try {
-          const refreshResponse = await axios.post('/api/auth/refresh', {}, {
-            validateStatus: (status) => status === 200 || status === 401,
-            _silent: true,
-            withCredentials: true
-          })
+          const refreshResponse = await axios.post(
+            "/api/auth/refresh",
+            {},
+            {
+              validateStatus: (status) => status === 200 || status === 401,
+              _silent: true,
+              withCredentials: true,
+            }
+          );
           if (refreshResponse.status === 200) {
             // Token refreshed successfully - retry fetching user
             try {
-              const retryResponse = await axios.get('/api/auth/me')
+              const retryResponse = await axios.get("/api/auth/me");
               if (retryResponse.data.user) {
-                setUser(retryResponse.data.user)
-                setError(null)
+                setUser(retryResponse.data.user);
+                setError(null);
               }
               // If still no user after refresh, preserve current user state (don't clear)
             } catch {
@@ -61,39 +72,43 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
         }
       } else {
         // No refresh token exists - clear user
-        setUser(null)
-        setError(null)
+        setUser(null);
+        setError(null);
       }
     }
   } catch (error) {
     // Handle 429 errors gracefully - don't clear user on rate limit
     if (error.response?.status === 429) {
-      error._silent = true
+      error._silent = true;
       if (error.config) {
-        error.config._silent = true
+        error.config._silent = true;
       }
       // Don't clear user on rate limit - just set loading to false
-      setLoading(false)
-      isFetchingUserRef.current = false
-      userFetchedTimeRef.current = Date.now()
-      return
+      setLoading(false);
+      isFetchingUserRef.current = false;
+      userFetchedTimeRef.current = Date.now();
+      return;
     }
     // If error occurs but refresh token exists, try to refresh access token first
     if (hasRefreshToken && hasRefreshToken()) {
       // Refresh token exists - try to refresh access token, then retry fetchUser
       try {
-        const refreshResponse = await axios.post('/api/auth/refresh', {}, {
-          validateStatus: (status) => status === 200 || status === 401,
-          _silent: true,
-          withCredentials: true
-        })
+        const refreshResponse = await axios.post(
+          "/api/auth/refresh",
+          {},
+          {
+            validateStatus: (status) => status === 200 || status === 401,
+            _silent: true,
+            withCredentials: true,
+          }
+        );
         if (refreshResponse.status === 200) {
           // Token refreshed successfully - retry fetching user
           try {
-            const retryResponse = await axios.get('/api/auth/me')
+            const retryResponse = await axios.get("/api/auth/me");
             if (retryResponse.data.user) {
-              setUser(retryResponse.data.user)
-              setError(null)
+              setUser(retryResponse.data.user);
+              setError(null);
             }
             // If still no user after refresh, don't clear (keep current state)
           } catch {
@@ -111,15 +126,15 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
       }
     } else {
       // No refresh token exists - clear user
-      setUser(null)
-      setError(null)
+      setUser(null);
+      setError(null);
     }
   } finally {
-    setLoading(false)
-    isFetchingUserRef.current = false
-    userFetchedTimeRef.current = Date.now()
+    setLoading(false);
+    isFetchingUserRef.current = false;
+    userFetchedTimeRef.current = Date.now();
   }
-}
+};
 
 /**
  * Login user - silently handles 401 errors without console logging
@@ -133,40 +148,44 @@ export const fetchUser = async (setUser, setError, setLoading, isFetchingUserRef
  */
 export const login = async (email, password, setUser, setError) => {
   return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/auth/login', true)
-    xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.withCredentials = true
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/auth/login", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.withCredentials = true;
     xhr.onload = () => {
       try {
-        const data = JSON.parse(xhr.responseText || '{}')
+        const data = JSON.parse(xhr.responseText || "{}");
         // Check if response has error message (backend returns 200 with message for wrong creds)
         if (data.message && !data._id) {
-          const message = data.message || 'Invalid email or password'
-          setError(message)
-          resolve({ success: false, error: message })
+          const message = data.message || "Invalid email or password";
+          setError(message);
+          resolve({ success: false, error: message });
         } else if (xhr.status === 200 && data._id) {
           // Success: response has user data
-          setUser(data)
-          setError(null)
-          resolve({ success: true })
+          console.log("Logged in user:", data);
+          console.log("Logged in user with accessToken:", data.accessToken);
+
+          setUser(data);
+
+          setError(null);
+          resolve({ success: true });
         } else {
-          const message = data?.message || 'Invalid email or password'
-          setError(message)
-          resolve({ success: false, error: message })
+          const message = data?.message || "Invalid email or password";
+          setError(message);
+          resolve({ success: false, error: message });
         }
       } catch {
-        setError('Invalid email or password')
-        resolve({ success: false, error: 'Invalid email or password' })
+        setError("Invalid email or password");
+        resolve({ success: false, error: "Invalid email or password" });
       }
-    }
+    };
     xhr.onerror = () => {
-      setError('Login failed. Please try again.')
-      resolve({ success: false, error: 'Login failed. Please try again.' })
-    }
-    xhr.send(JSON.stringify({ email, password }))
-  })
-}
+      setError("Login failed. Please try again.");
+      resolve({ success: false, error: "Login failed. Please try again." });
+    };
+    xhr.send(JSON.stringify({ email, password }));
+  });
+};
 
 /**
  * Register new user
@@ -181,16 +200,23 @@ export const login = async (email, password, setUser, setError) => {
  */
 export const register = async (name, email, password, setUser, setError) => {
   try {
-    const response = await axios.post('/api/auth/register', { name, email, password })
-    setUser(response.data)
-    setError(null)
-    return { success: true }
+    const response = await axios.post("/api/auth/register", {
+      name,
+      email,
+      password,
+    });
+    setUser(response.data);
+    setError(null);
+    return { success: true };
   } catch (error) {
-    const message = error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || 'Registration failed'
-    setError(message)
-    return { success: false, error: message }
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.errors?.[0]?.msg ||
+      "Registration failed";
+    setError(message);
+    return { success: false, error: message };
   }
-}
+};
 
 /**
  * Logout user
@@ -201,14 +227,14 @@ export const register = async (name, email, password, setUser, setError) => {
  */
 export const logout = async (setUser, setError) => {
   try {
-    await axios.post('/api/auth/logout')
+    await axios.post("/api/auth/logout");
   } catch {
     // Silent fail
   } finally {
-    setUser(null)
-    setError(null)
+    setUser(null);
+    setError(null);
   }
-}
+};
 
 /**
  * Update user profile
@@ -221,14 +247,13 @@ export const logout = async (setUser, setError) => {
  */
 export const updateProfile = async (userData, setUser, setError) => {
   try {
-    const response = await axios.put('/api/auth/profile', userData)
-    setUser(response.data)
-    setError(null)
-    return { success: true }
+    const response = await axios.put("/api/auth/profile", userData);
+    setUser(response.data);
+    setError(null);
+    return { success: true };
   } catch (error) {
-    const message = error.response?.data?.message || 'Update failed'
-    setError(message)
-    return { success: false, error: message }
+    const message = error.response?.data?.message || "Update failed";
+    setError(message);
+    return { success: false, error: message };
   }
-}
-
+};

@@ -2,28 +2,35 @@
  * Cart Page Component
  * Displays shopping cart with items and checkout functionality
  * Allows unauthenticated users to view cart but requires login for checkout
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
 
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
-import { toast } from 'react-toastify'
-import SkeletonLoader from '../components/SkeletonLoader'
-import Button from '../components/Button'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
+import SkeletonLoader from "../components/SkeletonLoader";
+import Button from "../components/Button";
 
 /**
  * Cart component
  * @returns {JSX.Element} Cart page
  */
 const Cart = () => {
-  const { cart, loading, updateQuantity, removeFromCart, getTotals, getItemCount } = useCart()
-  const { isAuthenticated } = useAuth()
-  const navigate = useNavigate()
-  const [processingItems, setProcessingItems] = useState({})
+  const {
+    cart,
+    loading,
+    updateQuantity,
+    removeFromCart,
+    getTotals,
+    getItemCount,
+  } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [processingItems, setProcessingItems] = useState({});
 
   /**
    * Handle quantity change
@@ -34,20 +41,20 @@ const Cart = () => {
    */
   const handleQuantityChange = async (itemId, newQuantity) => {
     if (newQuantity < 1) {
-      return
+      return;
     }
-    setProcessingItems(prev => ({ ...prev, [itemId]: true }))
+    setProcessingItems((prev) => ({ ...prev, [itemId]: true }));
     try {
-      const result = await updateQuantity(itemId, newQuantity)
+      const result = await updateQuantity(itemId, newQuantity);
       if (result.success) {
-        toast.success('Cart updated')
+        toast.success("Cart updated");
       } else {
-        toast.error(result.error || 'Failed to update quantity')
+        toast.error(result.error || "Failed to update quantity");
       }
     } finally {
-      setProcessingItems(prev => ({ ...prev, [itemId]: false }))
+      setProcessingItems((prev) => ({ ...prev, [itemId]: false }));
     }
-  }
+  };
 
   /**
    * Handle remove item
@@ -56,18 +63,18 @@ const Cart = () => {
    * @date 2025-12-12
    */
   const handleRemoveItem = async (itemId) => {
-    setProcessingItems(prev => ({ ...prev, [itemId]: true }))
+    setProcessingItems((prev) => ({ ...prev, [itemId]: true }));
     try {
-      const result = await removeFromCart(itemId)
+      const result = await removeFromCart(itemId);
       if (result.success) {
-        toast.success('Item removed from cart')
+        toast.success("Item removed from cart");
       } else {
-        toast.error(result.error || 'Failed to remove item')
+        toast.error(result.error || "Failed to remove item");
       }
     } finally {
-      setProcessingItems(prev => ({ ...prev, [itemId]: false }))
+      setProcessingItems((prev) => ({ ...prev, [itemId]: false }));
     }
-  }
+  };
 
   /**
    * Handle proceed to checkout or login
@@ -76,14 +83,14 @@ const Cart = () => {
    */
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      navigate('/login')
-      return
+      navigate("/login");
+      return;
     }
-    navigate('/checkout')
-  }
+    navigate("/checkout");
+  };
 
-  const totals = getTotals()
-  const itemCount = getItemCount()
+  const totals = getTotals();
+  const itemCount = getItemCount();
 
   if (loading) {
     return (
@@ -92,7 +99,7 @@ const Cart = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
         <SkeletonLoader type="list" count={3} />
       </div>
-    )
+    );
   }
 
   if (cart.items.length === 0) {
@@ -100,8 +107,12 @@ const Cart = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Empty cart message */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-          <p className="text-gray-600 mb-8">Add some products to get started!</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Your cart is empty
+          </h1>
+          <p className="text-gray-600 mb-8">
+            Add some products to get started!
+          </p>
           <Link
             to="/products"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
@@ -110,37 +121,75 @@ const Cart = () => {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   /* Cart page layout */
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Cart header */}
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart ({itemCount} items)</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+        Shopping Cart ({itemCount} items)
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart items list */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
             {cart.items.map((item) => (
-              <div key={item.cart_item_id} className="flex items-center border-b pb-4 last:border-0">
+              <div
+                key={item.cart_item_id}
+                className="flex items-center border-b pb-4 last:border-0"
+              >
                 <div className="w-24 h-24 bg-gray-200 rounded-lg mr-4 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                  {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> : <p className="text-gray-400 text-xs">No image</p>}
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <p className="text-gray-400 text-xs">No image</p>
+                  )}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">{item.name}</h3>
-                  <p className="text-gray-600">${(Number(item.price) || 0).toFixed(2)}</p>
+                  <p className="text-gray-600">
+                    ${(Number(item.price) || 0).toFixed(2)}
+                  </p>
                   <p className="text-sm text-gray-500">Stock: {item.stock}</p>
                 </div>
                 <div className="flex items-center space-x-2 mr-4">
-                  <button onClick={() => handleQuantityChange(item.cart_item_id, item.quantity - 1)} className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100" disabled={item.quantity <= 1}>-</button>
+                  <button
+                    onClick={() =>
+                      handleQuantityChange(item.cart_item_id, item.quantity - 1)
+                    }
+                    className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100"
+                    disabled={item.quantity <= 1}
+                  >
+                    -
+                  </button>
                   <span className="w-12 text-center">{item.quantity}</span>
-                  <button onClick={() => handleQuantityChange(item.cart_item_id, item.quantity + 1)} className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100" disabled={item.quantity >= item.stock}>+</button>
+                  <button
+                    onClick={() =>
+                      handleQuantityChange(item.cart_item_id, item.quantity + 1)
+                    }
+                    className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100"
+                    disabled={item.quantity >= item.stock}
+                  >
+                    +
+                  </button>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-lg">${((Number(item.price) || 0) * item.quantity).toFixed(2)}</p>
-                  <button onClick={() => handleRemoveItem(item.cart_item_id)} className="text-red-600 hover:text-red-800 text-sm mt-2">Remove</button>
+                  <p className="font-semibold text-lg">
+                    ${((Number(item.price) || 0) * item.quantity).toFixed(2)}
+                  </p>
+                  <button
+                    onClick={() => handleRemoveItem(item.cart_item_id)}
+                    className="text-red-600 hover:text-red-800 text-sm mt-2"
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             ))}
@@ -150,8 +199,10 @@ const Cart = () => {
         {/* Order summary */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
-            
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Order Summary
+            </h2>
+
             {/* Totals breakdown */}
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
@@ -176,7 +227,10 @@ const Cart = () => {
             {totals.subtotal < 100 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <p className="text-sm text-blue-800 text-center">
-                  <strong>You're almost there!</strong> Add <strong>${(100 - totals.subtotal).toFixed(2)}</strong> more to qualify for <strong>FREE shipping</strong> on orders over $100.
+                  <strong>You're almost there!</strong> Add{" "}
+                  <strong>${(100 - totals.subtotal).toFixed(2)}</strong> more to
+                  qualify for <strong>FREE shipping</strong> on orders over
+                  $100.
                 </p>
               </div>
             )}
@@ -193,9 +247,18 @@ const Cart = () => {
             ) : (
               <div className="space-y-3">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
-                  <p className="text-sm text-gray-700 text-center">To complete your purchase, please sign in to your account. Don't have an account? You can create one during checkout.</p>
+                  <p className="text-sm text-gray-700 text-center">
+                    To complete your purchase, please sign in to your account.
+                    Don't have an account? You can create one during checkout.
+                  </p>
                 </div>
-                <Button onClick={handleCheckout} icon="login" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white">Login to Checkout</Button>
+                <Button
+                  onClick={handleCheckout}
+                  icon="login"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Login to Checkout
+                </Button>
               </div>
             )}
 
@@ -210,7 +273,7 @@ const Cart = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Cart
+export default Cart;

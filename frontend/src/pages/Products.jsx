@@ -2,22 +2,22 @@
  * Products Page Component
  * Displays product listing with filters, search, and pagination
  * Supports hierarchical category filtering (category -> subcategory -> child category)
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-17
  */
 
-import { useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
-import { toast } from 'react-toastify'
-import SkeletonLoader from '../components/SkeletonLoader'
-import ProductCard from '../components/ProductCard'
-import Pagination from '../components/Pagination'
-import FilterSidebar from '../components/FilterSidebar'
-import Breadcrumb from '../components/Breadcrumb'
-import { useProductsData } from '../hooks/useProductsData'
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
+import SkeletonLoader from "../components/SkeletonLoader";
+import ProductCard from "../components/ProductCard";
+import Pagination from "../components/Pagination";
+import FilterSidebar from "../components/FilterSidebar";
+import Breadcrumb from "../components/Breadcrumb";
+import { useProductsData } from "../hooks/useProductsData";
 
 /**
  * Products component
@@ -26,11 +26,11 @@ import { useProductsData } from '../hooks/useProductsData'
  * @date 2025-12-17
  */
 const Products = () => {
-  const { addToCart } = useCart()
-  const { isAuthenticated } = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const filterContentRef = useRef(null)
-  const data = useProductsData(searchParams, setSearchParams)
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filterContentRef = useRef(null);
+  const data = useProductsData(searchParams, setSearchParams);
   const {
     filters,
     searchInput,
@@ -46,7 +46,7 @@ const Products = () => {
     isFilterOpen,
     openFilter,
     closeFilter,
-  } = data
+  } = data;
 
   /**
    * Focus first field in filter drawer when opened
@@ -56,12 +56,14 @@ const Products = () => {
   useEffect(() => {
     if (isFilterOpen) {
       const timer = setTimeout(() => {
-        const firstField = filterContentRef.current?.querySelector('input, select, textarea, button')
-        firstField?.focus()
-      }, 50)
-      return () => clearTimeout(timer)
+        const firstField = filterContentRef.current?.querySelector(
+          "input, select, textarea, button"
+        );
+        firstField?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [isFilterOpen])
+  }, [isFilterOpen]);
 
   /**
    * Handle add to cart event
@@ -71,17 +73,17 @@ const Products = () => {
    */
   const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
-      toast.error('Please login to add items to cart')
-      return
+      toast.error("Please login to add items to cart");
+      return;
     }
 
-    const result = await addToCart(productId, 1)
+    const result = await addToCart(productId, 1);
     if (result.success) {
-      toast.success('Item added to cart!')
+      toast.success("Item added to cart!");
     } else {
-      toast.error(result.error || 'Failed to add item')
+      toast.error(result.error || "Failed to add item");
     }
-  }
+  };
 
   if (loading && products.length === 0) {
     return (
@@ -90,7 +92,7 @@ const Products = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Products</h1>
         <SkeletonLoader type="card" count={6} />
       </div>
-    )
+    );
   }
 
   /**
@@ -98,9 +100,15 @@ const Products = () => {
    * @author Thang Truong
    * @date 2025-12-17
    */
-  const selectedCategory = categories.find(cat => cat.id === parseInt(filters.category))
-  const selectedSubcategory = subcategories.find(sub => sub.id === parseInt(filters.subcategory))
-  const selectedChildCategory = childCategories.find(child => child.id === parseInt(filters.childCategory))
+  const selectedCategory = categories.find(
+    (cat) => cat.id === parseInt(filters.category)
+  );
+  const selectedSubcategory = subcategories.find(
+    (sub) => sub.id === parseInt(filters.subcategory)
+  );
+  const selectedChildCategory = childCategories.find(
+    (child) => child.id === parseInt(filters.childCategory)
+  );
 
   /* Products page main container with filters drawer, product grid, and pagination */
   return (
@@ -122,7 +130,10 @@ const Products = () => {
 
       {/* Drawer overlay - darkens background when filters drawer is open */}
       {isFilterOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 z-40" onClick={closeFilter} />
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-40"
+          onClick={closeFilter}
+        />
       )}
 
       <div className="relative">
@@ -134,12 +145,14 @@ const Products = () => {
           aria-labelledby="product-filters-title"
           tabIndex={-1}
           className={`fixed z-50 top-0 left-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-200 ease-out ${
-            isFilterOpen ? 'translate-x-0' : '-translate-x-full'
+            isFilterOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* Drawer header with title and close button */}
           <div className="drawer-header h-16 flex items-center justify-between px-4 border-b">
-            <h2 id="product-filters-title" className="text-lg font-semibold">Filters</h2>
+            <h2 id="product-filters-title" className="text-lg font-semibold">
+              Filters
+            </h2>
             <button
               type="button"
               onClick={closeFilter}
@@ -210,7 +223,7 @@ const Products = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Products
+export default Products;

@@ -1,12 +1,12 @@
 /**
  * Refresh Token Model
  * Handles all database operations related to refresh tokens
- * 
+ *
  * @author Thang Truong
  * @date 2024-12-19
  */
 
-import db from '../config/db.js'
+import db from "../config/db.js";
 
 /**
  * Create a new refresh token
@@ -17,11 +17,11 @@ import db from '../config/db.js'
  */
 export const createRefreshToken = async (userId, token, expiresAt) => {
   const [result] = await db.execute(
-    'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+    "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
     [userId, token, expiresAt]
-  )
-  return result.insertId
-}
+  );
+  return result.insertId;
+};
 
 /**
  * Find refresh token by token string
@@ -30,11 +30,11 @@ export const createRefreshToken = async (userId, token, expiresAt) => {
  */
 export const findRefreshToken = async (token) => {
   const [rows] = await db.execute(
-    'SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > NOW()',
+    "SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > NOW()",
     [token]
-  )
-  return rows[0] || null
-}
+  );
+  return rows[0] || null;
+};
 
 /**
  * Delete refresh token
@@ -43,11 +43,11 @@ export const findRefreshToken = async (token) => {
  */
 export const deleteRefreshToken = async (token) => {
   const [result] = await db.execute(
-    'DELETE FROM refresh_tokens WHERE token = ?',
+    "DELETE FROM refresh_tokens WHERE token = ?",
     [token]
-  )
-  return result.affectedRows > 0
-}
+  );
+  return result.affectedRows > 0;
+};
 
 /**
  * Delete all refresh tokens for a user
@@ -56,11 +56,11 @@ export const deleteRefreshToken = async (token) => {
  */
 export const deleteAllUserRefreshTokens = async (userId) => {
   const [result] = await db.execute(
-    'DELETE FROM refresh_tokens WHERE user_id = ?',
+    "DELETE FROM refresh_tokens WHERE user_id = ?",
     [userId]
-  )
-  return result.affectedRows >= 0
-}
+  );
+  return result.affectedRows >= 0;
+};
 
 /**
  * Clean up expired refresh tokens
@@ -68,10 +68,10 @@ export const deleteAllUserRefreshTokens = async (userId) => {
  */
 export const cleanupExpiredTokens = async () => {
   const [result] = await db.execute(
-    'DELETE FROM refresh_tokens WHERE expires_at < NOW()'
-  )
-  return result.affectedRows
-}
+    "DELETE FROM refresh_tokens WHERE expires_at < NOW()"
+  );
+  return result.affectedRows;
+};
 
 /**
  * Delete old refresh token and create new one (token rotation)
@@ -81,31 +81,34 @@ export const cleanupExpiredTokens = async () => {
  * @param {Date} expiresAt - New expiration date
  * @returns {Promise<number>} - New token ID
  */
-export const rotateRefreshToken = async (oldToken, userId, newToken, expiresAt) => {
-  const connection = await db.getConnection()
-  
+export const rotateRefreshToken = async (
+  oldToken,
+  userId,
+  newToken,
+  expiresAt
+) => {
+  const connection = await db.getConnection();
+
   try {
-    await connection.beginTransaction()
+    await connection.beginTransaction();
 
     // Delete old token
-    await connection.execute(
-      'DELETE FROM refresh_tokens WHERE token = ?',
-      [oldToken]
-    )
+    await connection.execute("DELETE FROM refresh_tokens WHERE token = ?", [
+      oldToken,
+    ]);
 
     // Create new token
     const [result] = await connection.execute(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+      "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
       [userId, newToken, expiresAt]
-    )
+    );
 
-    await connection.commit()
-    return result.insertId
+    await connection.commit();
+    return result.insertId;
   } catch (error) {
-    await connection.rollback()
-    throw error
+    await connection.rollback();
+    throw error;
   } finally {
-    connection.release()
+    connection.release();
   }
-}
-
+};

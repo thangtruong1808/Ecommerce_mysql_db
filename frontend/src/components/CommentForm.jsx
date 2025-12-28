@@ -5,13 +5,13 @@
  * @date 2025-12-12
  */
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import axios from 'axios'
-import { useAuth } from '../context/AuthContext'
-import { toast } from 'react-toastify'
-import Button from './Button'
-import { FaComment, FaSmile } from 'react-icons/fa'
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
+import Button from "./Button";
+import { FaComment, FaSmile } from "react-icons/fa";
 
 /**
  * CommentForm component
@@ -23,8 +23,8 @@ import { FaComment, FaSmile } from 'react-icons/fa'
  * @date 2025-12-12
  */
 const CommentForm = ({ productId, onCommentSubmitted }) => {
-  const { isAuthenticated } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const { isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -32,8 +32,8 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
     reset,
     setValue,
     watch,
-  } = useForm()
-  const watchedComment = watch('comment', '')
+  } = useForm();
+  const watchedComment = watch("comment", "");
 
   /**
    * Insert emoji into comment text
@@ -42,10 +42,10 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
    * @date 2025-12-12
    */
   const insertEmoji = (emoji) => {
-    const currentText = watchedComment || ''
-    const newText = currentText + emoji
-    setValue('comment', newText, { shouldValidate: true })
-  }
+    const currentText = watchedComment || "";
+    const newText = currentText + emoji;
+    setValue("comment", newText, { shouldValidate: true });
+  };
 
   /**
    * Handle form submission
@@ -55,36 +55,54 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
    */
   const onSubmit = async (data) => {
     if (!isAuthenticated) {
-      toast.error('Please login to submit a comment')
-      return
+      toast.error("Please login to submit a comment");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      await axios.post(`/api/products/${productId}/comments`, {
-        comment: data.comment,
-      }, {
-        withCredentials: true
-      })
-      toast.success('Comment submitted successfully!')
-      reset()
+      await axios.post(
+        `/api/products/${productId}/comments`,
+        {
+          comment: data.comment,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      toast.success("Comment submitted successfully!");
+      reset();
       if (onCommentSubmitted) {
-        onCommentSubmitted()
+        onCommentSubmitted();
       }
     } catch (error) {
       // Handle 401 errors
       if (error.response?.status === 401) {
-        toast.error('Your session expired. Please try again.')
+        toast.error("Your session expired. Please try again.");
       } else {
-      const message = error.response?.data?.message || 'Failed to submit comment'
-      toast.error(message)
+        const message =
+          error.response?.data?.message || "Failed to submit comment";
+        toast.error(message);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const emojis = ['😀', '😃', '😄', '😁', '😊', '😍', '🤔', '👍', '❤️', '🎉', '🔥', '💯']
+  const emojis = [
+    "😀",
+    "😃",
+    "😄",
+    "😁",
+    "😊",
+    "😍",
+    "🤔",
+    "👍",
+    "❤️",
+    "🎉",
+    "🔥",
+    "💯",
+  ];
 
   if (!isAuthenticated) {
     return (
@@ -92,7 +110,7 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
         {/* Not authenticated message */}
         <p className="text-gray-600">Please login to write a comment</p>
       </div>
-    )
+    );
   }
 
   /* Comment form layout */
@@ -103,17 +121,22 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Comment input */}
         <div>
-          <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="comment"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Your Comment
           </label>
           <textarea
-            {...register('comment', { required: 'Comment is required' })}
+            {...register("comment", { required: "Comment is required" })}
             rows="4"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Write your comment here..."
           />
           {errors.comment && (
-            <p className="mt-1 text-sm text-red-600">{errors.comment.message}</p>
+            <p className="mt-1 text-sm text-red-600">
+              {errors.comment.message}
+            </p>
           )}
           {/* Emoji picker */}
           <div className="mt-2 flex items-center space-x-2">
@@ -145,8 +168,7 @@ const CommentForm = ({ productId, onCommentSubmitted }) => {
         </Button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default CommentForm
-
+export default CommentForm;

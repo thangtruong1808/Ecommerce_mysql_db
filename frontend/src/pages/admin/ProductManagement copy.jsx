@@ -81,12 +81,7 @@ const ProductManagement = () => {
       if (searchTerm) params.append("search", String(searchTerm));
       if (stockFilter) params.append("stock", stockFilter);
 
-      // const response = await axios.get(`/api/admin/products?${params}`);
-      // Axios automatically waits for refresh interceptor
-      const response = await axios.get(`/api/admin/products?${params}`, {
-        withCredentials: true,
-      });
-
+      const response = await axios.get(`/api/admin/products?${params}`);
       const pagination = response.data?.pagination || {
         page: 1,
         limit: entriesPerPage,

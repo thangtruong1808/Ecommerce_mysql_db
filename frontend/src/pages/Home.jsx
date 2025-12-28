@@ -5,21 +5,27 @@
  * @date 2025-12-12
  */
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { FaShippingFast, FaShieldAlt, FaUndo, FaArrowRight, FaTag } from 'react-icons/fa'
-import ProductCard from '../components/ProductCard'
-import SkeletonLoader from '../components/SkeletonLoader'
-import RecentlyViewed from '../components/RecentlyViewed'
-import Recommendations from '../components/Recommendations'
-import CategoryCarousel from '../components/CategoryCarousel'
-import VoucherSection from '../components/VoucherSection'
-import VoucherCodeItem from '../components/VoucherCodeItem'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
-import { loadCategories } from '../utils/categoryCache'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  FaShippingFast,
+  FaShieldAlt,
+  FaUndo,
+  FaArrowRight,
+  FaTag,
+} from "react-icons/fa";
+import ProductCard from "../components/ProductCard";
+import SkeletonLoader from "../components/SkeletonLoader";
+import RecentlyViewed from "../components/RecentlyViewed";
+import Recommendations from "../components/Recommendations";
+import CategoryCarousel from "../components/CategoryCarousel";
+import VoucherSection from "../components/VoucherSection";
+import VoucherCodeItem from "../components/VoucherCodeItem";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { loadCategories } from "../utils/categoryCache";
 
 /**
  * Home component
@@ -28,14 +34,14 @@ import { loadCategories } from '../utils/categoryCache'
  * @date 2025-12-12
  */
 const Home = () => {
-  const { addToCart } = useCart()
-  const { isAuthenticated } = useAuth()
-  const [featuredProducts, setFeaturedProducts] = useState([])
-  const [clearanceProducts, setClearanceProducts] = useState([])
-  const [categories, setCategories] = useState([])
-  const [vouchers, setVouchers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [copiedCodes, setCopiedCodes] = useState(new Set())
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [clearanceProducts, setClearanceProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedCodes, setCopiedCodes] = useState(new Set());
 
   /**
    * Fetch featured products, categories, and vouchers
@@ -45,25 +51,28 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true)
-        const [productsRes, clearanceRes, categoriesData, vouchersRes] = await Promise.all([
-          axios.get('/api/products?limit=10&sortBy=created_at&sortOrder=DESC'),
-          axios.get('/api/products/clearance?limit=4'),
-          loadCategories(),
-          axios.get('/api/vouchers').catch(() => ({ data: [] }))
-        ])
-        setFeaturedProducts(productsRes.data.products || [])
-        setClearanceProducts(clearanceRes.data.products || [])
-        setCategories(categoriesData || [])
-        setVouchers(vouchersRes.data || [])
+        setLoading(true);
+        const [productsRes, clearanceRes, categoriesData, vouchersRes] =
+          await Promise.all([
+            axios.get(
+              "/api/products?limit=10&sortBy=created_at&sortOrder=DESC"
+            ),
+            axios.get("/api/products/clearance?limit=4"),
+            loadCategories(),
+            axios.get("/api/vouchers").catch(() => ({ data: [] })),
+          ]);
+        setFeaturedProducts(productsRes.data.products || []);
+        setClearanceProducts(clearanceRes.data.products || []);
+        setCategories(categoriesData || []);
+        setVouchers(vouchersRes.data || []);
       } catch (error) {
         // Silent fail for home page
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchData()
-  }, [])
+    };
+    fetchData();
+  }, []);
 
   /**
    * Handle add to cart
@@ -73,11 +82,11 @@ const Home = () => {
    */
   const handleAddToCart = async (product) => {
     if (!isAuthenticated) {
-      window.location.href = '/login'
-      return
+      window.location.href = "/login";
+      return;
     }
-    await addToCart(product.id, 1)
-  }
+    await addToCart(product.id, 1);
+  };
 
   /**
    * Handle copy voucher code to clipboard
@@ -87,20 +96,20 @@ const Home = () => {
    */
   const handleCopyCode = async (code) => {
     try {
-      await navigator.clipboard.writeText(code)
-      setCopiedCodes(prev => new Set(prev).add(code))
-      toast.success(`Voucher code ${code} copied!`)
+      await navigator.clipboard.writeText(code);
+      setCopiedCodes((prev) => new Set(prev).add(code));
+      toast.success(`Voucher code ${code} copied!`);
       setTimeout(() => {
-        setCopiedCodes(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(code)
-          return newSet
-        })
-      }, 2000)
+        setCopiedCodes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(code);
+          return newSet;
+        });
+      }, 2000);
     } catch (error) {
-      toast.error('Failed to copy code')
+      toast.error("Failed to copy code");
     }
-  }
+  };
 
   /* Home page layout */
   return (
@@ -110,8 +119,13 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero content */}
           <div className="text-center mb-6">
-            <h1 className="text-5xl font-bold mb-6">Welcome to Badminton Stores</h1>
-            <p className="text-xl mb-8 text-blue-100">Discover amazing products at unbeatable prices and amazing discounts with our exclusive voucher codes!</p>
+            <h1 className="text-5xl font-bold mb-6">
+              Welcome to Badminton Stores
+            </h1>
+            <p className="text-xl mb-8 text-blue-100">
+              Discover amazing products at unbeatable prices and amazing
+              discounts with our exclusive voucher codes!
+            </p>
           </div>
 
           {/* Voucher codes section - centered in hero banner */}
@@ -130,7 +144,10 @@ const Home = () => {
                   ))}
                 </div>
                 {vouchers.length > 4 && (
-                  <p className="text-sm text-blue-100 mt-3">+{vouchers.length - 4} more voucher{vouchers.length - 4 !== 1 ? 's' : ''} available</p>
+                  <p className="text-sm text-blue-100 mt-3">
+                    +{vouchers.length - 4} more voucher
+                    {vouchers.length - 4 !== 1 ? "s" : ""} available
+                  </p>
                 )}
               </div>
             </div>
@@ -140,7 +157,9 @@ const Home = () => {
           <div className="flex flex-wrap justify-center items-center gap-6 pt-6 border-t border-blue-400/20">
             <div className="flex items-center gap-2">
               <FaShippingFast className="text-white text-sm" />
-              <span className="text-sm text-blue-100">Free Shipping over $100 </span>
+              <span className="text-sm text-blue-100">
+                Free Shipping over $100{" "}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <FaShieldAlt className="text-white text-sm" />
@@ -152,10 +171,11 @@ const Home = () => {
             </div>
             <div className="flex items-center gap-2">
               <FaTag className="text-white text-sm" />
-              <span className="text-sm text-blue-100">Exclusive Vouchers & Discounts</span>
+              <span className="text-sm text-blue-100">
+                Exclusive Vouchers & Discounts
+              </span>
             </div>
           </div>
-          
         </div>
       </div>
 
@@ -164,8 +184,13 @@ const Home = () => {
         {categories.length > 0 && (
           <section className="mb-16">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-gray-900">Shop by Category</h2>
-              <Link to="/products" className="text-blue-600 hover:text-blue-800 flex items-center">
+              <h2 className="text-3xl font-bold text-gray-900">
+                Shop by Category
+              </h2>
+              <Link
+                to="/products"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
                 View All <FaArrowRight className="ml-2" />
               </Link>
             </div>
@@ -183,9 +208,14 @@ const Home = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <FaTag className="text-red-500 text-2xl" />
-                <h2 className="text-3xl font-bold text-gray-900">Clearance Deals</h2>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  Clearance Deals
+                </h2>
               </div>
-              <Link to="/clearance" className="text-blue-600 hover:text-blue-800 flex items-center">
+              <Link
+                to="/clearance"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
                 View All <FaArrowRight className="ml-2" />
               </Link>
             </div>
@@ -194,7 +224,11 @@ const Home = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {clearanceProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                  />
                 ))}
               </div>
             )}
@@ -204,8 +238,13 @@ const Home = () => {
         {/* Featured products section */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
-            <Link to="/products" className="text-blue-600 hover:text-blue-800 flex items-center">
+            <h2 className="text-3xl font-bold text-gray-900">
+              Featured Products
+            </h2>
+            <Link
+              to="/products"
+              className="text-blue-600 hover:text-blue-800 flex items-center"
+            >
               View All <FaArrowRight className="ml-2" />
             </Link>
           </div>
@@ -214,7 +253,11 @@ const Home = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                />
               ))}
             </div>
           )}
@@ -230,7 +273,7 @@ const Home = () => {
         <Recommendations onAddToCart={handleAddToCart} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

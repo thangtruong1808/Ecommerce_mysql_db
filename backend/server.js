@@ -56,7 +56,7 @@ const PORT = process.env.PORT || 5000;
 // Rate limiting - more lenient for normal usage
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs
+  max: 1000, // limit each IP to 500 requests per windowMs
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
@@ -130,5 +130,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   // Server started successfully
   console.log(`Server running on port ${PORT}`);
-  console.log(`The endpoint health check: ${process.env.VITE_API_URL}/health`);
+  console.log(
+    `The endpoint health check: ${process.env.VITE_API_URL}/api/health`
+  );
 });
