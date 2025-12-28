@@ -117,7 +117,8 @@ export const AuthProvider = ({ children }) => {
       isFetchingUserRef,
       userFetchedTimeRef,
       hasRefreshToken,
-      setTokenExpiresAt
+      setTokenExpiresAt,
+      isRefreshingTokenRef
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -151,7 +152,8 @@ export const AuthProvider = ({ children }) => {
             isFetchingUserRef,
             userFetchedTimeRef,
             hasRefreshToken,
-            setTokenExpiresAt
+            setTokenExpiresAt,
+            isRefreshingTokenRef
           );
         }
       }
@@ -212,7 +214,8 @@ export const AuthProvider = ({ children }) => {
           isFetchingUserRef,
           userFetchedTimeRef,
           hasRefreshToken,
-          setTokenExpiresAt
+          setTokenExpiresAt,
+          isRefreshingTokenRef
         );
       }
     };
@@ -285,7 +288,8 @@ export const AuthProvider = ({ children }) => {
         isFetchingUserRef,
         userFetchedTimeRef,
         hasRefreshToken,
-        setTokenExpiresAt
+        setTokenExpiresAt,
+        isRefreshingTokenRef
       );
     }
   };

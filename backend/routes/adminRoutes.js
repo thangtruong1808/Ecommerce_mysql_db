@@ -1,52 +1,63 @@
 /**
  * Admin Routes
  * Handles all admin-only API endpoints
- * 
+ *
  * @author Thang Truong
  * @date 2024-12-19
  */
 
-import express from 'express'
-import * as userModel from '../models/userModel.js'
-import * as productModel from '../models/productModel.js'
-import * as orderModel from '../models/orderModel.js'
-import * as invoiceModel from '../models/invoiceModel.js'
-import * as analyticsModel from '../models/analyticsModel.js'
-import * as reviewModel from '../models/reviewModel.js'
-import * as commentModel from '../models/commentModel.js'
-import * as voucherModel from '../models/voucherModel.js'
-import * as bulkOperationsModel from '../models/bulkOperationsModel.js'
-import * as productViewModel from '../models/productViewModel.js'
-import { validateBulkOperation, validateOrderStatusTransition, validateProductDeletion, validateUserDeletion } from '../middleware/validationMiddleware.js'
-import bcrypt from 'bcryptjs'
-import { protect, admin } from '../middleware/authMiddleware.js'
+import express from "express";
+import * as userModel from "../models/userModel.js";
+import * as productModel from "../models/productModel.js";
+import * as orderModel from "../models/orderModel.js";
+import * as invoiceModel from "../models/invoiceModel.js";
+import * as analyticsModel from "../models/analyticsModel.js";
+import * as reviewModel from "../models/reviewModel.js";
+import * as commentModel from "../models/commentModel.js";
+import * as voucherModel from "../models/voucherModel.js";
+import * as bulkOperationsModel from "../models/bulkOperationsModel.js";
+import * as productViewModel from "../models/productViewModel.js";
+import {
+  validateBulkOperation,
+  validateOrderStatusTransition,
+  validateProductDeletion,
+  validateUserDeletion,
+} from "../middleware/validationMiddleware.js";
+import bcrypt from "bcryptjs";
+import { protect, admin } from "../middleware/authMiddleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
 // All routes require admin authentication
-router.use(protect, admin)
+router.use(protect, admin);
 
 /**
  * GET /api/admin/stats
  * Get dashboard statistics
  */
-router.get('/stats', async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
-    const db = (await import('../config/db.js')).default
+    const db = (await import("../config/db.js")).default;
 
     // Get total sales
     const [salesResult] = await db.execute(
-      'SELECT SUM(total_price) as total_sales FROM orders WHERE is_paid = 1'
-    )
+      "SELECT SUM(total_price) as total_sales FROM orders WHERE is_paid = 1"
+    );
 
     // Get total orders
-    const [ordersResult] = await db.execute('SELECT COUNT(*) as total FROM orders')
+    const [ordersResult] = await db.execute(
+      "SELECT COUNT(*) as total FROM orders"
+    );
 
     // Get total users
-    const [usersResult] = await db.execute('SELECT COUNT(*) as total FROM users')
+    const [usersResult] = await db.execute(
+      "SELECT COUNT(*) as total FROM users"
+    );
 
     // Get total products
-    const [productsResult] = await db.execute('SELECT COUNT(*) as total FROM products')
+    const [productsResult] = await db.execute(
+      "SELECT COUNT(*) as total FROM products"
+    );
 
     // Get recent orders
     const [recentOrders] = await db.execute(
@@ -55,12 +66,12 @@ router.get('/stats', async (req, res) => {
        JOIN users u ON o.user_id = u.id 
        ORDER BY o.created_at DESC 
        LIMIT 5`
-    )
+    );
 
     // Get low stock products
     const [lowStock] = await db.execute(
-      'SELECT * FROM products WHERE stock < 10 ORDER BY stock ASC LIMIT 5'
-    )
+      "SELECT * FROM products WHERE stock < 10 ORDER BY stock ASC LIMIT 5"
+    );
 
     res.json({
       sales: {
@@ -77,41 +88,57 @@ router.get('/stats', async (req, res) => {
       },
       recentOrders,
       lowStockProducts: lowStock,
-    })
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/overview
  * Get dashboard overview with all key metrics
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/overview', async (req, res) => {
+router.get("/stats/overview", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const db = (await import('../config/db.js')).default
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const db = (await import("../config/db.js")).default;
 
     // Get sales overview
-    const salesOverview = await analyticsModel.getSalesOverview(period, startDate, endDate)
+    const salesOverview = await analyticsModel.getSalesOverview(
+      period,
+      startDate,
+      endDate
+    );
 
     // Get order statistics
-    const orderStats = await analyticsModel.getOrderStatistics(period, startDate, endDate)
+    const orderStats = await analyticsModel.getOrderStatistics(
+      period,
+      startDate,
+      endDate
+    );
 
     // Get customer insights
-    const customerInsights = await analyticsModel.getCustomerInsights(period, startDate, endDate)
+    const customerInsights = await analyticsModel.getCustomerInsights(
+      period,
+      startDate,
+      endDate
+    );
 
     // Get inventory overview
-    const inventory = await analyticsModel.getInventoryOverview()
+    const inventory = await analyticsModel.getInventoryOverview();
 
     // Get performance metrics
-    const performance = await analyticsModel.getPerformanceMetrics(period, startDate, endDate)
+    const performance = await analyticsModel.getPerformanceMetrics(
+      period,
+      startDate,
+      endDate
+    );
 
     // Get recent orders
     const [recentOrders] = await db.execute(
@@ -120,235 +147,270 @@ router.get('/stats/overview', async (req, res) => {
        JOIN users u ON o.user_id = u.id 
        ORDER BY o.created_at DESC 
        LIMIT 5`
-    )
+    );
 
     res.json({
       sales: {
         total: salesOverview.totalSales,
-        growth: salesOverview.growth
+        growth: salesOverview.growth,
       },
       orders: {
         total: orderStats.total,
-        growth: orderStats.growth
+        growth: orderStats.growth,
       },
       users: {
         total: customerInsights.totalCustomers,
         new: customerInsights.newCustomers,
-        growth: customerInsights.growth
+        growth: customerInsights.growth,
       },
       products: {
-        total: inventory.totalProducts
+        total: inventory.totalProducts,
       },
       recentOrders,
       lowStockProducts: inventory.lowStockProducts,
-      performance
-    })
+      performance,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/sales
  * Get sales analytics with time period support
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/sales', async (req, res) => {
+router.get("/stats/sales", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const salesOverview = await analyticsModel.getSalesOverview(period, startDate, endDate)
-    const salesTrend = await analyticsModel.getSalesTrend(period, 'day', startDate, endDate)
-    
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const salesOverview = await analyticsModel.getSalesOverview(
+      period,
+      startDate,
+      endDate
+    );
+    const salesTrend = await analyticsModel.getSalesTrend(
+      period,
+      "day",
+      startDate,
+      endDate
+    );
+
     res.json({
       overview: salesOverview,
-      trend: salesTrend
-    })
+      trend: salesTrend,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/orders
  * Get order statistics and trends
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/orders', async (req, res) => {
+router.get("/stats/orders", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const orderStats = await analyticsModel.getOrderStatistics(period, startDate, endDate)
-    
-    res.json(orderStats)
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const orderStats = await analyticsModel.getOrderStatistics(
+      period,
+      startDate,
+      endDate
+    );
+
+    res.json(orderStats);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/customers
  * Get customer insights and growth
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/customers', async (req, res) => {
+router.get("/stats/customers", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const customerInsights = await analyticsModel.getCustomerInsights(period, startDate, endDate)
-    
-    res.json(customerInsights)
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const customerInsights = await analyticsModel.getCustomerInsights(
+      period,
+      startDate,
+      endDate
+    );
+
+    res.json(customerInsights);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/inventory
  * Get inventory management data
  * Note: Inventory data is not time-period dependent
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/inventory', async (req, res) => {
+router.get("/stats/inventory", async (req, res) => {
   try {
-    const inventory = await analyticsModel.getInventoryOverview()
-    
-    res.json(inventory)
+    const inventory = await analyticsModel.getInventoryOverview();
+
+    res.json(inventory);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/revenue-chart
  * Get revenue data for charts (supports daily/weekly/monthly)
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/revenue-chart', async (req, res) => {
+router.get("/stats/revenue-chart", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    let groupBy = 'day'
-    
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    let groupBy = "day";
+
     // Determine groupBy based on period
-    if (period === 'year') {
-      groupBy = 'month'
-    } else if (period === 'month') {
-      groupBy = 'day'
-    } else if (period === 'week') {
-      groupBy = 'day'
+    if (period === "year") {
+      groupBy = "month";
+    } else if (period === "month") {
+      groupBy = "day";
+    } else if (period === "week") {
+      groupBy = "day";
     } else {
-      groupBy = 'day'
+      groupBy = "day";
     }
-    
-    const revenueData = await analyticsModel.getSalesTrend(period, groupBy, startDate, endDate)
-    
-    res.json(revenueData)
+
+    const revenueData = await analyticsModel.getSalesTrend(
+      period,
+      groupBy,
+      startDate,
+      endDate
+    );
+
+    res.json(revenueData);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/revenue-by-category
  * Get revenue breakdown by category (for pie charts)
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/revenue-by-category', async (req, res) => {
+router.get("/stats/revenue-by-category", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const categoryData = await analyticsModel.getRevenueByCategory(period, startDate, endDate)
-    
-    res.json(categoryData)
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const categoryData = await analyticsModel.getRevenueByCategory(
+      period,
+      startDate,
+      endDate
+    );
+
+    res.json(categoryData);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/top-products
  * Get top selling products
  * Query params: period (today, week, month, year, all), startDate, endDate, limit
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/top-products', async (req, res) => {
+router.get("/stats/top-products", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const limit = parseInt(req.query.limit) || 10
-    const topProducts = await analyticsModel.getTopProducts(period, limit, startDate, endDate)
-    
-    res.json(topProducts)
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const limit = parseInt(req.query.limit) || 10;
+    const topProducts = await analyticsModel.getTopProducts(
+      period,
+      limit,
+      startDate,
+      endDate
+    );
+
+    res.json(topProducts);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/recent-activity
  * Get recent orders, reviews, comments, registrations
  * Query params: limit (default: 15)
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/recent-activity', async (req, res) => {
+router.get("/stats/recent-activity", async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 15
-    const activities = await analyticsModel.getRecentActivity(limit)
-    
-    res.json(activities)
+    const limit = parseInt(req.query.limit) || 15;
+    const activities = await analyticsModel.getRecentActivity(limit);
+
+    res.json(activities);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/stats/performance
  * Get performance metrics (conversion rate, AOV, etc.)
  * Query params: period (today, week, month, year, all), startDate, endDate
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/stats/performance', async (req, res) => {
+router.get("/stats/performance", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
-    const performance = await analyticsModel.getPerformanceMetrics(period, startDate, endDate)
-    
-    res.json(performance)
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const performance = await analyticsModel.getPerformanceMetrics(
+      period,
+      startDate,
+      endDate
+    );
+
+    res.json(performance);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/users
@@ -356,20 +418,27 @@ router.get('/stats/performance', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/users', async (req, res) => {
+router.get("/users", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 20
-    const search = req.query.search || null
-    const role = req.query.role || null
-    const sortBy = req.query.sortBy || 'created_at'
-    const sortOrder = req.query.sortOrder || 'desc'
-    const result = await userModel.getAllUsers(page, limit, search, role, sortBy, sortOrder)
-    res.json(result)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = req.query.search || null;
+    const role = req.query.role || null;
+    const sortBy = req.query.sortBy || "created_at";
+    const sortOrder = req.query.sortOrder || "desc";
+    const result = await userModel.getAllUsers(
+      page,
+      limit,
+      search,
+      role,
+      sortBy,
+      sortOrder
+    );
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/users/:id
@@ -377,47 +446,47 @@ router.get('/users', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.put('/users/:id', async (req, res) => {
+router.put("/users/:id", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id)
-    const { name, email, role } = req.body
+    const userId = parseInt(req.params.id);
+    const { name, email, role } = req.body;
 
     // Validate role if provided
-    if (role && !['user', 'admin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' })
+    if (role && !["user", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     // Update name and email if provided
     if (name || email) {
-      const updateData = {}
-      if (name) updateData.name = name
-      if (email) updateData.email = email
-      
-      const updatedUser = await userModel.updateUser(userId, updateData)
+      const updateData = {};
+      if (name) updateData.name = name;
+      if (email) updateData.email = email;
+
+      const updatedUser = await userModel.updateUser(userId, updateData);
       if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' })
+        return res.status(404).json({ message: "User not found" });
       }
     }
 
     // Update role if provided
     if (role) {
-      const updatedUser = await userModel.updateUserRole(userId, role)
+      const updatedUser = await userModel.updateUserRole(userId, role);
       if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' })
+        return res.status(404).json({ message: "User not found" });
       }
     }
 
     // Return updated user
-    const user = await userModel.findUserById(userId)
+    const user = await userModel.findUserById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(user)
+    res.json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * DELETE /api/admin/users/:id
@@ -425,26 +494,30 @@ router.put('/users/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/users/:id', validateUserDeletion, async (req, res) => {
+router.delete("/users/:id", validateUserDeletion, async (req, res) => {
   try {
-    const userId = parseInt(req.params.id)
-    
+    const userId = parseInt(req.params.id);
+
     if (userId === req.user.id) {
-      return res.status(400).json({ message: 'Cannot delete your own account' })
+      return res
+        .status(400)
+        .json({ message: "Cannot delete your own account" });
     }
 
-    const db = (await import('../config/db.js')).default
-    const [result] = await db.execute('DELETE FROM users WHERE id = ?', [userId])
+    const db = (await import("../config/db.js")).default;
+    const [result] = await db.execute("DELETE FROM users WHERE id = ?", [
+      userId,
+    ]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ message: 'User deleted successfully' })
+    res.json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/orders
@@ -452,20 +525,27 @@ router.delete('/users/:id', validateUserDeletion, async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/orders', async (req, res) => {
+router.get("/orders", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 20
-    const status = req.query.status || null
-    const search = req.query.search || null
-    const sortBy = req.query.sortBy || 'created_at'
-    const sortOrder = req.query.sortOrder || 'desc'
-    const result = await orderModel.getAllOrders({ page, limit, status, search, sortBy, sortOrder })
-    res.json(result)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status || null;
+    const search = req.query.search || null;
+    const sortBy = req.query.sortBy || "created_at";
+    const sortOrder = req.query.sortOrder || "desc";
+    const result = await orderModel.getAllOrders({
+      page,
+      limit,
+      status,
+      search,
+      sortBy,
+      sortOrder,
+    });
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/products
@@ -473,39 +553,39 @@ router.get('/orders', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/products', async (req, res) => {
+router.get("/products", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 20
-    const search = req.query.search || null
-    const stock = req.query.stock || null
-    const sortBy = req.query.sortBy || 'created_at'
-    const sortOrder = req.query.sortOrder || 'desc'
-    const filters = { page, limit, search, sortBy, sortOrder }
-    if (stock === 'low_stock') {
-      filters.minStock = 0
-      filters.maxStock = 10
-    } else if (stock === 'out_of_stock') {
-      filters.minStock = 0
-      filters.maxStock = 0
-    } else if (stock === 'in_stock') {
-      filters.minStock = 1
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = req.query.search || null;
+    const stock = req.query.stock || null;
+    const sortBy = req.query.sortBy || "created_at";
+    const sortOrder = req.query.sortOrder || "desc";
+    const filters = { page, limit, search, sortBy, sortOrder };
+    if (stock === "low_stock") {
+      filters.minStock = 0;
+      filters.maxStock = 10;
+    } else if (stock === "out_of_stock") {
+      filters.minStock = 0;
+      filters.maxStock = 0;
+    } else if (stock === "in_stock") {
+      filters.minStock = 1;
     }
-    const result = await productModel.getAllProducts(filters)
-    res.json(result)
+    const result = await productModel.getAllProducts(filters);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       message: error.message,
       products: [],
       pagination: {
         page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 20,
         total: 0,
-        pages: 0
-      }
-    })
+        pages: 0,
+      },
+    });
   }
-})
+});
 
 /**
  * GET /api/admin/invoices
@@ -513,31 +593,31 @@ router.get('/products', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/invoices', async (req, res) => {
+router.get("/invoices", async (req, res) => {
   try {
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
-      search: req.query.search || '',
+      search: req.query.search || "",
       paymentStatus: req.query.paymentStatus || null,
-      sortBy: req.query.sortBy || 'created_at',
-      sortOrder: req.query.sortOrder || 'desc'
-    }
-    const result = await invoiceModel.getAllInvoices(filters)
-    res.json(result)
+      sortBy: req.query.sortBy || "created_at",
+      sortOrder: req.query.sortOrder || "desc",
+    };
+    const result = await invoiceModel.getAllInvoices(filters);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       message: error.message,
       invoices: [],
       pagination: {
         page: 1,
         limit: 20,
         total: 0,
-        pages: 0
-      }
-    })
+        pages: 0,
+      },
+    });
   }
-})
+});
 
 /**
  * GET /api/admin/invoices/:id
@@ -545,24 +625,24 @@ router.get('/invoices', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/invoices/:id', async (req, res) => {
+router.get("/invoices/:id", async (req, res) => {
   try {
-    const invoiceId = parseInt(req.params.id)
-    
+    const invoiceId = parseInt(req.params.id);
+
     if (isNaN(invoiceId) || invoiceId <= 0) {
-      return res.status(400).json({ message: 'Invalid invoice ID' })
+      return res.status(400).json({ message: "Invalid invoice ID" });
     }
-    
-    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null);
     if (!invoice) {
-      return res.status(404).json({ message: 'Invoice not found' })
+      return res.status(404).json({ message: "Invoice not found" });
     }
-    
-    res.json(invoice)
+
+    res.json(invoice);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/invoices/:id
@@ -570,34 +650,36 @@ router.get('/invoices/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.put('/invoices/:id', async (req, res) => {
+router.put("/invoices/:id", async (req, res) => {
   try {
-    const invoiceId = parseInt(req.params.id)
-    const { payment_status, email_sent } = req.body
-    
+    const invoiceId = parseInt(req.params.id);
+    const { payment_status, email_sent } = req.body;
+
     if (isNaN(invoiceId) || invoiceId <= 0) {
-      return res.status(400).json({ message: 'Invalid invoice ID' })
+      return res.status(400).json({ message: "Invalid invoice ID" });
     }
-    
-    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null);
     if (!invoice) {
-      return res.status(404).json({ message: 'Invoice not found' })
+      return res.status(404).json({ message: "Invoice not found" });
     }
-    
-    const updateData = {}
-    if (payment_status !== undefined) updateData.payment_status = payment_status
-    if (email_sent !== undefined) updateData.email_sent = email_sent === true || email_sent === 'true'
-    
-    const updated = await invoiceModel.updateInvoice(invoiceId, updateData)
+
+    const updateData = {};
+    if (payment_status !== undefined)
+      updateData.payment_status = payment_status;
+    if (email_sent !== undefined)
+      updateData.email_sent = email_sent === true || email_sent === "true";
+
+    const updated = await invoiceModel.updateInvoice(invoiceId, updateData);
     if (!updated) {
-      return res.status(400).json({ message: 'Failed to update invoice' })
+      return res.status(400).json({ message: "Failed to update invoice" });
     }
-    
-    res.json(updated)
+
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * DELETE /api/admin/invoices/:id
@@ -605,34 +687,36 @@ router.put('/invoices/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/invoices/:id', async (req, res) => {
+router.delete("/invoices/:id", async (req, res) => {
   try {
-    const invoiceId = parseInt(req.params.id)
-    
+    const invoiceId = parseInt(req.params.id);
+
     if (isNaN(invoiceId) || invoiceId <= 0) {
-      return res.status(400).json({ message: 'Invalid invoice ID' })
+      return res.status(400).json({ message: "Invalid invoice ID" });
     }
-    
-    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null);
     if (!invoice) {
-      return res.status(404).json({ message: 'Invoice not found' })
+      return res.status(404).json({ message: "Invoice not found" });
     }
-    
+
     // Note: Invoices are linked to orders with RESTRICT, so deletion should be careful
     // In a real scenario, you might want to archive instead of delete
-    const deleted = await invoiceModel.deleteInvoice(invoiceId)
+    const deleted = await invoiceModel.deleteInvoice(invoiceId);
     if (!deleted) {
-      return res.status(400).json({ message: 'Failed to delete invoice' })
+      return res.status(400).json({ message: "Failed to delete invoice" });
     }
-    
-    res.json({ message: 'Invoice deleted successfully' })
+
+    res.json({ message: "Invoice deleted successfully" });
   } catch (error) {
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-      return res.status(400).json({ message: 'Cannot delete invoice. It is referenced by an order.' })
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        message: "Cannot delete invoice. It is referenced by an order.",
+      });
     }
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/invoices/:id/resend-email
@@ -640,37 +724,42 @@ router.delete('/invoices/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/invoices/:id/resend-email', async (req, res) => {
+router.post("/invoices/:id/resend-email", async (req, res) => {
   try {
-    const invoiceId = parseInt(req.params.id)
-    
+    const invoiceId = parseInt(req.params.id);
+
     if (isNaN(invoiceId) || invoiceId <= 0) {
-      return res.status(400).json({ message: 'Invalid invoice ID' })
+      return res.status(400).json({ message: "Invalid invoice ID" });
     }
-    
-    const invoice = await invoiceModel.getInvoiceById(invoiceId, null)
+
+    const invoice = await invoiceModel.getInvoiceById(invoiceId, null);
     if (!invoice) {
-      return res.status(404).json({ message: 'Invoice not found' })
+      return res.status(404).json({ message: "Invoice not found" });
     }
-    
+
     // Send invoice email
-    const { sendInvoiceEmail } = await import('../utils/emailService.js')
+    const { sendInvoiceEmail } = await import("../utils/emailService.js");
     const emailResult = await sendInvoiceEmail(
       invoice.user_email,
-      invoice.user_name || 'Customer',
+      invoice.user_name || "Customer",
       invoice
-    )
-    
+    );
+
     if (emailResult.success) {
-      await invoiceModel.markInvoiceEmailSent(invoiceId)
-      res.json({ message: 'Invoice email sent successfully', invoice: await invoiceModel.getInvoiceById(invoiceId, null) })
+      await invoiceModel.markInvoiceEmailSent(invoiceId);
+      res.json({
+        message: "Invoice email sent successfully",
+        invoice: await invoiceModel.getInvoiceById(invoiceId, null),
+      });
     } else {
-      res.status(500).json({ message: emailResult.message || 'Failed to send invoice email' })
+      res.status(500).json({
+        message: emailResult.message || "Failed to send invoice email",
+      });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/invoices/bulk-delete
@@ -678,49 +767,49 @@ router.post('/invoices/:id/resend-email', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/invoices/bulk-delete', async (req, res) => {
+router.post("/invoices/bulk-delete", async (req, res) => {
   try {
-    const { invoiceIds } = req.body
-    
+    const { invoiceIds } = req.body;
+
     if (!Array.isArray(invoiceIds) || invoiceIds.length === 0) {
-      return res.status(400).json({ message: 'Invoice IDs array is required' })
+      return res.status(400).json({ message: "Invoice IDs array is required" });
     }
-    
-    const deleted = []
-    const errors = []
-    
+
+    const deleted = [];
+    const errors = [];
+
     for (const invoiceId of invoiceIds) {
       try {
-        const id = parseInt(invoiceId)
+        const id = parseInt(invoiceId);
         if (isNaN(id) || id <= 0) {
-          errors.push({ id: invoiceId, error: 'Invalid invoice ID' })
-          continue
+          errors.push({ id: invoiceId, error: "Invalid invoice ID" });
+          continue;
         }
-        
-        const result = await invoiceModel.deleteInvoice(id)
+
+        const result = await invoiceModel.deleteInvoice(id);
         if (result) {
-          deleted.push(id)
+          deleted.push(id);
         } else {
-          errors.push({ id, error: 'Invoice not found' })
+          errors.push({ id, error: "Invoice not found" });
         }
       } catch (error) {
-        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-          errors.push({ id: invoiceId, error: 'Referenced by order' })
+        if (error.code === "ER_ROW_IS_REFERENCED_2") {
+          errors.push({ id: invoiceId, error: "Referenced by order" });
         } else {
-          errors.push({ id: invoiceId, error: error.message })
+          errors.push({ id: invoiceId, error: error.message });
         }
       }
     }
-    
+
     res.json({
       message: `${deleted.length} invoice(s) deleted successfully`,
       deleted,
-      errors
-    })
+      errors,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/order-items
@@ -728,22 +817,36 @@ router.post('/invoices/bulk-delete', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/order-items', async (req, res) => {
+router.get("/order-items", async (req, res) => {
   try {
-    const db = (await import('../config/db.js')).default
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 20
-    const offset = (page - 1) * limit
-    const orderId = req.query.orderId ? parseInt(req.query.orderId) : null
-    const productId = req.query.productId ? parseInt(req.query.productId) : null
-    const sortBy = req.query.sortBy || 'created_at'
-    const sortOrder = req.query.sortOrder || 'desc'
-    
+    const db = (await import("../config/db.js")).default;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+    const orderId = req.query.orderId ? parseInt(req.query.orderId) : null;
+    const productId = req.query.productId
+      ? parseInt(req.query.productId)
+      : null;
+    const sortBy = req.query.sortBy || "created_at";
+    const sortOrder = req.query.sortOrder || "desc";
+
     // Allowed sort columns
-    const allowedSortColumns = ['id', 'order_id', 'product_id', 'name', 'image_url', 'price', 'quantity', 'order_number', 'created_at']
-    const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
-    const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
-    
+    const allowedSortColumns = [
+      "id",
+      "order_id",
+      "product_id",
+      "name",
+      "image_url",
+      "price",
+      "quantity",
+      "order_number",
+      "created_at",
+    ];
+    const validSortBy = allowedSortColumns.includes(sortBy)
+      ? sortBy
+      : "created_at";
+    const validSortOrder = sortOrder.toLowerCase() === "asc" ? "ASC" : "DESC";
+
     let query = `
       SELECT oi.*, 
              o.order_number,
@@ -755,55 +858,55 @@ router.get('/order-items', async (req, res) => {
       JOIN orders o ON oi.order_id = o.id
       JOIN users u ON o.user_id = u.id
       JOIN products p ON oi.product_id = p.id
-    `
-    const params = []
-    
-    const conditions = []
+    `;
+    const params = [];
+
+    const conditions = [];
     if (orderId && !isNaN(orderId)) {
-      conditions.push('oi.order_id = ?')
-      params.push(orderId)
+      conditions.push("oi.order_id = ?");
+      params.push(orderId);
     }
     if (productId && !isNaN(productId)) {
-      conditions.push('oi.product_id = ?')
-      params.push(productId)
+      conditions.push("oi.product_id = ?");
+      params.push(productId);
     }
-    
+
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ')
+      query += " WHERE " + conditions.join(" AND ");
     }
-    
+
     // Handle sorting - map joined table fields
-    let sortColumn = `oi.${validSortBy}`
-    if (validSortBy === 'order_number') sortColumn = 'o.order_number'
-    
-    query += ` ORDER BY ${sortColumn} ${validSortOrder}`
-    
+    let sortColumn = `oi.${validSortBy}`;
+    if (validSortBy === "order_number") sortColumn = "o.order_number";
+
+    query += ` ORDER BY ${sortColumn} ${validSortOrder}`;
+
     // Get total count
     const countQuery = query.replace(
-      'SELECT oi.*, o.order_number, o.user_id, u.name as user_name, u.email as user_email, p.name as product_name',
-      'SELECT COUNT(*) as total'
-    )
-    const [countResult] = await db.execute(countQuery, params)
-    const total = countResult[0].total
-    
+      "SELECT oi.*, o.order_number, o.user_id, u.name as user_name, u.email as user_email, p.name as product_name",
+      "SELECT COUNT(*) as total"
+    );
+    const [countResult] = await db.execute(countQuery, params);
+    const total = countResult[0].total;
+
     // Get paginated results
-    query += ` LIMIT ${limit} OFFSET ${offset}`
-    
-    const [rows] = await db.execute(query, params)
-    
+    query += ` LIMIT ${limit} OFFSET ${offset}`;
+
+    const [rows] = await db.execute(query, params);
+
     res.json({
       orderItems: rows,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
-    })
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * GET /api/admin/order-items/:id
@@ -811,15 +914,15 @@ router.get('/order-items', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/order-items/:id', async (req, res) => {
+router.get("/order-items/:id", async (req, res) => {
   try {
-    const db = (await import('../config/db.js')).default
-    const itemId = parseInt(req.params.id)
-    
+    const db = (await import("../config/db.js")).default;
+    const itemId = parseInt(req.params.id);
+
     if (isNaN(itemId) || itemId <= 0) {
-      return res.status(400).json({ message: 'Invalid order item ID' })
+      return res.status(400).json({ message: "Invalid order item ID" });
     }
-    
+
     const [rows] = await db.execute(
       `SELECT oi.*, 
               o.order_number,
@@ -834,17 +937,17 @@ router.get('/order-items/:id', async (req, res) => {
        JOIN products p ON oi.product_id = p.id
        WHERE oi.id = ?`,
       [itemId]
-    )
-    
+    );
+
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'Order item not found' })
+      return res.status(404).json({ message: "Order item not found" });
     }
-    
-    res.json(rows[0])
+
+    res.json(rows[0]);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 // ============================================
 // ORDERS CRUD OPERATIONS
@@ -856,181 +959,199 @@ router.get('/order-items/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.put('/orders/:id/status', validateOrderStatusTransition, async (req, res) => {
-  try {
-    const orderId = parseInt(req.params.id)
-    const { status } = req.body
+router.put(
+  "/orders/:id/status",
+  validateOrderStatusTransition,
+  async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const { status } = req.body;
 
-    if (!status || !['pending', 'processing', 'paid', 'delivered'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status. Must be: pending, processing, paid, or delivered' })
+      if (
+        !status ||
+        !["pending", "processing", "paid", "delivered"].includes(status)
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid status. Must be: pending, processing, paid, or delivered",
+        });
+      }
+
+      const db = (await import("../config/db.js")).default;
+      const order = await orderModel.getOrderById(orderId);
+
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      // Update order based on status
+      if (status === "paid") {
+        await db.execute(
+          "UPDATE orders SET is_paid = 1, paid_at = NOW() WHERE id = ?",
+          [orderId]
+        );
+      } else if (status === "delivered") {
+        await db.execute(
+          "UPDATE orders SET is_delivered = 1, delivered_at = NOW() WHERE id = ?",
+          [orderId]
+        );
+      } else if (status === "processing") {
+        // Processing means paid but not delivered
+        await db.execute(
+          "UPDATE orders SET is_paid = 1, paid_at = COALESCE(paid_at, NOW()), is_delivered = 0 WHERE id = ?",
+          [orderId]
+        );
+      } else if (status === "pending") {
+        await db.execute(
+          "UPDATE orders SET is_paid = 0, is_delivered = 0, paid_at = NULL, delivered_at = NULL WHERE id = ?",
+          [orderId]
+        );
+      }
+
+      const updatedOrder = await orderModel.getOrderById(orderId);
+      res.json(updatedOrder);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-
-    const db = (await import('../config/db.js')).default
-    const order = await orderModel.getOrderById(orderId)
-
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' })
-    }
-
-    // Update order based on status
-    if (status === 'paid') {
-      await db.execute(
-        'UPDATE orders SET is_paid = 1, paid_at = NOW() WHERE id = ?',
-        [orderId]
-      )
-    } else if (status === 'delivered') {
-      await db.execute(
-        'UPDATE orders SET is_delivered = 1, delivered_at = NOW() WHERE id = ?',
-        [orderId]
-      )
-    } else if (status === 'processing') {
-      // Processing means paid but not delivered
-      await db.execute(
-        'UPDATE orders SET is_paid = 1, paid_at = COALESCE(paid_at, NOW()), is_delivered = 0 WHERE id = ?',
-        [orderId]
-      )
-    } else if (status === 'pending') {
-      await db.execute(
-        'UPDATE orders SET is_paid = 0, is_delivered = 0, paid_at = NULL, delivered_at = NULL WHERE id = ?',
-        [orderId]
-      )
-    }
-
-    const updatedOrder = await orderModel.getOrderById(orderId)
-    res.json(updatedOrder)
-  } catch (error) {
-    res.status(500).json({ message: error.message })
   }
-})
+);
 
 /**
  * PUT /api/admin/orders/:id
  * Update order details (shipping address, payment info)
  */
-router.put('/orders/:id', async (req, res) => {
+router.put("/orders/:id", async (req, res) => {
   try {
-    const orderId = parseInt(req.params.id)
-    const { shippingAddress, paymentMethod, taxPrice, shippingPrice, totalPrice } = req.body
+    const orderId = parseInt(req.params.id);
+    const {
+      shippingAddress,
+      paymentMethod,
+      taxPrice,
+      shippingPrice,
+      totalPrice,
+    } = req.body;
 
-    const order = await orderModel.getOrderById(orderId)
+    const order = await orderModel.getOrderById(orderId);
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' })
+      return res.status(404).json({ message: "Order not found" });
     }
 
-    const db = (await import('../config/db.js')).default
-    const connection = await db.getConnection()
+    const db = (await import("../config/db.js")).default;
+    const connection = await db.getConnection();
 
     try {
-      await connection.beginTransaction()
+      await connection.beginTransaction();
 
       // Update order fields
-      const updateFields = []
-      const updateValues = []
+      const updateFields = [];
+      const updateValues = [];
 
       if (paymentMethod) {
-        updateFields.push('payment_method = ?')
-        updateValues.push(paymentMethod)
+        updateFields.push("payment_method = ?");
+        updateValues.push(paymentMethod);
       }
       if (taxPrice !== undefined) {
-        updateFields.push('tax_price = ?')
-        updateValues.push(taxPrice)
+        updateFields.push("tax_price = ?");
+        updateValues.push(taxPrice);
       }
       if (shippingPrice !== undefined) {
-        updateFields.push('shipping_price = ?')
-        updateValues.push(shippingPrice)
+        updateFields.push("shipping_price = ?");
+        updateValues.push(shippingPrice);
       }
       if (totalPrice !== undefined) {
-        updateFields.push('total_price = ?')
-        updateValues.push(totalPrice)
+        updateFields.push("total_price = ?");
+        updateValues.push(totalPrice);
       }
 
       if (updateFields.length > 0) {
-        updateValues.push(orderId)
+        updateValues.push(orderId);
         await connection.execute(
-          `UPDATE orders SET ${updateFields.join(', ')} WHERE id = ?`,
+          `UPDATE orders SET ${updateFields.join(", ")} WHERE id = ?`,
           updateValues
-        )
+        );
       }
 
       // Update shipping address if provided
       if (shippingAddress) {
-        const { address, city, postalCode, country } = shippingAddress
+        const { address, city, postalCode, country } = shippingAddress;
         await connection.execute(
           `UPDATE shipping_addresses 
            SET address = ?, city = ?, postal_code = ?, country = ? 
            WHERE order_id = ?`,
           [address, city, postalCode, country, orderId]
-        )
+        );
       }
 
-      await connection.commit()
-      const updatedOrder = await orderModel.getOrderById(orderId)
-      res.json(updatedOrder)
+      await connection.commit();
+      const updatedOrder = await orderModel.getOrderById(orderId);
+      res.json(updatedOrder);
     } catch (error) {
-      await connection.rollback()
-      throw error
+      await connection.rollback();
+      throw error;
     } finally {
-      connection.release()
+      connection.release();
     }
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * DELETE /api/admin/orders/:id
  * Cancel/delete order (with validation)
  */
-router.delete('/orders/:id', async (req, res) => {
+router.delete("/orders/:id", async (req, res) => {
   try {
-    const orderId = parseInt(req.params.id)
-    const order = await orderModel.getOrderById(orderId)
+    const orderId = parseInt(req.params.id);
+    const order = await orderModel.getOrderById(orderId);
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' })
+      return res.status(404).json({ message: "Order not found" });
     }
 
     // Check if order can be deleted (not delivered)
     if (order.is_delivered) {
-      return res.status(400).json({ message: 'Cannot delete a delivered order' })
+      return res
+        .status(400)
+        .json({ message: "Cannot delete a delivered order" });
     }
 
-    const db = (await import('../config/db.js')).default
-    const connection = await db.getConnection()
+    const db = (await import("../config/db.js")).default;
+    const connection = await db.getConnection();
 
     try {
-      await connection.beginTransaction()
+      await connection.beginTransaction();
 
       // Restore product stock if order was paid
       if (order.is_paid) {
         const [items] = await connection.execute(
-          'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
+          "SELECT product_id, quantity FROM order_items WHERE order_id = ?",
           [orderId]
-        )
+        );
 
         for (const item of items) {
           await connection.execute(
-            'UPDATE products SET stock = stock + ? WHERE id = ?',
+            "UPDATE products SET stock = stock + ? WHERE id = ?",
             [item.quantity, item.product_id]
-          )
+          );
         }
       }
 
       // Delete order (cascade will delete order_items and shipping_addresses)
-      await connection.execute('DELETE FROM orders WHERE id = ?', [orderId])
+      await connection.execute("DELETE FROM orders WHERE id = ?", [orderId]);
 
-      await connection.commit()
-      res.json({ message: 'Order deleted successfully' })
+      await connection.commit();
+      res.json({ message: "Order deleted successfully" });
     } catch (error) {
-      await connection.rollback()
-      throw error
+      await connection.rollback();
+      throw error;
     } finally {
-      connection.release()
+      connection.release();
     }
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/orders/bulk-update
@@ -1038,24 +1159,29 @@ router.delete('/orders/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/orders/bulk-update', validateBulkOperation, async (req, res) => {
+router.post("/orders/bulk-update", validateBulkOperation, async (req, res) => {
   try {
-    const { orderIds, status } = req.body
+    const { orderIds, status } = req.body;
 
-    if (!status || !['pending', 'processing', 'paid', 'delivered'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' })
+    if (
+      !status ||
+      !["pending", "processing", "paid", "delivered"].includes(status)
+    ) {
+      return res.status(400).json({ message: "Invalid status" });
     }
 
-    const result = await bulkOperationsModel.bulkUpdateOrders(orderIds, { status })
-    res.json({ 
+    const result = await bulkOperationsModel.bulkUpdateOrders(orderIds, {
+      status,
+    });
+    res.json({
       message: `${result.success} orders updated successfully`,
       success: result.success,
-      failed: result.failed
-    })
+      failed: result.failed,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/orders/bulk-delete
@@ -1063,19 +1189,19 @@ router.post('/orders/bulk-update', validateBulkOperation, async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/orders/bulk-delete', validateBulkOperation, async (req, res) => {
+router.post("/orders/bulk-delete", validateBulkOperation, async (req, res) => {
   try {
-    const { orderIds } = req.body
-    const result = await bulkOperationsModel.bulkDeleteOrders(orderIds)
-    res.json({ 
+    const { orderIds } = req.body;
+    const result = await bulkOperationsModel.bulkDeleteOrders(orderIds);
+    res.json({
       message: `${result.success} orders deleted successfully`,
       success: result.success,
-      failed: result.failed
-    })
+      failed: result.failed,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 // ============================================
 // PRODUCTS CRUD OPERATIONS
@@ -1085,12 +1211,21 @@ router.post('/orders/bulk-delete', validateBulkOperation, async (req, res) => {
  * POST /api/admin/products/quick-create
  * Quick create product from dashboard
  */
-router.post('/products/quick-create', async (req, res) => {
+router.post("/products/quick-create", async (req, res) => {
   try {
-    const { name, description, price, child_category_id, stock } = req.body
+    const { name, description, price, child_category_id, stock } = req.body;
 
-    if (!name || !description || price === undefined || !child_category_id || stock === undefined) {
-      return res.status(400).json({ message: 'Missing required fields: name, description, price, child_category_id, stock' })
+    if (
+      !name ||
+      !description ||
+      price === undefined ||
+      !child_category_id ||
+      stock === undefined
+    ) {
+      return res.status(400).json({
+        message:
+          "Missing required fields: name, description, price, child_category_id, stock",
+      });
     }
 
     const productId = await productModel.createProduct({
@@ -1098,87 +1233,97 @@ router.post('/products/quick-create', async (req, res) => {
       description,
       price: parseFloat(price),
       child_category_id: parseInt(child_category_id),
-      stock: parseInt(stock)
-    })
+      stock: parseInt(stock),
+    });
 
-    const product = await productModel.getProductById(productId)
-    res.status(201).json(product)
+    const product = await productModel.getProductById(productId);
+    res.status(201).json(product);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/products/:id/stock
  * Update product stock inline
  */
-router.put('/products/:id/stock', async (req, res) => {
+router.put("/products/:id/stock", async (req, res) => {
   try {
-    const productId = parseInt(req.params.id)
-    const { stock } = req.body
+    const productId = parseInt(req.params.id);
+    const { stock } = req.body;
 
     if (stock === undefined || stock < 0) {
-      return res.status(400).json({ message: 'Stock must be a non-negative number' })
+      return res
+        .status(400)
+        .json({ message: "Stock must be a non-negative number" });
     }
 
-    const updated = await productModel.updateProduct(productId, { stock: parseInt(stock) })
+    const updated = await productModel.updateProduct(productId, {
+      stock: parseInt(stock),
+    });
     if (!updated) {
-      return res.status(404).json({ message: 'Product not found' })
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/products/:id/status
  * Toggle product active/inactive (using stock > 0 as active)
  */
-router.put('/products/:id/status', async (req, res) => {
+router.put("/products/:id/status", async (req, res) => {
   try {
-    const productId = parseInt(req.params.id)
-    const { isActive } = req.body
+    const productId = parseInt(req.params.id);
+    const { isActive } = req.body;
 
-    const product = await productModel.getProductById(productId)
+    const product = await productModel.getProductById(productId);
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' })
+      return res.status(404).json({ message: "Product not found" });
     }
 
     // If setting to inactive, set stock to 0; if active, set to 1 if currently 0
-    const newStock = isActive ? (product.stock === 0 ? 1 : product.stock) : 0
-    const updated = await productModel.updateProduct(productId, { stock: newStock })
+    const newStock = isActive ? (product.stock === 0 ? 1 : product.stock) : 0;
+    const updated = await productModel.updateProduct(productId, {
+      stock: newStock,
+    });
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/products/:id/price
  * Update product price inline
  */
-router.put('/products/:id/price', async (req, res) => {
+router.put("/products/:id/price", async (req, res) => {
   try {
-    const productId = parseInt(req.params.id)
-    const { price } = req.body
+    const productId = parseInt(req.params.id);
+    const { price } = req.body;
 
     if (price === undefined || price < 0) {
-      return res.status(400).json({ message: 'Price must be a non-negative number' })
+      return res
+        .status(400)
+        .json({ message: "Price must be a non-negative number" });
     }
 
-    const updated = await productModel.updateProduct(productId, { price: parseFloat(price) })
+    const updated = await productModel.updateProduct(productId, {
+      price: parseFloat(price),
+    });
     if (!updated) {
-      return res.status(404).json({ message: 'Product not found' })
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/products/bulk-update
@@ -1186,24 +1331,31 @@ router.put('/products/:id/price', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/products/bulk-update', validateBulkOperation, async (req, res) => {
-  try {
-    const { productIds, updates } = req.body
+router.post(
+  "/products/bulk-update",
+  validateBulkOperation,
+  async (req, res) => {
+    try {
+      const { productIds, updates } = req.body;
 
-    if (!updates || Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: 'No updates provided' })
+      if (!updates || Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: "No updates provided" });
+      }
+
+      const result = await bulkOperationsModel.bulkUpdateProducts(
+        productIds,
+        updates
+      );
+      res.json({
+        message: `${result.success} products updated successfully`,
+        success: result.success,
+        failed: result.failed,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-
-    const result = await bulkOperationsModel.bulkUpdateProducts(productIds, updates)
-    res.json({ 
-      message: `${result.success} products updated successfully`,
-      success: result.success,
-      failed: result.failed
-    })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
   }
-})
+);
 
 /**
  * DELETE /api/admin/products/:id
@@ -1211,33 +1363,34 @@ router.post('/products/bulk-update', validateBulkOperation, async (req, res) => 
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/products/:id', validateProductDeletion, async (req, res) => {
+router.delete("/products/:id", validateProductDeletion, async (req, res) => {
   try {
-    const productId = parseInt(req.params.id)
+    const productId = parseInt(req.params.id);
 
     // Check if product exists in any orders
-    const db = (await import('../config/db.js')).default
+    const db = (await import("../config/db.js")).default;
     const [orderItems] = await db.execute(
-      'SELECT COUNT(*) as count FROM order_items WHERE product_id = ?',
+      "SELECT COUNT(*) as count FROM order_items WHERE product_id = ?",
       [productId]
-    )
+    );
 
     if (orderItems[0].count > 0) {
-      return res.status(400).json({ 
-        message: 'Cannot delete product that has been ordered. Consider setting stock to 0 instead.' 
-      })
+      return res.status(400).json({
+        message:
+          "Cannot delete product that has been ordered. Consider setting stock to 0 instead.",
+      });
     }
 
-    const deleted = await productModel.deleteProduct(productId)
+    const deleted = await productModel.deleteProduct(productId);
     if (!deleted) {
-      return res.status(404).json({ message: 'Product not found' })
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json({ message: 'Product deleted successfully' })
+    res.json({ message: "Product deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/products/bulk-delete
@@ -1245,38 +1398,42 @@ router.delete('/products/:id', validateProductDeletion, async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/products/bulk-delete', validateBulkOperation, async (req, res) => {
-  try {
-    const { productIds } = req.body
-    const result = await bulkOperationsModel.bulkDeleteProducts(productIds)
-    res.json({ 
-      message: `${result.success} products deleted successfully`,
-      success: result.success,
-      failed: result.failed
-    })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+router.post(
+  "/products/bulk-delete",
+  validateBulkOperation,
+  async (req, res) => {
+    try {
+      const { productIds } = req.body;
+      const result = await bulkOperationsModel.bulkDeleteProducts(productIds);
+      res.json({
+        message: `${result.success} products deleted successfully`,
+        success: result.success,
+        failed: result.failed,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-})
+);
 
 /**
  * PUT /api/admin/products/:id/out-of-stock
  * Mark product as out of stock
  */
-router.put('/products/:id/out-of-stock', async (req, res) => {
+router.put("/products/:id/out-of-stock", async (req, res) => {
   try {
-    const productId = parseInt(req.params.id)
-    const updated = await productModel.updateProduct(productId, { stock: 0 })
-    
+    const productId = parseInt(req.params.id);
+    const updated = await productModel.updateProduct(productId, { stock: 0 });
+
     if (!updated) {
-      return res.status(404).json({ message: 'Product not found' })
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/products/bulk-stock-update
@@ -1284,24 +1441,26 @@ router.put('/products/:id/out-of-stock', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/products/bulk-stock-update', async (req, res) => {
+router.post("/products/bulk-stock-update", async (req, res) => {
   try {
-    const { updates } = req.body // Array of { productId, stock }
+    const { updates } = req.body; // Array of { productId, stock }
 
     if (!Array.isArray(updates) || updates.length === 0) {
-      return res.status(400).json({ message: 'updates must be a non-empty array' })
+      return res
+        .status(400)
+        .json({ message: "updates must be a non-empty array" });
     }
 
-    const result = await bulkOperationsModel.bulkUpdateStock(updates)
-    res.json({ 
+    const result = await bulkOperationsModel.bulkUpdateStock(updates);
+    res.json({
       message: `${result.success} products updated successfully`,
       success: result.success,
-      failed: result.failed
-    })
+      failed: result.failed,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 // ============================================
 // USERS CRUD OPERATIONS
@@ -1311,144 +1470,158 @@ router.post('/products/bulk-stock-update', async (req, res) => {
  * POST /api/admin/users/quick-create
  * Quick create user from dashboard
  */
-router.post('/users/quick-create', async (req, res) => {
+router.post("/users/quick-create", async (req, res) => {
   try {
-    const { name, email, password, role = 'user' } = req.body
+    const { name, email, password, role = "user" } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Missing required fields: name, email, password' })
+      return res
+        .status(400)
+        .json({ message: "Missing required fields: name, email, password" });
     }
 
-    if (!['user', 'admin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' })
+    if (!["user", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     // Check if user exists
-    const existingUser = await userModel.findUserByEmail(email)
+    const existingUser = await userModel.findUserByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' })
+      return res
+        .status(400)
+        .json({ message: "User with this email already exists" });
     }
 
     // Hash password
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const userId = await userModel.createUser(name, email, hashedPassword)
-    
+    const userId = await userModel.createUser(name, email, hashedPassword);
+
     // Update role if not default
-    if (role === 'admin') {
-      await userModel.updateUserRole(userId, role)
+    if (role === "admin") {
+      await userModel.updateUserRole(userId, role);
     }
 
-    const user = await userModel.findUserById(userId)
-    res.status(201).json(user)
+    const user = await userModel.findUserById(userId);
+    res.status(201).json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/users/:id/role
  * Update user role inline
  */
-router.put('/users/:id/role', async (req, res) => {
+router.put("/users/:id/role", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id)
-    const { role } = req.body
+    const userId = parseInt(req.params.id);
+    const { role } = req.body;
 
-    if (!role || !['user', 'admin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' })
+    if (!role || !["user", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     if (userId === req.user.id) {
-      return res.status(400).json({ message: 'Cannot change your own role' })
+      return res.status(400).json({ message: "Cannot change your own role" });
     }
 
-    const updatedUser = await userModel.updateUserRole(userId, role)
+    const updatedUser = await userModel.updateUserRole(userId, role);
     if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(updatedUser)
+    res.json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/users/:id/status
  * Activate/deactivate user (using a simple approach - can be enhanced with status field)
  * Note: This is a placeholder - actual implementation would require a status field in users table
  */
-router.put('/users/:id/status', async (req, res) => {
+router.put("/users/:id/status", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id)
-    const { isActive } = req.body
+    const userId = parseInt(req.params.id);
+    const { isActive } = req.body;
 
     if (userId === req.user.id) {
-      return res.status(400).json({ message: 'Cannot change your own status' })
+      return res.status(400).json({ message: "Cannot change your own status" });
     }
 
     // For now, we'll just return the user (status field would need to be added to schema)
-    const user = await userModel.findUserById(userId)
+    const user = await userModel.findUserById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json({ message: "User not found" });
     }
 
     // TODO: Add status field to users table and implement actual status toggle
-    res.json({ ...user, isActive, message: 'Status update would be implemented with status field' })
+    res.json({
+      ...user,
+      isActive,
+      message: "Status update would be implemented with status field",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/users/bulk-update
  * Bulk update user roles/status
  */
-router.post('/users/bulk-update', async (req, res) => {
+router.post("/users/bulk-update", async (req, res) => {
   try {
-    const { userIds, updates } = req.body
+    const { userIds, updates } = req.body;
 
     if (!Array.isArray(userIds) || userIds.length === 0) {
-      return res.status(400).json({ message: 'userIds must be a non-empty array' })
+      return res
+        .status(400)
+        .json({ message: "userIds must be a non-empty array" });
     }
 
     if (!updates || Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: 'No updates provided' })
+      return res.status(400).json({ message: "No updates provided" });
     }
 
     // Prevent self-update
     if (userIds.includes(req.user.id)) {
-      return res.status(400).json({ message: 'Cannot update your own account in bulk' })
+      return res
+        .status(400)
+        .json({ message: "Cannot update your own account in bulk" });
     }
 
-    const db = (await import('../config/db.js')).default
-    const placeholders = userIds.map(() => '?').join(',')
+    const db = (await import("../config/db.js")).default;
+    const placeholders = userIds.map(() => "?").join(",");
 
-    const updateFields = []
-    const updateValues = []
+    const updateFields = [];
+    const updateValues = [];
 
-    if (updates.role && ['user', 'admin'].includes(updates.role)) {
-      updateFields.push('role = ?')
-      updateValues.push(updates.role)
+    if (updates.role && ["user", "admin"].includes(updates.role)) {
+      updateFields.push("role = ?");
+      updateValues.push(updates.role);
     }
 
     if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No valid updates provided' })
+      return res.status(400).json({ message: "No valid updates provided" });
     }
 
-    updateValues.push(...userIds)
+    updateValues.push(...userIds);
     await db.execute(
-      `UPDATE users SET ${updateFields.join(', ')} WHERE id IN (${placeholders})`,
+      `UPDATE users SET ${updateFields.join(
+        ", "
+      )} WHERE id IN (${placeholders})`,
       updateValues
-    )
+    );
 
-    res.json({ message: `${userIds.length} users updated successfully` })
+    res.json({ message: `${userIds.length} users updated successfully` });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 // ============================================
 // REVIEWS CRUD OPERATIONS
@@ -1460,31 +1633,31 @@ router.post('/users/bulk-update', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/reviews', async (req, res) => {
+router.get("/reviews", async (req, res) => {
   try {
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
-      search: req.query.search ? String(req.query.search).trim() : '',
+      search: req.query.search ? String(req.query.search).trim() : "",
       productId: req.query.productId ? parseInt(req.query.productId) : null,
       userId: req.query.userId ? parseInt(req.query.userId) : null,
-      rating: req.query.rating ? parseInt(req.query.rating) : null
-    }
-    const result = await reviewModel.getAllReviews(filters)
-    res.json(result)
+      rating: req.query.rating ? parseInt(req.query.rating) : null,
+    };
+    const result = await reviewModel.getAllReviews(filters);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'No reviews found matching your search',
+    res.status(500).json({
+      message: error.message || "No reviews found matching your search",
       reviews: [],
       pagination: {
         page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 20,
         total: 0,
-        pages: 1
-      }
-    })
+        pages: 1,
+      },
+    });
   }
-})
+});
 
 /**
  * PUT /api/admin/reviews/:id
@@ -1492,51 +1665,53 @@ router.get('/reviews', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.put('/reviews/:id', async (req, res) => {
+router.put("/reviews/:id", async (req, res) => {
   try {
-    const reviewId = parseInt(req.params.id)
-    const { rating, comment } = req.body
-    
+    const reviewId = parseInt(req.params.id);
+    const { rating, comment } = req.body;
+
     if (isNaN(reviewId) || reviewId <= 0) {
-      return res.status(400).json({ message: 'Invalid review ID' })
+      return res.status(400).json({ message: "Invalid review ID" });
     }
-    
-    const review = await reviewModel.getReviewById(reviewId)
+
+    const review = await reviewModel.getReviewById(reviewId);
     if (!review) {
-      return res.status(404).json({ message: 'Review not found' })
+      return res.status(404).json({ message: "Review not found" });
     }
-    
+
     if (rating !== undefined && (rating < 1 || rating > 5)) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' })
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5" });
     }
-    
-    const updateData = {}
-    if (rating !== undefined) updateData.rating = rating
-    if (comment !== undefined) updateData.comment = comment
-    
-    const updated = await reviewModel.updateReview(reviewId, updateData)
+
+    const updateData = {};
+    if (rating !== undefined) updateData.rating = rating;
+    if (comment !== undefined) updateData.comment = comment;
+
+    const updated = await reviewModel.updateReview(reviewId, updateData);
     if (!updated) {
-      return res.status(400).json({ message: 'Failed to update review' })
+      return res.status(400).json({ message: "Failed to update review" });
     }
-    
-    res.json(updated)
+
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/reviews/:id/approve
  * Approve review
  * Note: Requires is_approved field in reviews table (currently not in schema)
  */
-router.put('/reviews/:id/approve', async (req, res) => {
+router.put("/reviews/:id/approve", async (req, res) => {
   try {
-    const reviewId = parseInt(req.params.id)
-    const review = await reviewModel.getReviewById(reviewId)
+    const reviewId = parseInt(req.params.id);
+    const review = await reviewModel.getReviewById(reviewId);
 
     if (!review) {
-      return res.status(404).json({ message: 'Review not found' })
+      return res.status(404).json({ message: "Review not found" });
     }
 
     // TODO: Uncomment when is_approved field is added to reviews table
@@ -1549,24 +1724,27 @@ router.put('/reviews/:id/approve', async (req, res) => {
     // res.json(updatedReview)
 
     // Placeholder until schema is updated
-    res.json({ ...review, message: 'Review approved (requires is_approved field in reviews table)' })
+    res.json({
+      ...review,
+      message: "Review approved (requires is_approved field in reviews table)",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/reviews/:id/reject
  * Reject review
  * Note: Requires is_approved field in reviews table (currently not in schema)
  */
-router.put('/reviews/:id/reject', async (req, res) => {
+router.put("/reviews/:id/reject", async (req, res) => {
   try {
-    const reviewId = parseInt(req.params.id)
-    const review = await reviewModel.getReviewById(reviewId)
+    const reviewId = parseInt(req.params.id);
+    const review = await reviewModel.getReviewById(reviewId);
 
     if (!review) {
-      return res.status(404).json({ message: 'Review not found' })
+      return res.status(404).json({ message: "Review not found" });
     }
 
     // TODO: Uncomment when is_approved field is added to reviews table
@@ -1579,30 +1757,33 @@ router.put('/reviews/:id/reject', async (req, res) => {
     // res.json(updatedReview)
 
     // Placeholder until schema is updated
-    res.json({ ...review, message: 'Review rejected (requires is_approved field in reviews table)' })
+    res.json({
+      ...review,
+      message: "Review rejected (requires is_approved field in reviews table)",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * DELETE /api/admin/reviews/:id
  * Delete review
  */
-router.delete('/reviews/:id', async (req, res) => {
+router.delete("/reviews/:id", async (req, res) => {
   try {
-    const reviewId = parseInt(req.params.id)
-    const deleted = await reviewModel.deleteReview(reviewId)
+    const reviewId = parseInt(req.params.id);
+    const deleted = await reviewModel.deleteReview(reviewId);
 
     if (!deleted) {
-      return res.status(404).json({ message: 'Review not found' })
+      return res.status(404).json({ message: "Review not found" });
     }
 
-    res.json({ message: 'Review deleted successfully' })
+    res.json({ message: "Review deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/reviews/bulk-approve
@@ -1611,19 +1792,24 @@ router.delete('/reviews/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/reviews/bulk-approve', validateBulkOperation, async (req, res) => {
-  try {
-    const { reviewIds } = req.body
-    const result = await bulkOperationsModel.bulkApproveReviews(reviewIds)
-    res.json({ 
-      message: result.message || `${result.success} reviews approved successfully`,
-      success: result.success,
-      failed: result.failed
-    })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+router.post(
+  "/reviews/bulk-approve",
+  validateBulkOperation,
+  async (req, res) => {
+    try {
+      const { reviewIds } = req.body;
+      const result = await bulkOperationsModel.bulkApproveReviews(reviewIds);
+      res.json({
+        message:
+          result.message || `${result.success} reviews approved successfully`,
+        success: result.success,
+        failed: result.failed,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-})
+);
 
 // ============================================
 // COMMENTS CRUD OPERATIONS
@@ -1635,57 +1821,70 @@ router.post('/reviews/bulk-approve', validateBulkOperation, async (req, res) => 
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/comments', async (req, res) => {
+router.get("/comments", async (req, res) => {
   try {
-    const { page, limit, search, productId, userId, isApproved, sortBy, sortOrder } = req.query
+    const {
+      page,
+      limit,
+      search,
+      productId,
+      userId,
+      isApproved,
+      sortBy,
+      sortOrder,
+    } = req.query;
     // Handle isApproved filter: empty string means show all, 'true'/'false' means filter
-    let isApprovedFilter = null
-    if (isApproved !== undefined && isApproved !== '') {
-      isApprovedFilter = isApproved === 'true'
+    let isApprovedFilter = null;
+    if (isApproved !== undefined && isApproved !== "") {
+      isApprovedFilter = isApproved === "true";
     }
     const result = await commentModel.getAllCommentsPaginated({
       page,
       limit,
-      search: search ? String(search).trim() : '',
+      search: search ? String(search).trim() : "",
       productId,
       userId,
       isApproved: isApprovedFilter,
       sortBy,
-      sortOrder
-    })
-    res.json(result)
+      sortOrder,
+    });
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'No comments found matching your search',
+    res.status(500).json({
+      message: error.message || "No comments found matching your search",
       comments: [],
       pagination: {
         page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 20,
         total: 0,
-        pages: 1
-      }
-    })
+        pages: 1,
+      },
+    });
   }
-})
+});
 
 /**
  * DELETE /api/admin/comments/:id
  * Delete comment
  */
-router.delete('/comments/:id', async (req, res) => {
+router.delete("/comments/:id", async (req, res) => {
   try {
-    const commentId = parseInt(req.params.id)
-    const deleted = await commentModel.deleteComment(commentId, req.user.id, true)
+    const commentId = parseInt(req.params.id);
+    const deleted = await commentModel.deleteComment(
+      commentId,
+      req.user.id,
+      true
+    );
 
     if (!deleted) {
-      return res.status(404).json({ message: 'Comment not found' })
+      return res.status(404).json({ message: "Comment not found" });
     }
 
-    res.json({ message: 'Comment deleted successfully' })
+    res.json({ message: "Comment deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/comments/bulk-approve
@@ -1693,19 +1892,23 @@ router.delete('/comments/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/comments/bulk-approve', validateBulkOperation, async (req, res) => {
-  try {
-    const { commentIds } = req.body
-    const result = await bulkOperationsModel.bulkApproveComments(commentIds)
-    res.json({ 
-      message: `${result.success} comments approved successfully`,
-      success: result.success,
-      failed: result.failed
-    })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+router.post(
+  "/comments/bulk-approve",
+  validateBulkOperation,
+  async (req, res) => {
+    try {
+      const { commentIds } = req.body;
+      const result = await bulkOperationsModel.bulkApproveComments(commentIds);
+      res.json({
+        message: `${result.success} comments approved successfully`,
+        success: result.success,
+        failed: result.failed,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
-})
+);
 
 // ============================================
 // VOUCHERS CRUD OPERATIONS
@@ -1715,7 +1918,7 @@ router.post('/comments/bulk-approve', validateBulkOperation, async (req, res) =>
  * POST /api/admin/vouchers/quick-create
  * Quick create voucher from dashboard
  */
-router.post('/vouchers/quick-create', async (req, res) => {
+router.post("/vouchers/quick-create", async (req, res) => {
   try {
     const {
       code,
@@ -1728,23 +1931,32 @@ router.post('/vouchers/quick-create', async (req, res) => {
       end_date,
       usage_limit_per_user = 1,
       total_usage_limit = null,
-      is_active = true
-    } = req.body
+      is_active = true,
+    } = req.body;
 
-    if (!code || !discount_type || !discount_value || !start_date || !end_date) {
-      return res.status(400).json({ 
-        message: 'Missing required fields: code, discount_type, discount_value, start_date, end_date' 
-      })
+    if (
+      !code ||
+      !discount_type ||
+      !discount_value ||
+      !start_date ||
+      !end_date
+    ) {
+      return res.status(400).json({
+        message:
+          "Missing required fields: code, discount_type, discount_value, start_date, end_date",
+      });
     }
 
-    if (!['percentage', 'fixed'].includes(discount_type)) {
-      return res.status(400).json({ message: 'discount_type must be "percentage" or "fixed"' })
+    if (!["percentage", "fixed"].includes(discount_type)) {
+      return res
+        .status(400)
+        .json({ message: 'discount_type must be "percentage" or "fixed"' });
     }
 
     // Check if code exists
-    const existing = await voucherModel.getVoucherByCode(code)
+    const existing = await voucherModel.getVoucherByCode(code);
     if (existing) {
-      return res.status(400).json({ message: 'Voucher code already exists' })
+      return res.status(400).json({ message: "Voucher code already exists" });
     }
 
     const voucherId = await voucherModel.createVoucher({
@@ -1753,44 +1965,48 @@ router.post('/vouchers/quick-create', async (req, res) => {
       discount_type,
       discount_value: parseFloat(discount_value),
       min_purchase_amount: parseFloat(min_purchase_amount),
-      max_discount_amount: max_discount_amount ? parseFloat(max_discount_amount) : null,
+      max_discount_amount: max_discount_amount
+        ? parseFloat(max_discount_amount)
+        : null,
       start_date,
       end_date,
       usage_limit_per_user: parseInt(usage_limit_per_user),
       total_usage_limit: total_usage_limit ? parseInt(total_usage_limit) : null,
-      is_active
-    })
+      is_active,
+    });
 
-    const voucher = await voucherModel.getVoucherById(voucherId)
-    res.status(201).json(voucher)
+    const voucher = await voucherModel.getVoucherById(voucherId);
+    res.status(201).json(voucher);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/vouchers/:id/status
  * Activate/deactivate voucher
  */
-router.put('/vouchers/:id/status', async (req, res) => {
+router.put("/vouchers/:id/status", async (req, res) => {
   try {
-    const voucherId = parseInt(req.params.id)
-    const { isActive } = req.body
+    const voucherId = parseInt(req.params.id);
+    const { isActive } = req.body;
 
     if (isActive === undefined) {
-      return res.status(400).json({ message: 'isActive is required' })
+      return res.status(400).json({ message: "isActive is required" });
     }
 
-    const updated = await voucherModel.updateVoucher(voucherId, { is_active: isActive })
+    const updated = await voucherModel.updateVoucher(voucherId, {
+      is_active: isActive,
+    });
     if (!updated) {
-      return res.status(404).json({ message: 'Voucher not found' })
+      return res.status(404).json({ message: "Voucher not found" });
     }
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * PUT /api/admin/vouchers/:id
@@ -1798,26 +2014,31 @@ router.put('/vouchers/:id/status', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.put('/vouchers/:id', async (req, res) => {
+router.put("/vouchers/:id", async (req, res) => {
   try {
-    const voucherId = parseInt(req.params.id)
-    const updateData = req.body
+    const voucherId = parseInt(req.params.id);
+    const updateData = req.body;
 
     // Validate discount_type if provided
-    if (updateData.discount_type && !['percentage', 'fixed'].includes(updateData.discount_type)) {
-      return res.status(400).json({ message: 'discount_type must be "percentage" or "fixed"' })
+    if (
+      updateData.discount_type &&
+      !["percentage", "fixed"].includes(updateData.discount_type)
+    ) {
+      return res
+        .status(400)
+        .json({ message: 'discount_type must be "percentage" or "fixed"' });
     }
 
-    const updated = await voucherModel.updateVoucher(voucherId, updateData)
+    const updated = await voucherModel.updateVoucher(voucherId, updateData);
     if (!updated) {
-      return res.status(404).json({ message: 'Voucher not found' })
+      return res.status(404).json({ message: "Voucher not found" });
     }
 
-    res.json(updated)
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * DELETE /api/admin/vouchers/:id
@@ -1825,20 +2046,20 @@ router.put('/vouchers/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/vouchers/:id', async (req, res) => {
+router.delete("/vouchers/:id", async (req, res) => {
   try {
-    const voucherId = parseInt(req.params.id)
-    const deleted = await voucherModel.deleteVoucher(voucherId)
-    
+    const voucherId = parseInt(req.params.id);
+    const deleted = await voucherModel.deleteVoucher(voucherId);
+
     if (!deleted) {
-      return res.status(404).json({ message: 'Voucher not found' })
+      return res.status(404).json({ message: "Voucher not found" });
     }
-    
-    res.json({ message: 'Voucher deleted successfully' })
+
+    res.json({ message: "Voucher deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 /**
  * POST /api/admin/vouchers/bulk-update
@@ -1846,27 +2067,33 @@ router.delete('/vouchers/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.post('/vouchers/bulk-update', validateBulkOperation, async (req, res) => {
-  try {
-    const { voucherIds, isActive } = req.body
+router.post(
+  "/vouchers/bulk-update",
+  validateBulkOperation,
+  async (req, res) => {
+    try {
+      const { voucherIds, isActive } = req.body;
 
-    if (isActive === undefined) {
-      return res.status(400).json({ message: 'isActive is required' })
+      if (isActive === undefined) {
+        return res.status(400).json({ message: "isActive is required" });
+      }
+
+      const db = (await import("../config/db.js")).default;
+      const placeholders = voucherIds.map(() => "?").join(",");
+
+      await db.execute(
+        `UPDATE vouchers SET is_active = ? WHERE id IN (${placeholders})`,
+        [isActive, ...voucherIds]
+      );
+
+      res.json({
+        message: `${voucherIds.length} vouchers updated successfully`,
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-
-    const db = (await import('../config/db.js')).default
-    const placeholders = voucherIds.map(() => '?').join(',')
-    
-    await db.execute(
-      `UPDATE vouchers SET is_active = ? WHERE id IN (${placeholders})`,
-      [isActive, ...voucherIds]
-    )
-
-    res.json({ message: `${voucherIds.length} vouchers updated successfully` })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
   }
-})
+);
 
 /**
  * GET /api/admin/product-views
@@ -1875,7 +2102,7 @@ router.post('/vouchers/bulk-update', validateBulkOperation, async (req, res) => 
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/product-views', async (req, res) => {
+router.get("/product-views", async (req, res) => {
   try {
     const filters = {
       page: parseInt(req.query.page) || 1,
@@ -1884,21 +2111,21 @@ router.get('/product-views', async (req, res) => {
       userId: req.query.userId ? parseInt(req.query.userId) : null,
       productId: req.query.productId ? parseInt(req.query.productId) : null,
       userType: req.query.userType || null,
-      sortBy: req.query.sortBy || 'viewed_at',
-      sortOrder: req.query.sortOrder || 'DESC',
+      sortBy: req.query.sortBy || "viewed_at",
+      sortOrder: req.query.sortOrder || "DESC",
       startDate: req.query.startDate || null,
-      endDate: req.query.endDate || null
-    }
+      endDate: req.query.endDate || null,
+    };
 
-    const result = await productViewModel.getAllProductViews(filters)
-    res.json(result)
+    const result = await productViewModel.getAllProductViews(filters);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to fetch product views',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to fetch product views",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * GET /api/admin/product-views/:id
@@ -1906,26 +2133,26 @@ router.get('/product-views', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/product-views/:id', async (req, res) => {
+router.get("/product-views/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid view ID' })
+      return res.status(400).json({ message: "Invalid view ID" });
     }
 
-    const view = await productViewModel.getProductViewById(id)
+    const view = await productViewModel.getProductViewById(id);
     if (!view) {
-      return res.status(404).json({ message: 'Product view not found' })
+      return res.status(404).json({ message: "Product view not found" });
     }
 
-    res.json(view)
+    res.json(view);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to fetch product view',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to fetch product view",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * DELETE /api/admin/product-views/:id
@@ -1933,26 +2160,26 @@ router.get('/product-views/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/product-views/:id', async (req, res) => {
+router.delete("/product-views/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid view ID' })
+      return res.status(400).json({ message: "Invalid view ID" });
     }
 
-    const deleted = await productViewModel.deleteProductView(id)
+    const deleted = await productViewModel.deleteProductView(id);
     if (!deleted) {
-      return res.status(404).json({ message: 'Product view not found' })
+      return res.status(404).json({ message: "Product view not found" });
     }
 
-    res.json({ message: 'Product view deleted successfully' })
+    res.json({ message: "Product view deleted successfully" });
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to delete product view',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to delete product view",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * DELETE /api/admin/product-views
@@ -1961,26 +2188,26 @@ router.delete('/product-views/:id', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/product-views', async (req, res) => {
+router.delete("/product-views", async (req, res) => {
   try {
-    const { ids } = req.body
+    const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ message: 'ids array is required' })
+      return res.status(400).json({ message: "ids array is required" });
     }
 
-    const deletedCount = await productViewModel.bulkDeleteProductViews(ids)
-    res.json({ 
+    const deletedCount = await productViewModel.bulkDeleteProductViews(ids);
+    res.json({
       message: `${deletedCount} product view(s) deleted successfully`,
-      deletedCount
-    })
+      deletedCount,
+    });
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to delete product views',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to delete product views",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * DELETE /api/admin/product-views/user/:userId
@@ -1988,25 +2215,25 @@ router.delete('/product-views', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/product-views/user/:userId', async (req, res) => {
+router.delete("/product-views/user/:userId", async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId)
+    const userId = parseInt(req.params.userId);
     if (isNaN(userId)) {
-      return res.status(400).json({ message: 'Invalid user ID' })
+      return res.status(400).json({ message: "Invalid user ID" });
     }
 
-    const deletedCount = await productViewModel.deleteViewsByUserId(userId)
-    res.json({ 
+    const deletedCount = await productViewModel.deleteViewsByUserId(userId);
+    res.json({
       message: `${deletedCount} product view(s) deleted successfully`,
-      deletedCount
-    })
+      deletedCount,
+    });
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to delete user views',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to delete user views",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * DELETE /api/admin/product-views/session/:sessionId
@@ -2014,26 +2241,28 @@ router.delete('/product-views/user/:userId', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.delete('/product-views/session/:sessionId', async (req, res) => {
+router.delete("/product-views/session/:sessionId", async (req, res) => {
   try {
-    const { sessionId } = req.params
+    const { sessionId } = req.params;
 
     if (!sessionId) {
-      return res.status(400).json({ message: 'Session ID is required' })
+      return res.status(400).json({ message: "Session ID is required" });
     }
 
-    const deletedCount = await productViewModel.deleteViewsBySessionId(sessionId)
-    res.json({ 
+    const deletedCount = await productViewModel.deleteViewsBySessionId(
+      sessionId
+    );
+    res.json({
       message: `${deletedCount} product view(s) deleted successfully`,
-      deletedCount
-    })
+      deletedCount,
+    });
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to delete session views',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to delete session views",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * GET /api/admin/product-views/analytics
@@ -2042,21 +2271,25 @@ router.delete('/product-views/session/:sessionId', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/product-views/analytics', async (req, res) => {
+router.get("/product-views/analytics", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
 
-    const analytics = await productViewModel.getProductViewAnalytics(period, startDate, endDate)
-    res.json(analytics)
+    const analytics = await productViewModel.getProductViewAnalytics(
+      period,
+      startDate,
+      endDate
+    );
+    res.json(analytics);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to fetch analytics',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to fetch analytics",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
 /**
  * GET /api/admin/product-views/statistics
@@ -2065,21 +2298,24 @@ router.get('/product-views/analytics', async (req, res) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-router.get('/product-views/statistics', async (req, res) => {
+router.get("/product-views/statistics", async (req, res) => {
   try {
-    const period = req.query.period || 'month'
-    const startDate = req.query.startDate || null
-    const endDate = req.query.endDate || null
+    const period = req.query.period || "month";
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
 
-    const statistics = await productViewModel.getProductViewStatistics(period, startDate, endDate)
-    res.json(statistics)
+    const statistics = await productViewModel.getProductViewStatistics(
+      period,
+      startDate,
+      endDate
+    );
+    res.json(statistics);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Failed to fetch statistics',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    res.status(500).json({
+      message: error.message || "Failed to fetch statistics",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
-})
+});
 
-export default router
-
+export default router;

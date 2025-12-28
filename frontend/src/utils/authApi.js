@@ -27,111 +27,77 @@ export const fetchUser = async (
   isFetchingUserRef,
   userFetchedTimeRef,
   hasRefreshToken,
-  setTokenExpiresAt
+  setTokenExpiresAt,
+  isRefreshingTokenRef
 ) => {
-  // Prevent duplicate calls (React StrictMode in development)
   if (isFetchingUserRef.current) return;
   isFetchingUserRef.current = true;
 
   try {
-    // Use silent auth check endpoint that never returns 401
     const response = await axios.get("/api/auth/me");
-    if (response.data.user) {
+
+    if (response.data.user && response.data.accessTokenExpiresAt) {
       setUser(response.data.user);
+      setTokenExpiresAt(response.data.accessTokenExpiresAt);
       setError(null);
     } else {
-      // If /api/auth/me returns null user, try to refresh access token if refresh token exists
-      // This handles cases where access token expired but refresh token is still valid
-      if (hasRefreshToken && hasRefreshToken()) {
-        // Refresh token exists - try to refresh access token, then retry fetchUser
+      // This 'else' block is now the primary path for expired tokens on startup.
+      // It uses the isRefreshingTokenRef as a lock to prevent race conditions.
+      if (
+        hasRefreshToken &&
+        hasRefreshToken() &&
+        !isRefreshingTokenRef.current
+      ) {
+        isRefreshingTokenRef.current = true;
         try {
+          // Attempt to refresh the token
           const refreshResponse = await axios.post(
             "/api/auth/refresh",
             {},
-            {
-              validateStatus: (status) => status === 200 || status === 401,
-              _silent: true,
-              withCredentials: true,
-            }
+            { withCredentials: true }
           );
-          if (refreshResponse.status === 200) {
-            setTokenExpiresAt(refreshResponse.data.accessTokenExpiresAt);
-            // Token refreshed successfully - retry fetching user
-            try {
-              const retryResponse = await axios.get("/api/auth/me");
-              if (retryResponse.data.user) {
-                setUser(retryResponse.data.user);
-                setError(null);
-              }
-              // If still no user after refresh, preserve current user state (don't clear)
-            } catch {
-              // If retry fails, preserve current user state (don't clear)
+
+          if (
+            refreshResponse.status === 200 &&
+            refreshResponse.data.accessTokenExpiresAt
+          ) {
+            // If refresh succeeds, retry fetching the user with the new token
+            const retryResponse = await axios.get("/api/auth/me");
+
+            if (
+              retryResponse.data.user &&
+              retryResponse.data.accessTokenExpiresAt
+            ) {
+              // If retry also succeeds, set both user and expiry time
+              setUser(retryResponse.data.user);
+              setTokenExpiresAt(retryResponse.data.accessTokenExpiresAt);
+              setError(null);
+            } else {
+              setUser(null);
+              setTokenExpiresAt(null);
             }
+          } else {
+            setUser(null);
+            setTokenExpiresAt(null);
           }
-          // If refresh fails, preserve current user state (don't clear)
-        } catch {
-          // If refresh fails, preserve current user state (don't clear)
+        } catch (err) {
+          setUser(null);
+          setTokenExpiresAt(null);
+        } finally {
+          isRefreshingTokenRef.current = false;
         }
-      } else {
-        // No refresh token exists - clear user
+      } else if (!hasRefreshToken || !hasRefreshToken()) {
+        // Only log out if there's no refresh token. If there is one but a refresh is already in progress, do nothing.
         setUser(null);
         setError(null);
+        setTokenExpiresAt(null);
       }
     }
   } catch (error) {
-    // Handle 429 errors gracefully - don't clear user on rate limit
-    if (error.response?.status === 429) {
-      error._silent = true;
-      if (error.config) {
-        error.config._silent = true;
-      }
-      // Don't clear user on rate limit - just set loading to false
-      setLoading(false);
-      isFetchingUserRef.current = false;
-      userFetchedTimeRef.current = Date.now();
-      return;
-    }
-    // If error occurs but refresh token exists, try to refresh access token first
-    if (hasRefreshToken && hasRefreshToken()) {
-      // Refresh token exists - try to refresh access token, then retry fetchUser
-      try {
-        const refreshResponse = await axios.post(
-          "/api/auth/refresh",
-          {},
-          {
-            validateStatus: (status) => status === 200 || status === 401,
-            _silent: true,
-            withCredentials: true,
-          }
-        );
-        if (refreshResponse.status === 200) {
-          setTokenExpiresAt(refreshResponse.data.accessTokenExpiresAt);
-          // Token refreshed successfully - retry fetching user
-          try {
-            const retryResponse = await axios.get("/api/auth/me");
-            if (retryResponse.data.user) {
-              setUser(retryResponse.data.user);
-              setError(null);
-            }
-            // If still no user after refresh, don't clear (keep current state)
-          } catch {
-            // If retry fails, don't clear user - keep current state
-          }
-        } else {
-          // Refresh token returned 401 - don't clear user immediately
-          // The refresh token might still be valid, just a temporary issue
-          // Only clear if we're absolutely sure it's expired (handled by interceptor)
-          // Preserve current user state to prevent unnecessary logout
-        }
-      } catch {
-        // If refresh fails, don't clear user - keep current state
-        // The token might still be valid, just a network issue
-      }
-    } else {
-      // No refresh token exists - clear user
-      setUser(null);
-      setError(null);
-    }
+    // The interceptor should handle 401s. If we get here, it's another error.
+    setUser(null);
+    setTokenExpiresAt(null);
+    setError(error.message || "Session could not be restored.");
   } finally {
     setLoading(false);
     isFetchingUserRef.current = false;

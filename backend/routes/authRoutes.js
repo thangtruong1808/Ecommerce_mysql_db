@@ -230,7 +230,11 @@ router.post("/logout", protect, async (req, res) => {
  */
 router.get("/me", optionalAuth, async (req, res) => {
   try {
-    if (req.user) {
+    if (req.user && req.token) {
+      const accessTokenExpiresAt = getTokenExpiration(req.token).getTime();
+      res.json({ user: req.user, accessTokenExpiresAt });
+    } else if (req.user) {
+      // Fallback in case token is not attached, though it should be
       res.json({ user: req.user });
     } else {
       res.json({ user: null });

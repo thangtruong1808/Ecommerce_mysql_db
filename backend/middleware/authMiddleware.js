@@ -38,6 +38,7 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = user;
+    req.token = accessToken; // Attach token to request
     next();
   } catch (error) {
     res.status(401).json({ message: "Not authorized, token failed" });
@@ -61,6 +62,7 @@ export const optionalAuth = async (req, res, next) => {
         const user = await userModel.findUserById(decoded.id);
         if (user) {
           req.user = user;
+          req.token = accessToken; // Attach token to request
         }
       }
     }
