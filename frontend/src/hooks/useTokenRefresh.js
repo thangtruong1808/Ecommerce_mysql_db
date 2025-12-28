@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react'
 import axios from 'axios'
 import { isProtectedRoute } from '../utils/errorSuppression.js'
 import { handleTokenExpiration, hasRefreshToken } from '../utils/authUtils.js'
-import { fetchUser } from '../utils/authApi.js'
+import { initializeSession } from '../utils/authApi.js'
 
 /**
  * Hook to check refresh token expiration periodically
@@ -18,10 +18,11 @@ import { fetchUser } from '../utils/authApi.js'
  * @param {Function} setUser - Function to set user state
  * @param {Function} setError - Function to set error state
  * @param {Object} isRedirectingRef - Ref to track if redirecting
+ * @param {Function} setTokenExpiresAt - Function to set token expiration state
  * @author Thang Truong
  * @date 2025-01-28
  */
-export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef) => {
+export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef, setTokenExpiresAt) => {
   const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef, userFetchedTimeRef } = refs
 
   useEffect(() => {
@@ -85,9 +86,9 @@ export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef)
           // If user is null, try to restore user state after successful refresh
           // This handles cases where user state was lost due to inactivity
           if (!user) {
-            // Create a temporary ref to prevent duplicate calls
-            const tempFetchingRef = { current: false }
-            fetchUser(setUser, setError, () => {}, tempFetchingRef, userFetchedTimeRef, hasRefreshToken)
+            // After a successful background refresh, re-initialize the session
+            // to get the user data and set the new token expiry.
+            await initializeSession(setUser, setTokenExpiresAt, () => {});
           }
         } else if (response.status === 401) {
           // Increment failure count

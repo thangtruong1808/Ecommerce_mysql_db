@@ -8,100 +8,38 @@
 import axios from "axios";
 
 /**
- * Fetch current user - silent auth check
- * Uses /api/auth/me which never returns 401, always returns user or null
- * If fetch fails and refresh token exists, tries to refresh access token first
+ * Initialize Session
+ * Calls the backend's dedicated session-check endpoint to validate the user's session
+ * on initial application load. This single API call encapsulates all validation and
+ * refresh logic on the backend.
  * @param {Function} setUser - Function to set user state
- * @param {Function} setError - Function to set error state
+ * @param {Function} setTokenExpiresAt - Function to set token expiration state
  * @param {Function} setLoading - Function to set loading state
- * @param {Object} isFetchingUserRef - Ref to track if fetching user
- * @param {Object} userFetchedTimeRef - Ref to track when user was fetched
- * @param {Function} hasRefreshToken - Function to check if refresh token exists
  * @author Thang Truong
- * @date 2025-01-28
+ * @date 2025-12-28
  */
-export const fetchUser = async (
+export const initializeSession = async (
   setUser,
-  setError,
-  setLoading,
-  isFetchingUserRef,
-  userFetchedTimeRef,
-  hasRefreshToken,
   setTokenExpiresAt,
-  isRefreshingTokenRef
+  setLoading
 ) => {
-  if (isFetchingUserRef.current) return;
-  isFetchingUserRef.current = true;
-
   try {
-    const response = await axios.get("/api/auth/me");
-
-    if (response.data.user && response.data.accessTokenExpiresAt) {
-      setUser(response.data.user);
-      setTokenExpiresAt(response.data.accessTokenExpiresAt);
-      setError(null);
+    const { data } = await axios.get("/api/auth/session-check");
+    if (data.user && data.accessTokenExpiresAt) {
+      setUser(data.user);
+      setTokenExpiresAt(data.accessTokenExpiresAt);
     } else {
-      // This 'else' block is now the primary path for expired tokens on startup.
-      // It uses the isRefreshingTokenRef as a lock to prevent race conditions.
-      if (
-        hasRefreshToken &&
-        hasRefreshToken() &&
-        !isRefreshingTokenRef.current
-      ) {
-        isRefreshingTokenRef.current = true;
-        try {
-          // Attempt to refresh the token
-          const refreshResponse = await axios.post(
-            "/api/auth/refresh",
-            {},
-            { withCredentials: true }
-          );
-
-          if (
-            refreshResponse.status === 200 &&
-            refreshResponse.data.accessTokenExpiresAt
-          ) {
-            // If refresh succeeds, retry fetching the user with the new token
-            const retryResponse = await axios.get("/api/auth/me");
-
-            if (
-              retryResponse.data.user &&
-              retryResponse.data.accessTokenExpiresAt
-            ) {
-              // If retry also succeeds, set both user and expiry time
-              setUser(retryResponse.data.user);
-              setTokenExpiresAt(retryResponse.data.accessTokenExpiresAt);
-              setError(null);
-            } else {
-              setUser(null);
-              setTokenExpiresAt(null);
-            }
-          } else {
-            setUser(null);
-            setTokenExpiresAt(null);
-          }
-        } catch (err) {
-          setUser(null);
-          setTokenExpiresAt(null);
-        } finally {
-          isRefreshingTokenRef.current = false;
-        }
-      } else if (!hasRefreshToken || !hasRefreshToken()) {
-        // Only log out if there's no refresh token. If there is one but a refresh is already in progress, do nothing.
-        setUser(null);
-        setError(null);
-        setTokenExpiresAt(null);
-      }
+      setUser(null);
+      setTokenExpiresAt(null);
     }
   } catch (error) {
-    // The interceptor should handle 401s. If we get here, it's another error.
+    console.error("Session initialization failed:", error);
     setUser(null);
     setTokenExpiresAt(null);
-    setError(error.message || "Session could not be restored.");
   } finally {
-    setLoading(false);
-    isFetchingUserRef.current = false;
-    userFetchedTimeRef.current = Date.now();
+    if (setLoading) {
+      setLoading(false);
+    }
   }
 };
 

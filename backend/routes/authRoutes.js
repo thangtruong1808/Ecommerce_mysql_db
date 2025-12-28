@@ -27,9 +27,21 @@ import {
   clearAllTokenCookies,
 } from "../utils/cookieUtils.js";
 import { sendPasswordResetEmail } from "../utils/emailService.js";
+import { validateSession } from "../middleware/sessionMiddleware.js";
 // import { ref } from "pdfkit";
 
 const router = express.Router();
+
+/**
+ * GET /api/auth/session-check
+ * Validates user session on initial app load using a dedicated middleware.
+ * This single endpoint handles AT validation, RT refresh, and returns the final session state.
+ * @author Thang Truong
+ * @date 2025-12-28
+ */
+router.get("/session-check", validateSession, (req, res) => {
+  res.json(req.sessionData);
+});
 
 /**
  * POST /api/auth/register

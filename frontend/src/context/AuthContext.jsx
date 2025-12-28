@@ -10,7 +10,7 @@ import { setupErrorSuppression } from "../utils/errorSuppression.js";
 import { setupAuthInterceptors } from "../utils/axiosInterceptors.js";
 import { useTokenRefresh } from "../hooks/useTokenRefresh.js";
 import {
-  fetchUser,
+  initializeSession,
   login as loginApi,
   register as registerApi,
   logout as logoutApi,
@@ -43,14 +43,11 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [tokenExpiresAt, setTokenExpiresAt] = useState(null);
   const isRedirectingRef = useRef(false);
-  const isFetchingUserRef = useRef(false);
   const isRefreshingTokenRef = useRef(false);
   const lastRefreshTimeRef = useRef(0);
   const userFetchedTimeRef = useRef(0);
   const refreshFailureCountRef = useRef(0);
-  const lastLocationRef = useRef(window.location.pathname);
   const userRef = useRef(null);
-  const loadingRef = useRef(true);
   const tokenExpiresAtRef = useRef(null);
 
   // Keep refs in sync with state
@@ -59,27 +56,22 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
-
-  useEffect(() => {
     tokenExpiresAtRef.current = tokenExpiresAt;
   }, [tokenExpiresAt]);
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true;
 
-  // Refs object for token refresh and user restoration
+  // Refs object for token refresh
   const refs = {
     isRefreshingTokenRef,
     lastRefreshTimeRef,
     refreshFailureCountRef,
     userFetchedTimeRef,
-    isFetchingUserRef,
     userRef,
   };
 
-  // Initialize token refresh refs for ensureValidAccessToken utility
+  // Initialize token refresh refs
   useEffect(() => {
     initTokenRefreshRefs(refs);
   }, [refs]);
@@ -98,98 +90,27 @@ export const AuthProvider = ({ children }) => {
       () => tokenExpiresAtRef.current, // Getter function for expiration time
       setTokenExpiresAt
     );
-  }, [setTokenExpiresAt]);
+  }, []); // Removed setTokenExpiresAt from deps to ensure it only runs once
 
   /**
-   * Initialize auth state on mount - always check auth to restore user state
-   * This ensures authenticated users stay logged in on refresh for all pages
+   * Initialize auth state on mount by calling the dedicated session-check endpoint.
+   * This is now the single source of truth for session restoration on app load.
    * @author Thang Truong
-   * @date 2025-12-12
+   * @date 2025-12-28
    */
   useEffect(() => {
-    // Always fetch user on mount to restore authentication state
-    // This ensures authenticated users stay logged in after page refresh on all pages
-    // 401 errors on public pages for unauthenticated users are suppressed
-    fetchUser(
-      setUser,
-      setError,
-      setLoading,
-      isFetchingUserRef,
-      userFetchedTimeRef,
-      hasRefreshToken,
-      setTokenExpiresAt,
-      isRefreshingTokenRef
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    initializeSession(setUser, setTokenExpiresAt, setLoading);
   }, []);
 
-  /**
-   * Re-fetch user when route changes to ensure authentication is maintained
-   * Detects navigation and proactively verifies/restores user state on every navigation
-   * Intercepts History API to catch React Router navigation immediately
-   * @author Thang Truong
-   * @date 2025-01-28
-   */
-  useEffect(() => {
-    // Function to verify and restore user state on navigation
-    // Uses refs to avoid stale closure issues
-    const verifyAuthOnNavigation = () => {
-      const currentPath = window.location.pathname;
-      if (currentPath !== lastLocationRef.current) {
-        lastLocationRef.current = currentPath;
-
-        // On every navigation, if refresh token exists, immediately verify/restore user state
-        // This ensures authentication is maintained across all navigations
-        // Check even during loading to handle cases where access token expired during inactivity
-        if (hasRefreshToken() && !isFetchingUserRef.current) {
-          // Always try to restore/verify user state on navigation if refresh token exists
-          // This prevents authentication loss during navigation and after inactivity
-          // Don't check loadingRef - we want to restore even if loading
-          fetchUser(
-            setUser,
-            setError,
-            setLoading,
-            isFetchingUserRef,
-            userFetchedTimeRef,
-            hasRefreshToken,
-            setTokenExpiresAt,
-            isRefreshingTokenRef
-          );
-        }
-      }
-    };
-
-    // Intercept History API pushState and replaceState to catch React Router navigation
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-
-    history.pushState = function (...args) {
-      originalPushState.apply(history, args);
-      setTimeout(verifyAuthOnNavigation, 50);
-    };
-
-    history.replaceState = function (...args) {
-      originalReplaceState.apply(history, args);
-      setTimeout(verifyAuthOnNavigation, 50);
-    };
-
-    // Check route changes periodically (every 500ms) as fallback
-    const interval = setInterval(verifyAuthOnNavigation, 500);
-
-    // Also check on popstate (browser back/forward)
-    window.addEventListener("popstate", verifyAuthOnNavigation);
-
-    return () => {
-      // Restore original History API methods
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-      clearInterval(interval);
-      window.removeEventListener("popstate", verifyAuthOnNavigation);
-    };
-  }, [setUser, setError, setLoading]);
-
-  // Use token refresh hook - pass user state but hook will work even if null (if refresh token exists)
-  useTokenRefresh(user, refs, setUser, setError, isRedirectingRef);
+  // Use token refresh hook for periodic checks (e.g., for other tabs)
+  useTokenRefresh(
+    user,
+    refs,
+    setUser,
+    setError,
+    isRedirectingRef,
+    setTokenExpiresAt
+  );
 
   /**
    * Restore user state when page becomes visible after inactivity
@@ -270,30 +191,6 @@ export const AuthProvider = ({ children }) => {
     return updateProfileApi(userData, setUser, setError);
   };
 
-  /**
-   * Check authentication - can be called manually when needed
-   * Always fetches user to ensure auth state is current, especially on page refresh
-   * Prevents duplicate calls to avoid 429 rate limit errors
-   * @author Thang Truong
-   * @date 2025-12-17
-   */
-  const checkAuth = () => {
-    // Prevent duplicate calls - only fetch if not already fetching
-    // This prevents 429 rate limit errors from multiple simultaneous requests
-    if (!isFetchingUserRef.current) {
-      fetchUser(
-        setUser,
-        setError,
-        setLoading,
-        isFetchingUserRef,
-        userFetchedTimeRef,
-        hasRefreshToken,
-        setTokenExpiresAt,
-        isRefreshingTokenRef
-      );
-    }
-  };
-
   console.log("AuthContext user:", user);
   console.log("AuthContext loading:", loading);
   console.log("AuthContext error:", error);
@@ -309,7 +206,6 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
-    checkAuth,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
     tokenExpiresAt,
