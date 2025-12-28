@@ -26,7 +26,8 @@ export const fetchUser = async (
   setLoading,
   isFetchingUserRef,
   userFetchedTimeRef,
-  hasRefreshToken
+  hasRefreshToken,
+  setTokenExpiresAt
 ) => {
   // Prevent duplicate calls (React StrictMode in development)
   if (isFetchingUserRef.current) return;
@@ -54,6 +55,7 @@ export const fetchUser = async (
             }
           );
           if (refreshResponse.status === 200) {
+            setTokenExpiresAt(refreshResponse.data.accessTokenExpiresAt);
             // Token refreshed successfully - retry fetching user
             try {
               const retryResponse = await axios.get("/api/auth/me");
@@ -103,6 +105,7 @@ export const fetchUser = async (
           }
         );
         if (refreshResponse.status === 200) {
+          setTokenExpiresAt(refreshResponse.data.accessTokenExpiresAt);
           // Token refreshed successfully - retry fetching user
           try {
             const retryResponse = await axios.get("/api/auth/me");
@@ -146,45 +149,42 @@ export const fetchUser = async (
  * @author Thang Truong
  * @date 2025-12-12
  */
-export const login = async (email, password, setUser, setError) => {
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/auth/login", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.withCredentials = true;
-    xhr.onload = () => {
-      try {
-        const data = JSON.parse(xhr.responseText || "{}");
-        // Check if response has error message (backend returns 200 with message for wrong creds)
-        if (data.message && !data._id) {
-          const message = data.message || "Invalid email or password";
-          setError(message);
-          resolve({ success: false, error: message });
-        } else if (xhr.status === 200 && data._id) {
-          // Success: response has user data
-          console.log("Logged in user:", data);
-          console.log("Logged in user with accessToken:", data.accessToken);
+export const login = async (
+  email,
+  password,
+  setUser,
+  setError,
+  setTokenExpiresAt
+) => {
+  try {
+    const response = await axios.post("/api/auth/login", { email, password });
+    const data = response.data;
 
-          setUser(data);
+    // The backend sends a 200 response even for failed logins, with a 'message' field.
+    if (data.message && !data._id) {
+      const message = data.message || "Invalid email or password";
+      setError(message);
+      return { success: false, error: message };
+    }
 
-          setError(null);
-          resolve({ success: true });
-        } else {
-          const message = data?.message || "Invalid email or password";
-          setError(message);
-          resolve({ success: false, error: message });
-        }
-      } catch {
-        setError("Invalid email or password");
-        resolve({ success: false, error: "Invalid email or password" });
-      }
-    };
-    xhr.onerror = () => {
-      setError("Login failed. Please try again.");
-      resolve({ success: false, error: "Login failed. Please try again." });
-    };
-    xhr.send(JSON.stringify({ email, password }));
-  });
+    if (data._id && data.accessTokenExpiresAt) {
+      // Separate user data from the expiration time
+      const { accessTokenExpiresAt, ...userData } = data;
+      setUser(userData);
+      setTokenExpiresAt(accessTokenExpiresAt);
+      setError(null);
+      return { success: true };
+    } else {
+      const message = "Login failed: Invalid response from server.";
+      setError(message);
+      return { success: false, error: message };
+    }
+  } catch (error) {
+    const message =
+      error.response?.data?.message || "Login failed. Please try again.";
+    setError(message);
+    return { success: false, error: message };
+  }
 };
 
 /**
@@ -225,7 +225,7 @@ export const register = async (name, email, password, setUser, setError) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-export const logout = async (setUser, setError) => {
+export const logout = async (setUser, setError, setTokenExpiresAt) => {
   try {
     await axios.post("/api/auth/logout");
   } catch {
@@ -233,6 +233,9 @@ export const logout = async (setUser, setError) => {
   } finally {
     setUser(null);
     setError(null);
+    if (setTokenExpiresAt) {
+      setTokenExpiresAt(null);
+    }
   }
 };
 

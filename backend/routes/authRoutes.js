@@ -120,9 +120,9 @@ router.post(
         if (isMatch) {
           // Generate tokens
           const accessToken = generateAccessToken(user.id);
-          console.log("Generated Access Token:", accessToken);
           const refreshToken = generateRefreshToken(user.id);
-          console.log("Generated Refresh Token:", refreshToken);
+          const accessTokenExpiresAt =
+            getTokenExpiration(accessToken).getTime();
 
           // Store refresh token in database
           const expiresAt = getTokenExpiration(refreshToken);
@@ -141,8 +141,7 @@ router.post(
             name: user.name,
             email: user.email,
             role: user.role,
-            accessToken: accessToken, // For debugging purposes
-            refreshToken: refreshToken, // For debugging purposes
+            accessTokenExpiresAt: accessTokenExpiresAt,
           });
         } else {
           // Return 200 to avoid browser console error noise on expected wrong creds
@@ -186,11 +185,15 @@ router.post("/refresh", async (req, res) => {
 
     // Generate new access token
     const newAccessToken = generateAccessToken(decoded.id);
+    const accessTokenExpiresAt = getTokenExpiration(newAccessToken).getTime();
 
     // Set new access token cookie
     setAccessTokenCookie(res, newAccessToken);
 
-    res.json({ message: "Token refreshed successfully" });
+    res.json({
+      message: "Token refreshed successfully",
+      accessTokenExpiresAt: accessTokenExpiresAt,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
