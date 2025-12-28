@@ -13,7 +13,8 @@ import jwt from "jsonwebtoken";
 // TODO: Consider throwing error if JWT_SECRET is not set in production
 const JWT_SECRET =
   process.env.JWT_SECRET || "fallback_secret_change_in_production";
-const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "2m";
+const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "5m";
+console.log(">>>> [DEBUG]Access Token Expiry:", ACCESS_TOKEN_EXPIRY);
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d";
 
 /**

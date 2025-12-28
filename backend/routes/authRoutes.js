@@ -29,7 +29,7 @@ import {
 import { sendPasswordResetEmail } from "../utils/emailService.js";
 import { validateSession } from "../middleware/sessionMiddleware.js";
 // import { ref } from "pdfkit";
-
+import jwt from "jsonwebtoken";
 const router = express.Router();
 
 /**
@@ -132,6 +132,35 @@ router.post(
         if (isMatch) {
           // Generate tokens
           const accessToken = generateAccessToken(user.id);
+          // // vvvv ADD THIS DEBUGGING BLOCK vvvv
+          // try {
+          //   // const jwt = require("jsonwebtoken");
+          //   const decodedForDebug = jwt.decode(accessToken);
+          //   if (decodedForDebug) {
+          //     const issuedAt = new Date(decodedForDebug.iat * 1000);
+          //     const expiresAt = new Date(decodedForDebug.exp * 1000);
+          //     const lifetimeInSeconds =
+          //       decodedForDebug.exp - decodedForDebug.iat;
+          //     console.log(">>>> [DEBUG] Immediately Decoded Token Details:");
+          //     console.log(
+          //       "Issued At (iat):",
+          //       issuedAt.toLocaleString("en-AU", {
+          //         timeZone: "Australia/Melbourne",
+          //       })
+          //     );
+          //     console.log(
+          //       "Expires At (exp):",
+          //       expiresAt.toLocaleString("en-AU", {
+          //         timeZone: "Australia/Melbourne",
+          //       })
+          //     );
+          //     console.log("Lifetime (seconds):", lifetimeInSeconds); // Should be 120
+          //   }
+          // } catch (e) {
+          //   console.log("Debug decode failed", e);
+          // }
+          // // ^^^^ END DEBUGGING BLOCK ^^^^
+
           const refreshToken = generateRefreshToken(user.id);
           const accessTokenExpiresAt =
             getTokenExpiration(accessToken).getTime();
