@@ -5,11 +5,11 @@
  * @date 2025-01-28
  */
 
-import { useEffect, useRef } from 'react'
-import axios from 'axios'
-import { isProtectedRoute } from '../utils/errorSuppression.js'
-import { handleTokenExpiration, hasRefreshToken } from '../utils/authUtils.js'
-import { initializeSession } from '../utils/authApi.js'
+import { useEffect, useRef } from "react";
+import axios from "axios";
+import { isProtectedRoute } from "../utils/errorSuppression.js";
+import { handleTokenExpiration, hasRefreshToken } from "../utils/authUtils.js";
+import { initializeSession } from "../utils/authApi.js";
 
 /**
  * Hook to check refresh token expiration periodically
@@ -22,131 +22,92 @@ import { initializeSession } from '../utils/authApi.js'
  * @author Thang Truong
  * @date 2025-01-28
  */
-export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef, setTokenExpiresAt) => {
-  const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef, userFetchedTimeRef } = refs
+export const useTokenRefresh = (
+  user,
+  refs,
+  setUser,
+  setError,
+  isRedirectingRef,
+  setTokenExpiresAt,
+  getRefreshTokenExpiresAt,
+  setRefreshTokenExpiresAt
+) => {
+  const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef } =
+    refs;
 
   useEffect(() => {
-    // Continue checking even if user is null, as long as refresh token exists
-    // This allows restoration of user state after inactivity
-    if (!hasRefreshToken()) return
-    
-    const checkTokenExpiration = async () => {
-      const path = window.location.pathname
-      const isProtected = isProtectedRoute()
-      const isAuthPage = path === '/login' || path === '/register' || path.startsWith('/forgot-password') || path.startsWith('/reset-password')
-      const isPublicPage = !isProtected && !isAuthPage
-      
-      // Don't check token expiration on public pages to avoid console errors
-      if (isPublicPage) return
-      
-      // Only check if we haven't refreshed recently (within last 2 minutes)
-      // This prevents interference with normal token refresh flow
-      const now = Date.now()
-      if (isRefreshingTokenRef.current || (now - lastRefreshTimeRef.current < 120000)) {
-        return
+    if (!hasRefreshToken()) return;
+
+    const proactivelyRefreshRefreshToken = async () => {
+      const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
+      if (!refreshTokenExpiresAt) return;
+
+      const now = Date.now();
+      const oneMinute = 60 * 1000;
+
+      if (refreshTokenExpiresAt < now) {
+        await handleTokenExpiration(setUser, setError, isRedirectingRef);
+        return;
       }
-      
-      // Don't check immediately after fetching user - wait at least 10 seconds
-      // This prevents simultaneous calls on page refresh
-      if (userFetchedTimeRef.current > 0 && (now - userFetchedTimeRef.current < 10000)) {
-        return
-      }
-      
-      // Check if refresh token cookie exists before making the call
-      // This prevents unnecessary 401 errors in console
-      if (!hasRefreshToken()) {
-        // If no refresh token cookie, don't make the call to avoid 401 errors
-        return
-      }
-      
-      // If we've had recent failures, don't check again immediately
-      // This prevents repeated 401 errors in console
-      if (refreshFailureCountRef.current > 0 && refreshFailureCountRef.current < 3) {
-        // Wait longer before retrying after a failure
-        if (now - lastRefreshTimeRef.current < 300000) { // 5 minutes
-          return
+
+      // Proactively refresh if the refresh token expires in the next minute
+      if (refreshTokenExpiresAt - now < oneMinute) {
+        if (
+          isRefreshingTokenRef.current ||
+          now - lastRefreshTimeRef.current < 30000 // 30 seconds
+        ) {
+          return;
         }
-      }
-      
-      isRefreshingTokenRef.current = true
-      lastRefreshTimeRef.current = now
-      
-      try {
-        // Only verify refresh token is still valid, don't proactively refresh access token
-        // The axios interceptor will handle access token refresh when needed
-        // Mark request as silent to prevent console errors
-        const response = await axios.post('/api/auth/refresh', {}, {
-          validateStatus: (status) => status === 200 || status === 401,
-          _silent: true,
-          withCredentials: true
-        })
-        if (response.status === 200) {
-          // Reset failure count on successful verification
-          refreshFailureCountRef.current = 0
-          // If user is null, try to restore user state after successful refresh
-          // This handles cases where user state was lost due to inactivity
-          if (!user) {
-            // After a successful background refresh, re-initialize the session
-            // to get the user data and set the new token expiry.
-            await initializeSession(setUser, setTokenExpiresAt, () => {});
+
+        isRefreshingTokenRef.current = true;
+        lastRefreshTimeRef.current = now;
+
+        try {
+          const response = await axios.post(
+            "/api/auth/refresh",
+            {},
+            {
+              validateStatus: (status) => status === 200 || status === 401,
+              _silent: true,
+              withCredentials: true,
+            }
+          );
+
+          if (response.status === 200) {
+            refreshFailureCountRef.current = 0;
+            if (response.data.accessTokenExpiresAt) {
+              setTokenExpiresAt(response.data.accessTokenExpiresAt);
+            }
+            if (response.data.refreshTokenExpiresAt) {
+              setRefreshTokenExpiresAt(response.data.refreshTokenExpiresAt);
+            }
+          } else if (response.status === 401) {
+            await handleTokenExpiration(setUser, setError, isRedirectingRef);
           }
-        } else if (response.status === 401) {
-          // Increment failure count
-          refreshFailureCountRef.current += 1
-          // Only logout after 3 consecutive failures to avoid false positives
-          if (refreshFailureCountRef.current >= 3) {
-            await handleTokenExpiration(setUser, setError, isRedirectingRef)
+        } catch (error) {
+          if (error.response?.status !== 429) {
+            await handleTokenExpiration(setUser, setError, isRedirectingRef);
           }
+        } finally {
+          setTimeout(() => {
+            isRefreshingTokenRef.current = false;
+          }, 10000);
         }
-      } catch (error) {
-        // Handle 429 errors gracefully - don't logout user
-        if (error.response?.status === 429) {
-          error._silent = true
-          if (error.config) {
-            error.config._silent = true
-          }
-          // Don't logout on rate limit - just wait and retry later
-          isRefreshingTokenRef.current = false
-          return
-        }
-        // Mark as silent to avoid console errors
-        if (error.config) {
-          error.config._silent = true
-        }
-        error._silent = true
-        if (error.response?.status === 401) {
-          // Increment failure count
-          refreshFailureCountRef.current += 1
-          // Only logout after 3 consecutive failures to avoid false positives
-          if (refreshFailureCountRef.current >= 3) {
-            await handleTokenExpiration(setUser, setError, isRedirectingRef)
-          }
-        } else {
-          // Reset failure count on non-401 errors (network issues, etc.)
-          refreshFailureCountRef.current = 0
-        }
-      } finally {
-        // Reset flag after a delay to allow periodic checks
-        setTimeout(() => {
-          isRefreshingTokenRef.current = false
-        }, 10000)
       }
-    }
-    
-    // Wait 10 seconds after user is set before first check to avoid simultaneous calls with fetchUser
-    // This prevents 429 rate limit errors on page refresh
-    // Check every 5 minutes instead of 60 seconds to avoid interfering with normal operations
-    const initialDelay = setTimeout(() => {
-      checkTokenExpiration()
-      // Periodic checks every 5 minutes (300000ms) instead of 60 seconds
-      // This is less aggressive and won't interfere with normal token refresh flow
-      const interval = setInterval(checkTokenExpiration, 300000)
-      return () => clearInterval(interval)
-    }, 10000)
-    
-    return () => clearTimeout(initialDelay)
-  }, [user, refs, setUser, setError, isRedirectingRef])
-}
+    };
+
+    const interval = setInterval(proactivelyRefreshRefreshToken, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [
+    user,
+    refs,
+    setUser,
+    setError,
+    isRedirectingRef,
+    getRefreshTokenExpiresAt,
+    setRefreshTokenExpiresAt,
+  ]);
+};
 
 /**
  * Refresh access token - called automatically when access token expires
@@ -155,58 +116,67 @@ export const useTokenRefresh = (user, refs, setUser, setError, isRedirectingRef,
  * @param {Function} setUser - Function to set user state
  * @param {Function} setError - Function to set error state
  * @param {Object} isRedirectingRef - Ref to track if redirecting
+ * @param {Function} setRefreshTokenExpiresAt - Function to set refresh token expiration
  * @returns {Promise<boolean>} Success status
  * @author Thang Truong
  * @date 2025-12-17
  */
-export const refreshToken = async (refs, setUser, setError, isRedirectingRef) => {
-  const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef } = refs
-  
-  // Prevent duplicate refresh calls - only allow one refresh per 5 seconds
-  const now = Date.now()
-  if (isRefreshingTokenRef.current || (now - lastRefreshTimeRef.current < 5000)) {
-    return false
+export const refreshToken = async (
+  refs,
+  setUser,
+  setError,
+  isRedirectingRef,
+  setRefreshTokenExpiresAt
+) => {
+  const { isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef } =
+    refs;
+
+  const now = Date.now();
+  if (isRefreshingTokenRef.current || now - lastRefreshTimeRef.current < 5000) {
+    return false;
   }
-  
-  isRefreshingTokenRef.current = true
-  lastRefreshTimeRef.current = now
-  
-  // Check if refresh token cookie exists before making the call
+
+  isRefreshingTokenRef.current = true;
+  lastRefreshTimeRef.current = now;
+
   if (!hasRefreshToken()) {
-    return false
+    return false;
   }
-  
+
   try {
-    // Mark request as silent to prevent console errors
-    const response = await axios.post('/api/auth/refresh', {}, {
-      validateStatus: (status) => status === 200 || status === 401,
-      _silent: true,
-      withCredentials: true
-    })
-    isRefreshingTokenRef.current = false
-    if (response.status === 200) {
-      // Reset failure count on successful refresh
-      refreshFailureCountRef.current = 0
-      return true
-    }
-    await handleTokenExpiration(setUser, setError, isRedirectingRef)
-    return false
-  } catch (error) {
-    isRefreshingTokenRef.current = false
-    // Handle 429 errors gracefully - don't logout user
-    if (error.response?.status === 429) {
-      error._silent = true
-      if (error.config) {
-        error.config._silent = true
+    const response = await axios.post(
+      "/api/auth/refresh",
+      {},
+      {
+        validateStatus: (status) => status === 200 || status === 401,
+        _silent: true,
+        withCredentials: true,
       }
-      return false
+    );
+    isRefreshingTokenRef.current = false;
+    if (response.status === 200) {
+      refreshFailureCountRef.current = 0;
+      if (response.data.refreshTokenExpiresAt && setRefreshTokenExpiresAt) {
+        setRefreshTokenExpiresAt(response.data.refreshTokenExpiresAt);
+      }
+      return true;
+    }
+    await handleTokenExpiration(setUser, setError, isRedirectingRef);
+    return false;
+  } catch (error) {
+    isRefreshingTokenRef.current = false;
+    if (error.response?.status === 429) {
+      error._silent = true;
+      if (error.config) {
+        error.config._silent = true;
+      }
+      return false;
     }
     if (error.response?.status === 401) {
-      await handleTokenExpiration(setUser, setError, isRedirectingRef)
+      await handleTokenExpiration(setUser, setError, isRedirectingRef);
     } else {
-      setUser(null)
+      setUser(null);
     }
-    return false
+    return false;
   }
-}
-
+};

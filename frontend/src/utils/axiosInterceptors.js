@@ -39,13 +39,15 @@ const authEndpoints = [
  * @param {Function} setTokenExpiresAt - A function to update the token expiration timestamp.
  * @returns {Function} A function to eject the interceptors.
  */
-export const setupAuthInterceptors = (
-  setUser,
-  setError,
-  isRedirectingRef,
-  getTokenExpiresAt,
-  setTokenExpiresAt
-) => {
+export const setupAuthInterceptors = (interceptorProps) => {
+  const {
+    setUser,
+    setError,
+    isRedirectingRef,
+    getTokenExpiresAt,
+    setTokenExpiresAt,
+    setRefreshTokenExpiresAt,
+  } = interceptorProps;
   const requestInterceptor = axios.interceptors.request.use(
     async (config) => {
       // Ignore auth endpoints
@@ -65,11 +67,16 @@ export const setupAuthInterceptors = (
               { withCredentials: true }
             );
             setTokenExpiresAt(data.accessTokenExpiresAt);
+            if (data.refreshTokenExpiresAt) {
+              setRefreshTokenExpiresAt(data.refreshTokenExpiresAt);
+            }
             processQueue(null);
             isRefreshing = false;
           } catch (error) {
             processQueue(error);
-            await handleTokenExpiration(setUser, setError, isRedirectingRef);
+            if (error.response?.data?.message === "force-logout") {
+              await handleTokenExpiration(setUser, setError, isRedirectingRef);
+            }
             isRefreshing = false;
             return Promise.reject(error);
           }
@@ -119,12 +126,17 @@ export const setupAuthInterceptors = (
           .post("/api/auth/refresh", {}, { withCredentials: true })
           .then((res) => {
             setTokenExpiresAt(res.data.accessTokenExpiresAt);
+            if (res.data.refreshTokenExpiresAt) {
+              setRefreshTokenExpiresAt(res.data.refreshTokenExpiresAt);
+            }
             processQueue(null);
             resolve(axios(originalRequest));
           })
           .catch(async (err) => {
             processQueue(err);
-            await handleTokenExpiration(setUser, setError, isRedirectingRef);
+            if (err.response?.data?.message === "force-logout") {
+              await handleTokenExpiration(setUser, setError, isRedirectingRef);
+            }
             reject(err);
           })
           .finally(() => {

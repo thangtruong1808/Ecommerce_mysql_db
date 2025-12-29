@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tokenExpiresAt, setTokenExpiresAt] = useState(null);
+  const [refreshTokenExpiresAt, setRefreshTokenExpiresAt] = useState(null);
   const isRedirectingRef = useRef(false);
   const isRefreshingTokenRef = useRef(false);
   const lastRefreshTimeRef = useRef(0);
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }) => {
   const refreshFailureCountRef = useRef(0);
   const userRef = useRef(null);
   const tokenExpiresAtRef = useRef(null);
+  const refreshTokenExpiresAtRef = useRef(null);
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -58,6 +60,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     tokenExpiresAtRef.current = tokenExpiresAt;
   }, [tokenExpiresAt]);
+
+  useEffect(() => {
+    refreshTokenExpiresAtRef.current = refreshTokenExpiresAt;
+  }, [refreshTokenExpiresAt]);
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true;
@@ -81,16 +87,40 @@ export const AuthProvider = ({ children }) => {
     setupErrorSuppression();
   }, []);
 
+  const setUserRef = useRef(setUser);
+  const setErrorRef = useRef(setError);
+  const setTokenExpiresAtRef = useRef(setTokenExpiresAt);
+  const setRefreshTokenExpiresAtRef = useRef(setRefreshTokenExpiresAt);
+  useEffect(() => {
+    setUserRef.current = setUser;
+    setErrorRef.current = setError;
+    setTokenExpiresAtRef.current = setTokenExpiresAt;
+    setRefreshTokenExpiresAtRef.current = setRefreshTokenExpiresAt;
+  });
+
   // Setup the consolidated authentication interceptors (proactive and reactive)
   useEffect(() => {
-    return setupAuthInterceptors(
-      setUser,
-      setError,
+    const interceptorProps = {
+      setUser: (...args) => setUserRef.current(...args),
+      setError: (...args) => setErrorRef.current(...args),
       isRedirectingRef,
-      () => tokenExpiresAtRef.current, // Getter function for expiration time
-      setTokenExpiresAt
-    );
-  }, []); // Removed setTokenExpiresAt from deps to ensure it only runs once
+      getTokenExpiresAt: () => tokenExpiresAtRef.current,
+      setTokenExpiresAt: (...args) => setTokenExpiresAtRef.current(...args),
+      setRefreshTokenExpiresAt: (...args) =>
+        setRefreshTokenExpiresAtRef.current(...args),
+    };
+    const ejectInterceptors = setupAuthInterceptors(interceptorProps);
+    return () => {
+      ejectInterceptors();
+    };
+  }, [
+    setUser,
+    setError,
+    setTokenExpiresAt,
+    setRefreshTokenExpiresAt,
+    isRedirectingRef,
+    tokenExpiresAtRef,
+  ]);
 
   /**
    * Initialize auth state on mount by calling the dedicated session-check endpoint.
@@ -99,7 +129,12 @@ export const AuthProvider = ({ children }) => {
    * @date 2025-12-28
    */
   useEffect(() => {
-    initializeSession(setUser, setTokenExpiresAt, setLoading);
+    initializeSession(
+      setUser,
+      setTokenExpiresAt,
+      setLoading,
+      setRefreshTokenExpiresAt
+    );
   }, []);
 
   // Use token refresh hook for periodic checks (e.g., for other tabs)
@@ -109,7 +144,9 @@ export const AuthProvider = ({ children }) => {
     setUser,
     setError,
     isRedirectingRef,
-    setTokenExpiresAt
+    setTokenExpiresAt,
+    () => refreshTokenExpiresAtRef.current,
+    setRefreshTokenExpiresAt
   );
 
   /**
@@ -155,7 +192,14 @@ export const AuthProvider = ({ children }) => {
    * @date 2025-12-12
    */
   const login = async (email, password) => {
-    return loginApi(email, password, setUser, setError, setTokenExpiresAt);
+    return loginApi(
+      email,
+      password,
+      setUser,
+      setError,
+      setTokenExpiresAt,
+      setRefreshTokenExpiresAt
+    );
   };
 
   /**
@@ -168,7 +212,14 @@ export const AuthProvider = ({ children }) => {
    * @date 2025-12-12
    */
   const register = async (name, email, password) => {
-    return registerApi(name, email, password, setUser, setError);
+    return registerApi(
+      name,
+      email,
+      password,
+      setUser,
+      setError,
+      setRefreshTokenExpiresAt
+    );
   };
 
   /**
@@ -177,7 +228,12 @@ export const AuthProvider = ({ children }) => {
    * @date 2025-12-12
    */
   const logout = async () => {
-    return logoutApi(setUser, setError, setTokenExpiresAt);
+    return logoutApi(
+      setUser,
+      setError,
+      setTokenExpiresAt,
+      setRefreshTokenExpiresAt
+    );
   };
 
   /**
@@ -192,11 +248,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   console.log("AuthContext user:", user);
-  console.log("AuthContext loading:", loading);
-  console.log("AuthContext error:", error);
-  console.log("AuthContext isAuthenticated:", !!user);
-  console.log("AuthContext isAdmin:", user?.role === "admin");
+  // console.log("AuthContext loading:", loading);
+  // console.log("AuthContext error:", error);
+  // console.log("AuthContext isAuthenticated:", !!user);
+  // console.log("AuthContext isAdmin:", user?.role === "admin");
   console.log("AuthContext tokenExpiresAt:", tokenExpiresAt);
+  console.log("AuthContext refreshTokenExpiresAt:", refreshTokenExpiresAt);
 
   const value = {
     user,
@@ -210,6 +267,8 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role === "admin",
     tokenExpiresAt,
     setTokenExpiresAt,
+    refreshTokenExpiresAt,
+    setRefreshTokenExpiresAt,
   };
 
   /* Auth context provider */

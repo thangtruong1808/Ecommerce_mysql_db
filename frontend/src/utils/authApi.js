@@ -21,21 +21,27 @@ import axios from "axios";
 export const initializeSession = async (
   setUser,
   setTokenExpiresAt,
-  setLoading
+  setLoading,
+  setRefreshTokenExpiresAt
 ) => {
   try {
     const { data } = await axios.get("/api/auth/session-check");
     if (data.user && data.accessTokenExpiresAt) {
       setUser(data.user);
       setTokenExpiresAt(data.accessTokenExpiresAt);
+      if (data.refreshTokenExpiresAt) {
+        setRefreshTokenExpiresAt(data.refreshTokenExpiresAt);
+      }
     } else {
       setUser(null);
       setTokenExpiresAt(null);
+      setRefreshTokenExpiresAt(null);
     }
   } catch (error) {
-    console.error("Session initialization failed:", error);
+    // console.error("Session initialization failed:", error);
     setUser(null);
     setTokenExpiresAt(null);
+    setRefreshTokenExpiresAt(null);
   } finally {
     if (setLoading) {
       setLoading(false);
@@ -58,7 +64,8 @@ export const login = async (
   password,
   setUser,
   setError,
-  setTokenExpiresAt
+  setTokenExpiresAt,
+  setRefreshTokenExpiresAt
 ) => {
   try {
     const response = await axios.post("/api/auth/login", { email, password });
@@ -73,9 +80,12 @@ export const login = async (
 
     if (data._id && data.accessTokenExpiresAt) {
       // Separate user data from the expiration time
-      const { accessTokenExpiresAt, ...userData } = data;
+      const { accessTokenExpiresAt, refreshTokenExpiresAt, ...userData } = data;
       setUser(userData);
       setTokenExpiresAt(accessTokenExpiresAt);
+      if (refreshTokenExpiresAt) {
+        setRefreshTokenExpiresAt(refreshTokenExpiresAt);
+      }
       setError(null);
       return { success: true };
     } else {
@@ -102,14 +112,25 @@ export const login = async (
  * @author Thang Truong
  * @date 2025-12-12
  */
-export const register = async (name, email, password, setUser, setError) => {
+export const register = async (
+  name,
+  email,
+  password,
+  setUser,
+  setError,
+  setRefreshTokenExpiresAt
+) => {
   try {
     const response = await axios.post("/api/auth/register", {
       name,
       email,
       password,
     });
-    setUser(response.data);
+    const { refreshTokenExpiresAt, ...userData } = response.data;
+    setUser(userData);
+    if (refreshTokenExpiresAt) {
+      setRefreshTokenExpiresAt(refreshTokenExpiresAt);
+    }
     setError(null);
     return { success: true };
   } catch (error) {
@@ -129,7 +150,12 @@ export const register = async (name, email, password, setUser, setError) => {
  * @author Thang Truong
  * @date 2025-12-12
  */
-export const logout = async (setUser, setError, setTokenExpiresAt) => {
+export const logout = async (
+  setUser,
+  setError,
+  setTokenExpiresAt,
+  setRefreshTokenExpiresAt
+) => {
   try {
     await axios.post("/api/auth/logout");
   } catch {
@@ -139,6 +165,9 @@ export const logout = async (setUser, setError, setTokenExpiresAt) => {
     setError(null);
     if (setTokenExpiresAt) {
       setTokenExpiresAt(null);
+    }
+    if (setRefreshTokenExpiresAt) {
+      setRefreshTokenExpiresAt(null);
     }
   }
 };

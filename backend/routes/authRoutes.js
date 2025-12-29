@@ -80,7 +80,7 @@ router.post(
       // Generate tokens
       const accessToken = generateAccessToken(user.id);
       const refreshToken = generateRefreshToken(user.id);
-
+      const refreshTokenExpiresAt = getTokenExpiration(refreshToken).getTime();
       // Store refresh token in database
       const expiresAt = getTokenExpiration(refreshToken);
       await refreshTokenModel.createRefreshToken(
@@ -98,6 +98,7 @@ router.post(
         name: user.name,
         email: user.email,
         role: user.role,
+        refreshTokenExpiresAt: refreshTokenExpiresAt,
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -164,7 +165,8 @@ router.post(
           const refreshToken = generateRefreshToken(user.id);
           const accessTokenExpiresAt =
             getTokenExpiration(accessToken).getTime();
-
+          const refreshTokenExpiresAt =
+            getTokenExpiration(refreshToken).getTime();
           // Store refresh token in database
           const expiresAt = getTokenExpiration(refreshToken);
           await refreshTokenModel.createRefreshToken(
@@ -183,6 +185,7 @@ router.post(
             email: user.email,
             role: user.role,
             accessTokenExpiresAt: accessTokenExpiresAt,
+            refreshTokenExpiresAt: refreshTokenExpiresAt,
           });
         } else {
           // Return 200 to avoid browser console error noise on expected wrong creds
@@ -203,40 +206,43 @@ router.post(
  * Refresh access token using refresh token
  */
 router.post("/refresh", async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No refresh token provided" });
+  }
   try {
-    const refreshToken = req.cookies?.refreshToken;
-
-    if (!refreshToken) {
-      return res.status(401).json({ message: "No refresh token provided" });
-    }
-
-    // Verify refresh token
     const decoded = verifyRefreshToken(refreshToken);
-    if (!decoded) {
-      return res.status(401).json({ message: "Invalid refresh token" });
-    }
-
-    // Check if token exists in database
     const tokenRecord = await refreshTokenModel.findRefreshToken(refreshToken);
     if (!tokenRecord) {
+      clearAllTokenCookies(res);
       return res
         .status(401)
-        .json({ message: "Refresh token not found or expired" });
+        .json({ message: "Refresh token not found, please log in again" });
     }
-
-    // Generate new access token
+    await refreshTokenModel.deleteRefreshToken(refreshToken);
     const newAccessToken = generateAccessToken(decoded.id);
-    const accessTokenExpiresAt = getTokenExpiration(newAccessToken).getTime();
-
-    // Set new access token cookie
+    const newRefreshToken = generateRefreshToken(decoded.id);
+    const newRefreshTokenExpiresAt = getTokenExpiration(newRefreshToken);
+    await refreshTokenModel.createRefreshToken(
+      decoded.id,
+      newRefreshToken,
+      newRefreshTokenExpiresAt
+    );
     setAccessTokenCookie(res, newAccessToken);
-
+    setRefreshTokenCookie(res, newRefreshToken);
+    const accessTokenExpiresAt = getTokenExpiration(newAccessToken).getTime();
     res.json({
       message: "Token refreshed successfully",
       accessTokenExpiresAt: accessTokenExpiresAt,
+      refreshTokenExpiresAt: newRefreshTokenExpiresAt.getTime(),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error.name === "TokenExpiredError") {
+      clearAllTokenCookies(res);
+      return res.status(401).json({ message: "force-logout" });
+    }
+    clearAllTokenCookies(res);
+    return res.status(401).json({ message: "Invalid refresh token" });
   }
 });
 

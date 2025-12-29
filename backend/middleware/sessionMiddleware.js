@@ -47,58 +47,67 @@ import {
   generateAccessToken,
   getTokenExpiration,
 } from "../utils/tokenUtils.js";
-import { setAccessTokenCookie } from "../utils/cookieUtils.js";
-
+import {
+  setAccessTokenCookie,
+  clearAllTokenCookies,
+} from "../utils/cookieUtils.js";
 export const validateSession = async (req, res, next) => {
+  const { accessToken, refreshToken } = req.cookies || {};
   try {
-    const accessToken = req.cookies?.accessToken;
-    const refreshToken = req.cookies?.refreshToken;
-
-    // 1. Try to validate with Access Token first
     if (accessToken) {
-      const decodedAccess = verifyAccessToken(accessToken);
-      if (decodedAccess) {
+      try {
+        const decodedAccess = verifyAccessToken(accessToken);
         const user = await userModel.findUserById(decodedAccess.id);
         if (user) {
-          // Attach user and token info to request and proceed
           req.sessionData = {
             user,
             accessTokenExpiresAt: getTokenExpiration(accessToken).getTime(),
           };
           return next();
         }
+      } catch (error) {
+        // Access token is invalid or expired, proceed to refresh token
       }
     }
-
-    // 2. Access Token failed. Try to use Refresh Token.
     if (refreshToken) {
-      const decodedRefresh = verifyRefreshToken(refreshToken);
-      if (decodedRefresh) {
-        // Check if refresh token is in the database
-        const tokenRecord = await refreshTokenModel.findRefreshToken(refreshToken);
+      try {
+        const decodedRefresh = verifyRefreshToken(refreshToken);
+        const tokenRecord = await refreshTokenModel.findRefreshToken(
+          refreshToken
+        );
         if (tokenRecord) {
           const user = await userModel.findUserById(decodedRefresh.id);
           if (user) {
-            // All checks passed. Issue a new Access Token.
             const newAccessToken = generateAccessToken(user.id);
-            setAccessTokenCookie(res, newAccessToken); // Set new AT cookie on the response
-
-            // Attach user and *new* token info to request
+            setAccessTokenCookie(res, newAccessToken);
             req.sessionData = {
               user,
-              accessTokenExpiresAt: getTokenExpiration(newAccessToken).getTime(),
+              accessTokenExpiresAt:
+                getTokenExpiration(newAccessToken).getTime(),
             };
             return next();
           }
         }
+      } catch (error) {
+        if (error.name === "TokenExpiredError") {
+          clearAllTokenCookies(res);
+          // Send a specific response for the frontend to handle logout
+          return res.status(401).json({
+            user: null,
+            accessTokenExpiresAt: null,
+            error: "force-logout",
+          });
+        }
+        // For other errors (e.g., invalid token), clear cookies and proceed
+        clearAllTokenCookies(res);
       }
     }
-
-    // 3. Both tokens failed or are missing.
+    // Default to a logged-out state if all checks fail
     req.sessionData = { user: null, accessTokenExpiresAt: null };
     next();
   } catch (error) {
-    // On any unexpected error, default to a logged-out state.
+    // Catch any unexpected server errors
+    console.error("Unexpected error in validateSession:", error);
     req.sessionData = { user: null, accessTokenExpiresAt: null };
     next();
   }

@@ -120,12 +120,8 @@ app.get("/api/health", (req, res) => {
  * @author Thang Truong
  * @date 2025-12-17
  */
-app.use((err, req, res, next) => {
-  // Error handled by error response
-  res
-    .status(500)
-    .json({ message: "Something went wrong!", error: err.message });
-});
+import errorHandler from "./middleware/errorHandler.js";
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   // Server started successfully
