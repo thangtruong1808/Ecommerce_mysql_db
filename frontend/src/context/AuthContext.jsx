@@ -18,6 +18,7 @@ import {
 } from "../utils/authApi.js";
 import { hasRefreshToken } from "../utils/authUtils.js";
 import { initTokenRefreshRefs } from "../utils/tokenUtils.js";
+import { startExpiryCountdown } from "../utils/convertToMelbourneTime.js";
 
 const AuthContext = createContext();
 
@@ -51,6 +52,7 @@ export const AuthProvider = ({ children }) => {
   const userRef = useRef(null);
   const tokenExpiresAtRef = useRef(null);
   const refreshTokenExpiresAtRef = useRef(null);
+  const countdownRef = useRef(null); // stores interval ID
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -67,6 +69,26 @@ export const AuthProvider = ({ children }) => {
 
   // Configure axios to send cookies
   axios.defaults.withCredentials = true;
+
+  // In case user is logged out in another tab  OR inactivity for long time
+  //Log out when refresh token expires
+  // useEffect(() => {
+  //   console.log("Log out called:");
+  //   console.log("Refresh token expried at:" + refreshTokenExpiresAtRef);
+
+  //   console.log(
+  //     "refreshTokenExpiresAtRef.current:" +
+  //       convertToMelbourneTime(refreshTokenExpiresAtRef)
+  //   );
+  //   if (
+  //     refreshTokenExpiresAtRef.current &&
+  //     Date.now() > refreshTokenExpiresAtRef.current
+  //   ) {
+  //     setUser(null);
+  //     setTokenExpiresAt(null);
+  //     setRefreshTokenExpiresAt(null);
+  //   }
+  // }, [refreshTokenExpiresAt]);
 
   // Refs object for token refresh
   const refs = {
@@ -247,13 +269,44 @@ export const AuthProvider = ({ children }) => {
     return updateProfileApi(userData, setUser, setError);
   };
 
-  console.log("AuthContext user:", user);
+  // console.log("AuthContext user:", user);
   // console.log("AuthContext loading:", loading);
   // console.log("AuthContext error:", error);
   // console.log("AuthContext isAuthenticated:", !!user);
   // console.log("AuthContext isAdmin:", user?.role === "admin");
   console.log("AuthContext tokenExpiresAt:", tokenExpiresAt);
   console.log("AuthContext refreshTokenExpiresAt:", refreshTokenExpiresAt);
+
+  useEffect(() => {
+    if (!refreshTokenExpiresAt) return;
+
+    // Clear previous countdown
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+
+    // Start new countdown
+    countdownRef.current = startExpiryCountdown(
+      refreshTokenExpiresAt,
+      async () => {
+        try {
+          await logout(
+            setUser,
+            setError,
+            setTokenExpiresAt,
+            setRefreshTokenExpiresAt
+          );
+        } catch (err) {
+          console.error("Logout failed:", err);
+        }
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [refreshTokenExpiresAt]);
 
   const value = {
     user,
