@@ -4,21 +4,21 @@
  * @date 2025-12-12
  */
 
-import { createContext, useState, useContext, useEffect, useRef } from "react";
 import axios from "axios";
-import { setupErrorSuppression } from "../utils/errorSuppression.js";
-import { setupAuthInterceptors } from "../utils/axiosInterceptors.js";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useTokenRefresh } from "../hooks/useTokenRefresh.js";
 import {
   initializeSession,
   login as loginApi,
-  register as registerApi,
   logout as logoutApi,
+  register as registerApi,
   updateProfile as updateProfileApi,
 } from "../utils/authApi.js";
 import { hasRefreshToken } from "../utils/authUtils.js";
-import { initTokenRefreshRefs } from "../utils/tokenUtils.js";
+import { setupAuthInterceptors } from "../utils/axiosInterceptors.js";
 import { startExpiryCountdown } from "../utils/convertToMelbourneTime.js";
+import { setupErrorSuppression } from "../utils/errorSuppression.js";
+import { initTokenRefreshRefs } from "../utils/tokenUtils.js";
 
 const AuthContext = createContext();
 
@@ -70,26 +70,6 @@ export const AuthProvider = ({ children }) => {
   // Configure axios to send cookies
   axios.defaults.withCredentials = true;
 
-  // In case user is logged out in another tab  OR inactivity for long time
-  //Log out when refresh token expires
-  // useEffect(() => {
-  //   console.log("Log out called:");
-  //   console.log("Refresh token expried at:" + refreshTokenExpiresAtRef);
-
-  //   console.log(
-  //     "refreshTokenExpiresAtRef.current:" +
-  //       convertToMelbourneTime(refreshTokenExpiresAtRef)
-  //   );
-  //   if (
-  //     refreshTokenExpiresAtRef.current &&
-  //     Date.now() > refreshTokenExpiresAtRef.current
-  //   ) {
-  //     setUser(null);
-  //     setTokenExpiresAt(null);
-  //     setRefreshTokenExpiresAt(null);
-  //   }
-  // }, [refreshTokenExpiresAt]);
-
   // Refs object for token refresh
   const refs = {
     isRefreshingTokenRef,
@@ -113,6 +93,8 @@ export const AuthProvider = ({ children }) => {
   const setErrorRef = useRef(setError);
   const setTokenExpiresAtRef = useRef(setTokenExpiresAt);
   const setRefreshTokenExpiresAtRef = useRef(setRefreshTokenExpiresAt);
+
+  // Keep setter refs in sync
   useEffect(() => {
     setUserRef.current = setUser;
     setErrorRef.current = setError;
@@ -269,14 +251,7 @@ export const AuthProvider = ({ children }) => {
     return updateProfileApi(userData, setUser, setError);
   };
 
-  // console.log("AuthContext user:", user);
-  // console.log("AuthContext loading:", loading);
-  // console.log("AuthContext error:", error);
-  // console.log("AuthContext isAuthenticated:", !!user);
-  // console.log("AuthContext isAdmin:", user?.role === "admin");
-  console.log("AuthContext tokenExpiresAt:", tokenExpiresAt);
-  console.log("AuthContext refreshTokenExpiresAt:", refreshTokenExpiresAt);
-
+  // Start countdown < 5s from refresh token expiry and auto-logout
   useEffect(() => {
     if (!refreshTokenExpiresAt) return;
 
@@ -297,7 +272,8 @@ export const AuthProvider = ({ children }) => {
             setRefreshTokenExpiresAt
           );
         } catch (err) {
-          console.error("Logout failed:", err);
+          return err;
+          // console.error("Logout failed:", err);
         }
       }
     );
@@ -307,6 +283,9 @@ export const AuthProvider = ({ children }) => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, [refreshTokenExpiresAt]);
+
+  // console.log("AuthContext tokenExpiresAt:", tokenExpiresAt);
+  // console.log("AuthContext refreshTokenExpiresAt:", refreshTokenExpiresAt);
 
   const value = {
     user,

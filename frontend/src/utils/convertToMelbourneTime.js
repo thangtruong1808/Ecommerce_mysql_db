@@ -1,41 +1,3 @@
-// // Converts a timestamp (string or number) to the client's local time
-// export default function convertToLocalTime(timestamp) {
-//   if (timestamp === null || timestamp === undefined) {
-//     return "Invalid timestamp";
-//   }
-
-//   const normalized = Number(String(timestamp).trim());
-
-//   if (Number.isNaN(normalized)) {
-//     return "Invalid timestamp";
-//   }
-
-//   const ts =
-//     normalized.toString().length === 10
-//       ? normalized * 1000 // seconds → ms
-//       : normalized; // milliseconds
-
-//   const date = new Date(ts);
-
-//   if (Number.isNaN(date.getTime())) {
-//     return "Invalid Date";
-//   }
-
-//   // Automatically detect client's timezone
-//   const clientTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-//   return date.toLocaleString(undefined, {
-//     timeZone: clientTimeZone,
-//     year: "numeric",
-//     month: "2-digit",
-//     day: "2-digit",
-//     hour: "2-digit",
-//     minute: "2-digit",
-//     second: "2-digit",
-//     hour12: false,
-//   });
-// }
-
 // Returns remaining seconds until the timestamp expires
 export function getRemainingSeconds(timestamp) {
   if (timestamp === null || timestamp === undefined) {
@@ -55,27 +17,41 @@ export function getRemainingSeconds(timestamp) {
 
   return Math.max(0, Math.floor(diffMs / 1000));
 }
-
-// Starts a countdown until expiry
 export function startExpiryCountdown(timestamp, onExpire) {
   let remainingSeconds = getRemainingSeconds(timestamp);
 
-  // Initial check
-  if (remainingSeconds === 0) {
+  // If already expired, call immediately
+  if (remainingSeconds <= 0) {
     onExpire();
-    return;
+    return null;
   }
 
-  const intervalId = setInterval(() => {
-    remainingSeconds -= 1;
+  // If more than 5 seconds remaining, set a timeout to wait until 5 seconds left
+  if (remainingSeconds > 5) {
+    const timeoutId = setTimeout(() => {
+      // Start the final 5-second countdown
+      startFinalCountdown(onExpire);
+    }, (remainingSeconds - 5) * 1000);
 
-    console.log("Remaining seconds:", remainingSeconds);
+    return timeoutId; // return the timeout ID for cleanup if needed
+  } else {
+    // If 5 seconds or less, start countdown immediately
+    startFinalCountdown(onExpire);
+    return null;
+  }
 
-    if (remainingSeconds <= 0) {
-      clearInterval(intervalId);
-      onExpire(); // 🔔 alert / logout here
-    }
-  }, 1000);
+  // Helper: starts the last 5-second interval
+  function startFinalCountdown(callback) {
+    let finalSeconds = Math.min(remainingSeconds, 5);
 
-  return intervalId; // allows cleanup if needed
+    const intervalId = setInterval(() => {
+      finalSeconds -= 1;
+      // console.log("Final countdown:", finalSeconds);
+
+      if (finalSeconds <= 0) {
+        clearInterval(intervalId);
+        callback();
+      }
+    }, 1000);
+  }
 }
