@@ -14,7 +14,7 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET =
   process.env.JWT_SECRET || "fallback_secret_change_in_production";
 const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "2m";
-const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "2m";
+const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "5m";
 
 /**
  * Generate access token

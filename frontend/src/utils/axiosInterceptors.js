@@ -82,7 +82,7 @@ export const setupAuthInterceptors = (interceptorProps) => {
           if (data.refreshTokenExpiresAt) {
             setRefreshTokenExpiresAt(data.refreshTokenExpiresAt);
           }
-          
+
           // Process the queue of waiting requests
           processQueue(null);
 
@@ -91,11 +91,11 @@ export const setupAuthInterceptors = (interceptorProps) => {
         } catch (error) {
           // Refresh failed
           processQueue(error); // Reject all waiting requests
-          
+
           if (error.response?.data?.message === "force-logout") {
             await handleTokenExpiration(setUser, setError, isRedirectingRef);
           }
-          
+
           return Promise.reject(error); // Reject the current request
         } finally {
           isRefreshing = false;

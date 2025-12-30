@@ -10,6 +10,7 @@ import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
+import os from 'os'
 
 // Lazy load sharp for image resizing (optional - graceful fallback if not installed)
 let sharpCache = null
@@ -29,9 +30,19 @@ const getSharp = async () => {
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../uploads')
-if (!fs.existsSync(uploadsDir)) {
+// Check if using S3
+const useS3 = process.env.USE_AWS_S3 === 'true'
+
+// Define a writable directory for uploads.
+// Use the OS's temporary directory for serverless environments like Vercel,
+// otherwise use a local 'uploads' folder for development.
+const uploadsDir =
+  process.env.NODE_ENV === 'production' && !useS3
+    ? path.join(os.tmpdir(), 'uploads')
+    : path.join(__dirname, '../uploads')
+
+// Create uploads directory if it doesn't exist and we are not using S3
+if (!useS3 && !fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
 }
 
@@ -45,7 +56,7 @@ if (!fs.existsSync(uploadsDir)) {
  */
 const resizeImage = async (inputPath, outputPath) => {
   const sharp = await getSharp()
-  
+
   if (!sharp) {
     // If sharp is not available, copy file as-is
     fs.copyFileSync(inputPath, outputPath)
@@ -68,21 +79,26 @@ const resizeImage = async (inputPath, outputPath) => {
   }
 }
 
-// Check if using S3
-const useS3 = process.env.USE_AWS_S3 === 'true'
-
 // Configure storage for images - memory for S3, disk for local
 const imageStorage = useS3
   ? multer.memoryStorage()
   : multer.diskStorage({
       destination: (req, file, cb) => {
-        cb(null, path.join(uploadsDir, 'images'))
+        const dest = path.join(uploadsDir, 'images')
+        // Ensure the destination directory exists
+        if (!fs.existsSync(dest)) {
+          fs.mkdirSync(dest, { recursive: true })
+        }
+        cb(null, dest)
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
         const ext = path.extname(file.originalname).toLowerCase()
         // Convert to jpeg for consistency after resizing
-        const finalExt = (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.webp') ? '.jpg' : ext
+        const finalExt =
+          ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.webp'
+            ? '.jpg'
+            : ext
         cb(null, `product-${uniqueSuffix}${finalExt}`)
       }
     })
@@ -92,10 +108,15 @@ const videoStorage = useS3
   ? multer.memoryStorage()
   : multer.diskStorage({
       destination: (req, file, cb) => {
-        cb(null, path.join(uploadsDir, 'videos'))
+        const dest = path.join(uploadsDir, 'videos')
+        // Ensure the destination directory exists
+        if (!fs.existsSync(dest)) {
+          fs.mkdirSync(dest, { recursive: true })
+        }
+        cb(null, dest)
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
         cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`)
       }
     })
@@ -108,7 +129,9 @@ const videoStorage = useS3
  */
 const imageFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp/
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  )
   const mimetype = allowedTypes.test(file.mimetype)
 
   if (extname && mimetype) {
@@ -126,7 +149,9 @@ const imageFilter = (req, file, cb) => {
  */
 const videoFilter = (req, file, cb) => {
   const allowedTypes = /mp4|webm|ogg|mov/
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  )
   const mimetype = allowedTypes.test(file.mimetype)
 
   if (extname && mimetype) {
@@ -152,16 +177,6 @@ export const uploadVideo = multer({
   },
   fileFilter: videoFilter
 })
-
-// Ensure upload directories exist
-const imagesDir = path.join(uploadsDir, 'images')
-const videosDir = path.join(uploadsDir, 'videos')
-if (!fs.existsSync(imagesDir)) {
-  fs.mkdirSync(imagesDir, { recursive: true })
-}
-if (!fs.existsSync(videosDir)) {
-  fs.mkdirSync(videosDir, { recursive: true })
-}
 
 /**
  * Export resize function for use in routes
