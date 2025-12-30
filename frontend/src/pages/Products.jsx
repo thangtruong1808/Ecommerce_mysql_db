@@ -9,14 +9,14 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
-import SkeletonLoader from "../components/SkeletonLoader";
-import ProductCard from "../components/ProductCard";
-import Pagination from "../components/Pagination";
-import FilterSidebar from "../components/FilterSidebar";
 import Breadcrumb from "../components/Breadcrumb";
+import FilterSidebar from "../components/FilterSidebar";
+import Pagination from "../components/Pagination";
+import ProductCard from "../components/ProductCard";
+import SkeletonLoader from "../components/SkeletonLoader";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { useProductsData } from "../hooks/useProductsData";
 
 /**

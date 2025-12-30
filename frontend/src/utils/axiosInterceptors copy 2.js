@@ -13,12 +13,12 @@ import { handleTokenExpiration } from "./authUtils.js";
 let isRefreshing = false;
 let requestQueue = [];
 
-const processQueue = (error) => {
+const processQueue = (error, token = null) => {
   requestQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve();
+      prom.resolve(token);
     }
   });
   requestQueue = [];
@@ -56,50 +56,38 @@ export const setupAuthInterceptors = (interceptorProps) => {
       }
 
       const expiresAt = getTokenExpiresAt();
-      // Proactively refresh if token is present and will expire in the next 60 seconds
+      // Refresh if token is present and will expire in the next 60 seconds
       if (expiresAt && expiresAt - Date.now() < 60000) {
-        if (isRefreshing) {
-          // A refresh is already in progress, queue this request
-          return new Promise((resolve, reject) => {
-            requestQueue.push({
-              resolve: () => resolve(config), // On success, resolve with the original config
-              reject: (error) => reject(error),
-            });
-          });
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const { data } = await axios.post(
+              "/api/auth/refresh",
+              {},
+              { withCredentials: true }
+            );
+            setTokenExpiresAt(data.accessTokenExpiresAt);
+            if (data.refreshTokenExpiresAt) {
+              setRefreshTokenExpiresAt(data.refreshTokenExpiresAt);
+            }
+            processQueue(null);
+            isRefreshing = false;
+          } catch (error) {
+            processQueue(error);
+            if (error.response?.data?.message === "force-logout") {
+              await handleTokenExpiration(setUser, setError, isRedirectingRef);
+            }
+            isRefreshing = false;
+            return Promise.reject(error);
+          }
         }
 
-        // This is the first request to trigger the refresh
-        isRefreshing = true;
-
-        try {
-          const { data } = await axios.post(
-            "/api/auth/refresh",
-            {},
-            { withCredentials: true }
-          );
-          // Refresh successful
-          setTokenExpiresAt(data.accessTokenExpiresAt);
-          if (data.refreshTokenExpiresAt) {
-            setRefreshTokenExpiresAt(data.refreshTokenExpiresAt);
-          }
-          
-          // Process the queue of waiting requests
-          processQueue(null);
-
-          // The current request can now proceed
-          return config;
-        } catch (error) {
-          // Refresh failed
-          processQueue(error); // Reject all waiting requests
-          
-          if (error.response?.data?.message === "force-logout") {
-            await handleTokenExpiration(setUser, setError, isRedirectingRef);
-          }
-          
-          return Promise.reject(error); // Reject the current request
-        } finally {
-          isRefreshing = false;
-        }
+        // Wait for the token to be refreshed
+        return new Promise((resolve, reject) => {
+          requestQueue.push({ resolve, reject });
+        }).then(() => {
+          return config; // Retry the original request
+        });
       }
       return config;
     },
@@ -121,40 +109,40 @@ export const setupAuthInterceptors = (interceptorProps) => {
         return Promise.reject(error);
       }
 
-      originalRequest._retry = true;
-
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          requestQueue.push({
-            resolve: () => resolve(axios(originalRequest)),
-            reject: (err) => reject(err),
-          });
+          requestQueue.push({ resolve, reject });
+        }).then(() => {
+          originalRequest._retry = true;
+          return axios(originalRequest);
         });
       }
 
+      originalRequest._retry = true;
       isRefreshing = true;
 
-      try {
-        const { data } = await axios.post(
-          "/api/auth/refresh",
-          {},
-          { withCredentials: true }
-        );
-        setTokenExpiresAt(data.accessTokenExpiresAt);
-        if (data.refreshTokenExpiresAt) {
-          setRefreshTokenExpiresAt(data.refreshTokenExpiresAt);
-        }
-        processQueue(null);
-        return axios(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError);
-        if (refreshError.response?.data?.message === "force-logout") {
-          await handleTokenExpiration(setUser, setError, isRedirectingRef);
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+      return new Promise((resolve, reject) => {
+        axios
+          .post("/api/auth/refresh", {}, { withCredentials: true })
+          .then((res) => {
+            setTokenExpiresAt(res.data.accessTokenExpiresAt);
+            if (res.data.refreshTokenExpiresAt) {
+              setRefreshTokenExpiresAt(res.data.refreshTokenExpiresAt);
+            }
+            processQueue(null);
+            resolve(axios(originalRequest));
+          })
+          .catch(async (err) => {
+            processQueue(err);
+            if (err.response?.data?.message === "force-logout") {
+              await handleTokenExpiration(setUser, setError, isRedirectingRef);
+            }
+            reject(err);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
+      });
     }
   );
 

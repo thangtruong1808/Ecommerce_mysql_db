@@ -5,26 +5,25 @@
  * @date 2025-12-12
  */
 
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
 import {
-  FaShippingFast,
-  FaShieldAlt,
-  FaUndo,
   FaArrowRight,
+  FaShieldAlt,
+  FaShippingFast,
   FaTag,
+  FaUndo,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import CategoryCarousel from "../components/CategoryCarousel";
 import ProductCard from "../components/ProductCard";
-import SkeletonLoader from "../components/SkeletonLoader";
 import RecentlyViewed from "../components/RecentlyViewed";
 import Recommendations from "../components/Recommendations";
-import CategoryCarousel from "../components/CategoryCarousel";
-import VoucherSection from "../components/VoucherSection";
+import SkeletonLoader from "../components/SkeletonLoader";
 import VoucherCodeItem from "../components/VoucherCodeItem";
-import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { loadCategories } from "../utils/categoryCache";
 
 /**
@@ -67,6 +66,7 @@ const Home = () => {
         setVouchers(vouchersRes.data || []);
       } catch (error) {
         // Silent fail for home page
+        console.error("Failed to load home page data:", error);
       } finally {
         setLoading(false);
       }
