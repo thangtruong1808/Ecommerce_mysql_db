@@ -5,9 +5,10 @@
  * @date 2025-12-12
  */
 
-import { Link } from 'react-router-dom'
-import { FaTag } from 'react-icons/fa'
-import comingSoon from '../assets/images/image_comming_soon.png'
+import { Link } from "react-router-dom";
+import { FaTag } from "react-icons/fa";
+import StarRating from "./StarRating";
+import comingSoon from "../assets/images/image_comming_soon.png";
 
 /**
  * ProductCard component
@@ -27,17 +28,27 @@ const ProductCard = ({ product, onAddToCart }) => {
    */
   const getPrimaryImage = () => {
     if (product.images && product.images.length > 0) {
-      const primary = product.images.find(img => img.is_primary)
-      return primary?.image_url || product.images[0]?.image_url || null
+      const primary = product.images.find((img) => img.is_primary);
+      return primary?.image_url || product.images[0]?.image_url || null;
     }
-    return null
-  }
+    return null;
+  };
 
-  const imageUrl = getPrimaryImage() || comingSoon
-  const likesCount = product.likes_count ?? product.like_count ?? product.total_likes ?? product.num_likes ?? 0
-  const commentsCount = product.comments_count ?? product.comment_count ?? product.total_comments ?? product.num_comments ?? 0
-  const reviewCount = product.num_reviews ?? 0
-  const rating = parseFloat(product.rating) || 0
+  const imageUrl = getPrimaryImage() || comingSoon;
+  const likesCount =
+    product.likes_count ??
+    product.like_count ??
+    product.total_likes ??
+    product.num_likes ??
+    0;
+  const commentsCount =
+    product.comments_count ??
+    product.comment_count ??
+    product.total_comments ??
+    product.num_comments ??
+    0;
+  const reviewCount = product.num_reviews ?? 0;
+  const rating = parseFloat(product.rating) || 0;
 
   return (
     /* Product card layout */
@@ -47,7 +58,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10 flex items-center space-x-1">
           <FaTag />
           <span>
-            {product.discount_type === 'percentage'
+            {product.discount_type === "percentage"
               ? `${Math.round(parseFloat(product.discount_value))}% OFF`
               : `$${parseFloat(product.discount_value).toFixed(2)} OFF`}
           </span>
@@ -64,39 +75,42 @@ const ProductCard = ({ product, onAddToCart }) => {
             loading="eager"
             decoding="async"
             // style={{ aspectRatio: '6 / 7' }}
-            onError={(e) => { if (e.target.src !== comingSoon) e.target.src = comingSoon }}
+            onError={(e) => {
+              if (e.target.src !== comingSoon) e.target.src = comingSoon;
+            }}
           />
         </div>
       </Link>
-      
+
       {/* Product info */}
       <div className="p-2 border-t border-gray-200">
         <div className="flex items-center justify-between">
-        <Link to={`/products/${product.id}`}>
-            <h3 className="font-semibold text-sm leading-5 hover:text-blue-600 line-clamp-2">{product.name}</h3>
-        </Link>
+          <Link to={`/products/${product.id}`}>
+            <h3 className="font-semibold text-sm leading-5 hover:text-blue-600 line-clamp-2">
+              {product.name}
+            </h3>
+          </Link>
           <div className="text-right">
-        {product.has_discount && product.discounted_price ? (
+            {product.has_discount && product.discounted_price ? (
               <div className="flex flex-col items-end">
                 <span className="text-sm font-semibold text-blue-600">
-                ${(Number(product.discounted_price) || 0).toFixed(2)}
-              </span>
+                  ${(Number(product.discounted_price) || 0).toFixed(2)}
+                </span>
                 <span className="text-xs text-gray-400 line-through">
+                  ${(Number(product.price) || 0).toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              <span className="text-base font-semibold text-blue-600">
                 ${(Number(product.price) || 0).toFixed(2)}
               </span>
-          </div>
-        ) : (
-              <span className="text-base font-semibold text-blue-600">
-            ${(Number(product.price) || 0).toFixed(2)}
-              </span>
-        )}
+            )}
           </div>
         </div>
 
         <div className="flex items-center justify-between text-xs text-gray-600 ">
           <span className="flex items-center space-x-1">
-            <span>★ {rating > 0 ? rating.toFixed(1) : '0.0'}</span>
-            <span>({reviewCount} reviews)</span>
+            <StarRating rating={rating} numReviews={reviewCount} />
           </span>
           <span className="flex items-center space-x-2">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
@@ -109,8 +123,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductCard
-
+export default ProductCard;

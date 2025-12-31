@@ -12,6 +12,7 @@
  * @param {string} timeString - Time string (e.g., '15m', '7d')
  * @returns {number} Time in milliseconds
  */
+
 const timeStringToMs = (timeString) => {
   const match = timeString.match(/^(\d+)([smhd])$/);
   if (!match) {
@@ -49,7 +50,8 @@ export const setAccessTokenCookie = (res, token) => {
   res.cookie("accessToken", token, {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "none",
+    path: "/",
     maxAge,
   });
 };
