@@ -43,7 +43,7 @@ const timeStringToMs = (timeString) => {
  * @param {string} token - Access token
  */
 export const setAccessTokenCookie = (res, token) => {
-  const expiryTime = process.env.ACCESS_TOKEN_EXPIRY || "2m";
+  const expiryTime = process.env.ACCESS_TOKEN_EXPIRY || "5m";
   const maxAge = timeStringToMs(expiryTime);
 
   res.cookie("accessToken", token, {
@@ -60,7 +60,7 @@ export const setAccessTokenCookie = (res, token) => {
  * @param {string} token - Refresh token
  */
 export const setRefreshTokenCookie = (res, token) => {
-  const expiryTime = process.env.REFRESH_TOKEN_EXPIRY || "5m";
+  const expiryTime = process.env.REFRESH_TOKEN_EXPIRY || "30m";
   const maxAge = timeStringToMs(expiryTime);
 
   res.cookie("refreshToken", token, {
