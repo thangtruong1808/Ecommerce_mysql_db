@@ -49,7 +49,7 @@ export const setAccessTokenCookie = (res, token) => {
   res.cookie("accessToken", token, {
     httpOnly: true,
     secure: true,
-    sameSite: "Lax",
+    sameSite: "None",
     maxAge,
   });
 };
@@ -66,7 +66,7 @@ export const setRefreshTokenCookie = (res, token) => {
   res.cookie("refreshToken", token, {
     httpOnly: true,
     secure: true,
-    sameSite: "Lax",
+    sameSite: "None",
     maxAge,
   });
 };
@@ -79,7 +79,7 @@ export const clearAccessTokenCookie = (res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: true,
-    sameSite: "Lax",
+    sameSite: "None",
   });
 };
 
@@ -91,7 +91,7 @@ export const clearRefreshTokenCookie = (res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: true,
-    sameSite: "Lax",
+    sameSite: "None",
   });
 };
 
