@@ -63,8 +63,12 @@ const limiter = rateLimit({
 });
 
 // CORS configuration for cookies
+let frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+if (frontendUrl.endsWith("/")) {
+  frontendUrl = frontendUrl.slice(0, -1);
+}
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: frontendUrl,
   credentials: true, // Allow cookies
 };
 
