@@ -14,12 +14,14 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import SkeletonLoader from "../components/SkeletonLoader";
 import Button from "../components/Button";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * Cart component
  * @returns {JSX.Element} Cart page
  */
 const Cart = () => {
+  usePageTitle("Shopping Cart");
   const {
     cart,
     loading,

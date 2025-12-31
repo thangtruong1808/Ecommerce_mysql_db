@@ -1,15 +1,7 @@
-/**
- * Product Detail Page Component
- * Displays detailed product information with add to cart functionality
- * @author Thang Truong
- * @date 2025-12-12
- */
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import ReviewList from "../components/ReviewList";
 import ReviewForm from "../components/ReviewForm";
@@ -25,6 +17,7 @@ import RecentlyViewed from "../components/RecentlyViewed";
 import Recommendations from "../components/Recommendations";
 import Breadcrumb from "../components/Breadcrumb";
 import { FaTag, FaArrowLeft } from "react-icons/fa";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * ProductDetail component
@@ -36,7 +29,30 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const reviewListRef = useRef(null);
+  const commentListRef = useRef(null);
+
+  usePageTitle(loading ? "Loading..." : product?.name);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/products/${id}`);
+        setProduct(response.data);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Product not found");
+        navigate("/products");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchProduct();
+  }, [id, navigate]);
 
   /**
    * Handle add to cart from product card
@@ -56,28 +72,6 @@ const ProductDetail = () => {
       toast.error("Failed to add item to cart");
     }
   };
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [addingToCart, setAddingToCart] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const reviewListRef = useRef(null);
-  const commentListRef = useRef(null);
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`/api/products/${id}`);
-        setProduct(response.data);
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Product not found");
-        navigate("/products");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchProduct();
-  }, [id, navigate]);
 
   /**
    * Handle add to cart

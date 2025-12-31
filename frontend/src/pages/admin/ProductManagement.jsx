@@ -33,6 +33,7 @@ import {
   deleteProduct,
 } from "../../utils/dashboardCrud";
 
+import usePageTitle from "../../hooks/usePageTitle";
 /**
  * ProductManagement component
  * @returns {JSX.Element} Product management page
@@ -55,6 +56,7 @@ const ProductManagement = () => {
     isOpen: false,
     product: null,
   });
+  usePageTitle(loading ? "Loading..." : "Products Management");
   const [formModal, setFormModal] = useState({ isOpen: false, product: null });
   const {
     selected: selectedProducts,

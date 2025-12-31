@@ -26,6 +26,8 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { loadCategories } from "../utils/categoryCache";
 
+import usePageTitle from "../hooks/usePageTitle";
+
 /**
  * Home component
  * @returns {JSX.Element} Home page
@@ -33,6 +35,7 @@ import { loadCategories } from "../utils/categoryCache";
  * @date 2025-12-12
  */
 const Home = () => {
+  usePageTitle("Home");
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [featuredProducts, setFeaturedProducts] = useState([]);

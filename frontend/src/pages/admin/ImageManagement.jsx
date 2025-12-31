@@ -21,6 +21,7 @@ import ImageLightbox from '../../components/admin/ImageLightbox'
 import ImageTableRow from '../../components/admin/ImageTableRow'
 import { useSelection } from '../../utils/useSelection'
 import { deleteImage, setPrimaryImage } from '../../utils/mediaApi'
+import usePageTitle from '../../hooks/usePageTitle'
 
 /**
  * ImageManagement component
@@ -29,6 +30,7 @@ import { deleteImage, setPrimaryImage } from '../../utils/mediaApi'
  * @date 2025-12-17
  */
 const ImageManagement = () => {
+  usePageTitle('Image Management')
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)

@@ -23,6 +23,7 @@ import CategoryEditModal from '../../components/admin/CategoryEditModal'
 import CategoryTableRow from '../../components/admin/CategoryTableRow'
 import { useSelection } from '../../utils/useSelection'
 import { useCrudOperations } from '../../utils/useCrudOperations'
+import usePageTitle from '../../hooks/usePageTitle'
 
 /**
  * CategoryManagement component
@@ -31,6 +32,7 @@ import { useCrudOperations } from '../../utils/useCrudOperations'
  * @date 2025-12-17
  */
 const CategoryManagement = () => {
+  usePageTitle('Category Management')
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)

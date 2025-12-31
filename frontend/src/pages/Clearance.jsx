@@ -14,6 +14,7 @@ import SkeletonLoader from '../components/SkeletonLoader'
 import ProductCard from '../components/ProductCard'
 import Pagination from '../components/Pagination'
 import { FaTag } from 'react-icons/fa'
+import usePageTitle from '../hooks/usePageTitle'
 
 /**
  * Clearance component
@@ -22,6 +23,7 @@ import { FaTag } from 'react-icons/fa'
  * @date 2025-12-17
  */
 const Clearance = () => {
+  usePageTitle('Clearance Sale')
   const [searchParams] = useSearchParams()
   const categoryId = searchParams.get('category')
   const categoryName = searchParams.get('categoryName') ? decodeURIComponent(searchParams.get('categoryName')) : null

@@ -14,6 +14,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SkeletonLoader from "../components/SkeletonLoader";
+import usePageTitle from '../hooks/usePageTitle';
 
 /**
  * OrderDetails component
@@ -25,6 +26,8 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(order ? `Order #${order.id}` : 'Order Details');
 
   /**
    * Fetch invoice for order

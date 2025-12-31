@@ -18,6 +18,7 @@ import SkeletonLoader from "../components/SkeletonLoader";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useProductsData } from "../hooks/useProductsData";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * Products component
@@ -26,6 +27,7 @@ import { useProductsData } from "../hooks/useProductsData";
  * @date 2025-12-17
  */
 const Products = () => {
+  usePageTitle("All Products");
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();

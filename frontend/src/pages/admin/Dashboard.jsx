@@ -35,6 +35,7 @@ import {
 } from "../../utils/dashboardApi";
 import { shouldSuppress401Toast } from "../../utils/authUtils";
 import { ensureValidAccessToken } from "../../utils/tokenUtils";
+import usePageTitle from '../../hooks/usePageTitle';
 
 /**
  * Get activity icon based on activity type
@@ -88,6 +89,7 @@ const formatActivityDate = (dateString) => {
  * @date 2025-12-17
  */
 const Dashboard = () => {
+  usePageTitle('Admin Dashboard');
   const [period, setPeriod] = useState("month");
   const [stats, setStats] = useState(null);
   const [categoryData, setCategoryData] = useState([]);

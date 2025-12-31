@@ -22,6 +22,7 @@ import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
 import CartViewModal from '../../components/admin/CartViewModal'
 import CartTableRow from '../../components/admin/CartTableRow'
 import { useSelection } from '../../utils/useSelection'
+import usePageTitle from '../../hooks/usePageTitle'
 
 /**
  * CartManagement component
@@ -30,6 +31,7 @@ import { useSelection } from '../../utils/useSelection'
  * @date 2025-12-17
  */
 const CartManagement = () => {
+  usePageTitle('Cart Management')
   const [carts, setCarts] = useState([])
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)

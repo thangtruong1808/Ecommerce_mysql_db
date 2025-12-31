@@ -1,27 +1,27 @@
 /**
  * Product View Management Page
  * Full CRUD operations for product views with filters, search, pagination
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-17
  */
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { FaEye, FaTrash, FaUser, FaUserSlash } from 'react-icons/fa'
-import AdminLayout from '../../components/admin/AdminLayout'
-import SkeletonLoader from '../../components/SkeletonLoader'
-import SearchFilterBar from '../../components/admin/SearchFilterBar'
-import Pagination from '../../components/admin/Pagination'
-import SortableTableHeader from '../../components/admin/SortableTableHeader'
-import BulkSelectCheckbox from '../../components/admin/BulkSelectCheckbox'
-import BulkActionBar from '../../components/admin/BulkActionBar'
-import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
-import { useSelection } from '../../utils/useSelection'
-import { formatDate } from '../../utils/dateUtils'
-
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { FaEye, FaTrash, FaUser, FaUserSlash } from "react-icons/fa";
+import AdminLayout from "../../components/admin/AdminLayout";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import SearchFilterBar from "../../components/admin/SearchFilterBar";
+import Pagination from "../../components/admin/Pagination";
+import SortableTableHeader from "../../components/admin/SortableTableHeader";
+import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
+import BulkActionBar from "../../components/admin/BulkActionBar";
+import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
+import { useSelection } from "../../utils/useSelection";
+import { formatDate } from "../../utils/dateUtils";
+import usePageTitle from "../../hooks/usePageTitle";
 /**
  * ProductViewManagement component
  * @returns {JSX.Element} Product view management page
@@ -29,19 +29,26 @@ import { formatDate } from '../../utils/dateUtils'
  * @date 2025-12-17
  */
 const ProductViewManagement = () => {
-  const [views, setViews] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [initialLoad, setInitialLoad] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [userTypeFilter, setUserTypeFilter] = useState('')
-  const [page, setPage] = useState(1)
-  const [entriesPerPage, setEntriesPerPage] = useState(10)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalItems, setTotalItems] = useState(0)
-  const [sortBy, setSortBy] = useState('viewed_at')
-  const [sortOrder, setSortOrder] = useState('desc')
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, view: null })
-  const { selected: selectedViews, toggle, selectAll, clear, selectedCount } = useSelection(views)
+  const [views, setViews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userTypeFilter, setUserTypeFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [sortBy, setSortBy] = useState("viewed_at");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, view: null });
+  usePageTitle(loading ? "Loading..." : "Product Views Management");
+  const {
+    selected: selectedViews,
+    toggle,
+    selectAll,
+    clear,
+    selectedCount,
+  } = useSelection(views);
 
   /**
    * Fetch product views with search and filters
@@ -50,47 +57,49 @@ const ProductViewManagement = () => {
    */
   const fetchViews = async () => {
     try {
-      setLoading(true)
-      const params = new URLSearchParams({ 
-        page, 
+      setLoading(true);
+      const params = new URLSearchParams({
+        page,
         limit: entriesPerPage,
         sortBy,
-        sortOrder
-      })
-      if (searchTerm) params.append('search', String(searchTerm))
-      if (userTypeFilter) params.append('userType', userTypeFilter)
-      const response = await axios.get(`/api/admin/product-views?${params}`)
-      const pagination = response.data?.pagination || { 
-        page: 1, 
-        limit: entriesPerPage, 
-        total: 0, 
-        pages: 1 
-      }
+        sortOrder,
+      });
+      if (searchTerm) params.append("search", String(searchTerm));
+      if (userTypeFilter) params.append("userType", userTypeFilter);
+      const response = await axios.get(`/api/admin/product-views?${params}`);
+      const pagination = response.data?.pagination || {
+        page: 1,
+        limit: entriesPerPage,
+        total: 0,
+        pages: 1,
+      };
       if (response.data && response.data.views) {
-        setViews(response.data.views || [])
-        setTotalPages(pagination.pages || 1)
-        setTotalItems(pagination.total || 0)
+        setViews(response.data.views || []);
+        setTotalPages(pagination.pages || 1);
+        setTotalItems(pagination.total || 0);
       } else {
-        setViews([])
-        setTotalPages(1)
-        setTotalItems(0)
+        setViews([]);
+        setTotalPages(1);
+        setTotalItems(0);
       }
-      setInitialLoad(false)
+      setInitialLoad(false);
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'No product views found matching your search'
-      toast.error(errorMessage)
-      setViews([])
-      setTotalPages(1)
-      setTotalItems(0)
-      setInitialLoad(false)
+      const errorMessage =
+        error.response?.data?.message ||
+        "No product views found matching your search";
+      toast.error(errorMessage);
+      setViews([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setInitialLoad(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchViews()
-  }, [page, entriesPerPage, searchTerm, userTypeFilter, sortBy, sortOrder])
+    fetchViews();
+  }, [page, entriesPerPage, searchTerm, userTypeFilter, sortBy, sortOrder]);
 
   /**
    * Handle sort
@@ -100,10 +109,10 @@ const ProductViewManagement = () => {
    * @date 2025-12-17
    */
   const handleSort = (field, order) => {
-    setSortBy(field)
-    setSortOrder(order)
-    setPage(1)
-  }
+    setSortBy(field);
+    setSortOrder(order);
+    setPage(1);
+  };
 
   /**
    * Handle delete confirm
@@ -112,14 +121,16 @@ const ProductViewManagement = () => {
    */
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`/api/admin/product-views/${deleteModal.view.id}`)
-      toast.success('Product view deleted successfully')
-      setDeleteModal({ isOpen: false, view: null })
-      fetchViews()
+      await axios.delete(`/api/admin/product-views/${deleteModal.view.id}`);
+      toast.success("Product view deleted successfully");
+      setDeleteModal({ isOpen: false, view: null });
+      fetchViews();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete product view')
+      toast.error(
+        error.response?.data?.message || "Failed to delete product view"
+      );
     }
-  }
+  };
 
   /**
    * Handle bulk delete
@@ -128,26 +139,30 @@ const ProductViewManagement = () => {
    */
   const handleBulkDelete = async () => {
     try {
-      const ids = Array.from(selectedViews)
-      await axios.delete('/api/admin/product-views', { data: { ids } })
-      toast.success(`${ids.length} product view(s) deleted successfully`)
-      clear()
-      fetchViews()
+      const ids = Array.from(selectedViews);
+      await axios.delete("/api/admin/product-views", { data: { ids } });
+      toast.success(`${ids.length} product view(s) deleted successfully`);
+      clear();
+      fetchViews();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete product views')
+      toast.error(
+        error.response?.data?.message || "Failed to delete product views"
+      );
     }
-  }
+  };
 
   if (loading && initialLoad && views.length === 0) {
     return (
       /* Loading skeleton */
       <AdminLayout>
         <div className="max-w-full mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Product View Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">
+            Product View Management
+          </h1>
           <SkeletonLoader type="table" />
         </div>
       </AdminLayout>
-    )
+    );
   }
 
   /* Product view management page */
@@ -159,29 +174,33 @@ const ProductViewManagement = () => {
           {/* Icon + Title */}
           <div className="flex flex-col sm:flex-row items-center justify-center mb-2">
             <FaEye className="text-blue-600 text-2xl sm:mr-2 md:mr-2" />
-            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">Product View Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900 text-center mt-2 sm:mt-0">
+              Product View Management
+            </h1>
           </div>
         </div>
 
         {/* Divider between header and filters */}
-        <div className="my-2 mb-4"><hr /></div>
+        <div className="my-2 mb-4">
+          <hr />
+        </div>
 
         {/* Filters and search */}
         <SearchFilterBar
           searchTerm={searchTerm}
           onSearchChange={(value) => {
-            setSearchTerm(value)
-            setPage(1)
+            setSearchTerm(value);
+            setPage(1);
           }}
           filterValue={userTypeFilter}
           onFilterChange={(value) => {
-            setUserTypeFilter(value)
-            setPage(1)
+            setUserTypeFilter(value);
+            setPage(1);
           }}
           filterOptions={[
-            { value: '', label: 'All Users' },
-            { value: 'authenticated', label: 'Authenticated' },
-            { value: 'guest', label: 'Guest' }
+            { value: "", label: "All Users" },
+            { value: "authenticated", label: "Authenticated" },
+            { value: "guest", label: "Guest" },
           ]}
           searchPlaceholder="Search by product, user, or session..."
         />
@@ -195,8 +214,8 @@ const ProductViewManagement = () => {
           entriesPerPage={entriesPerPage}
           onPageChange={setPage}
           onEntriesChange={(value) => {
-            setEntriesPerPage(value)
-            setPage(1)
+            setEntriesPerPage(value);
+            setPage(1);
           }}
         />
 
@@ -214,7 +233,9 @@ const ProductViewManagement = () => {
                       onSelectAll={selectAll}
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    #
+                  </th>
                   <SortableTableHeader
                     label="ID"
                     field="id"
@@ -250,7 +271,9 @@ const ProductViewManagement = () => {
                     sortOrder={sortOrder}
                     onSort={handleSort}
                   />
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -259,13 +282,14 @@ const ProductViewManagement = () => {
                     <td colSpan="7" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <p className="text-gray-500 text-lg font-medium">
-                          {searchTerm 
-                            ? `No product views found matching "${searchTerm}"` 
-                            : 'No product views found'}
+                          {searchTerm
+                            ? `No product views found matching "${searchTerm}"`
+                            : "No product views found"}
                         </p>
                         {searchTerm && (
                           <p className="text-gray-400 text-sm mt-2">
-                            Try adjusting your search terms or clear the search to see all product views.
+                            Try adjusting your search terms or clear the search
+                            to see all product views.
                           </p>
                         )}
                       </div>
@@ -287,11 +311,20 @@ const ProductViewManagement = () => {
                         {view.id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Link to={`/products/${view.product_id}`} className="flex items-center space-x-2 hover:text-blue-600">
+                        <Link
+                          to={`/products/${view.product_id}`}
+                          className="flex items-center space-x-2 hover:text-blue-600"
+                        >
                           {view.product_image && (
-                            <img src={view.product_image} alt={view.product_name} className="w-10 h-10 object-cover rounded" />
+                            <img
+                              src={view.product_image}
+                              alt={view.product_name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
                           )}
-                          <span className="text-sm font-medium">{view.product_name || `Product #${view.product_id}`}</span>
+                          <span className="text-sm font-medium">
+                            {view.product_name || `Product #${view.product_id}`}
+                          </span>
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -310,11 +343,17 @@ const ProductViewManagement = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {view.user_id ? (
                           <div>
-                            <div className="font-medium">{view.user_name || 'Unknown'}</div>
-                            <div className="text-xs">{view.user_email || ''}</div>
+                            <div className="font-medium">
+                              {view.user_name || "Unknown"}
+                            </div>
+                            <div className="text-xs">
+                              {view.user_email || ""}
+                            </div>
                           </div>
                         ) : (
-                          <div className="text-xs font-mono">{view.session_id?.substring(0, 8)}...</div>
+                          <div className="text-xs font-mono">
+                            {view.session_id?.substring(0, 8)}...
+                          </div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -345,8 +384,8 @@ const ProductViewManagement = () => {
           entriesPerPage={entriesPerPage}
           onPageChange={setPage}
           onEntriesChange={(value) => {
-            setEntriesPerPage(value)
-            setPage(1)
+            setEntriesPerPage(value);
+            setPage(1);
           }}
         />
 
@@ -363,14 +402,16 @@ const ProductViewManagement = () => {
         {selectedCount > 0 && (
           <BulkActionBar
             selectedCount={selectedCount}
-            actions={[{ type: 'delete', label: 'Delete Selected' }]}
-            onAction={(actionType) => actionType === 'delete' && handleBulkDelete()}
+            actions={[{ type: "delete", label: "Delete Selected" }]}
+            onAction={(actionType) =>
+              actionType === "delete" && handleBulkDelete()
+            }
             onCancel={clear}
           />
         )}
       </div>
     </AdminLayout>
-  )
-}
+  );
+};
 
-export default ProductViewManagement
+export default ProductViewManagement;

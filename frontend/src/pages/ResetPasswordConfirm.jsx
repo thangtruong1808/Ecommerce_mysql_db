@@ -13,12 +13,14 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 import Button from '../components/Button'
 import { FaLock, FaCheckCircle, FaArrowLeft } from 'react-icons/fa'
+import usePageTitle from '../hooks/usePageTitle'
 
 /**
  * Reset Password Confirm component
  * @returns {JSX.Element} Reset password confirmation form page
  */
 const ResetPasswordConfirm = () => {
+  usePageTitle('Confirm Password Reset')
   const { token } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)

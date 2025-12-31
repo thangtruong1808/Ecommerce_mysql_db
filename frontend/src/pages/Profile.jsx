@@ -24,6 +24,7 @@ import {
 } from "react-icons/fa";
 import LoadingSpinner from "../components/LoadingSpinner";
 import AddressForm from "../components/AddressForm";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * Profile component
@@ -32,6 +33,7 @@ import AddressForm from "../components/AddressForm";
  * @date 2025-12-12
  */
 const Profile = () => {
+  usePageTitle("My Profile");
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);

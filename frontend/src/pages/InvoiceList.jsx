@@ -13,12 +13,14 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SkeletonLoader from "../components/SkeletonLoader";
+import usePageTitle from '../hooks/usePageTitle';
 
 /**
  * InvoiceList component
  * @returns {JSX.Element} Invoice list page
  */
 const InvoiceList = () => {
+  usePageTitle('My Invoices');
   const { isAuthenticated } = useAuth();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);

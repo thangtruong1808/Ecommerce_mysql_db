@@ -23,6 +23,7 @@ import ChildCategoryEditModal from '../../components/admin/ChildCategoryEditModa
 import ChildCategoryTableRow from '../../components/admin/ChildCategoryTableRow'
 import { useSelection } from '../../utils/useSelection'
 import { useCrudOperations } from '../../utils/useCrudOperations'
+import usePageTitle from '../../hooks/usePageTitle'
 
 /**
  * ChildCategoryManagement component
@@ -31,6 +32,7 @@ import { useCrudOperations } from '../../utils/useCrudOperations'
  * @date 2025-12-17
  */
 const ChildCategoryManagement = () => {
+  usePageTitle('Child Category Management')
   const [childCategories, setChildCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
   const [loading, setLoading] = useState(true)

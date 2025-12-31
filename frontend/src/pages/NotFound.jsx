@@ -9,12 +9,14 @@
 import { Link } from 'react-router-dom'
 import { FaHome, FaShoppingBag } from 'react-icons/fa'
 import Button from '../components/Button'
+import usePageTitle from '../hooks/usePageTitle'
 
 /**
  * NotFound component
  * @returns {JSX.Element} 404 page
  */
 const NotFound = () => {
+  usePageTitle('Page Not Found')
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       {/* 404 content container */}

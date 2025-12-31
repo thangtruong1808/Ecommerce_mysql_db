@@ -14,12 +14,14 @@ import axios from 'axios'
 import Button from '../components/Button'
 import logoImage from '../assets/images/Logo.png'
 import { FaEnvelope, FaArrowLeft, FaShieldAlt } from 'react-icons/fa'
+import usePageTitle from '../hooks/usePageTitle'
 
 /**
  * Reset Password component
  * @returns {JSX.Element} Reset password form page
  */
 const ResetPassword = () => {
+  usePageTitle('Reset Password')
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)

@@ -12,12 +12,14 @@ import { toast } from "react-toastify";
 import Button from "../components/Button";
 import logoImage from "../assets/images/Logo.png";
 import { FaLock, FaShieldAlt, FaSmile } from "react-icons/fa";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * Login component
  * @returns {JSX.Element} Login form page
  */
 const Login = () => {
+  usePageTitle("Sign In");
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

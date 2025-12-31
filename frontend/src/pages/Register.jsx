@@ -12,12 +12,14 @@ import { toast } from "react-toastify";
 import Button from "../components/Button";
 import logoImage from "../assets/images/Logo.png";
 import { FaIdBadge, FaUsers, FaHeadset } from "react-icons/fa";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * Register component
  * @returns {JSX.Element} Registration form page
  */
 const Register = () => {
+  usePageTitle("Create Account");
   const { register: registerUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

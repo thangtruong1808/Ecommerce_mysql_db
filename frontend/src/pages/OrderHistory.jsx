@@ -13,12 +13,14 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SkeletonLoader from "../components/SkeletonLoader";
+import usePageTitle from '../hooks/usePageTitle';
 
 /**
  * OrderHistory component
  * @returns {JSX.Element} Order history page
  */
 const OrderHistory = () => {
+  usePageTitle('Order History');
   const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

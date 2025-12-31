@@ -18,12 +18,14 @@ import AddressForm from "../components/AddressForm";
 import VoucherForm from "../components/VoucherForm";
 import Button from "../components/Button";
 import { FaCheck, FaMapMarkerAlt } from "react-icons/fa";
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * Checkout component
  * @returns {JSX.Element} Checkout page
  */
 const Checkout = () => {
+  usePageTitle("Checkout");
   const { cart, getTotals, refreshCart } = useCart();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();

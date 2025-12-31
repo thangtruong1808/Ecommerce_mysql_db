@@ -20,6 +20,7 @@ import BulkActionBar from '../../components/admin/BulkActionBar'
 import ConfirmDeleteModal from '../../components/admin/ConfirmDeleteModal'
 import { useSelection } from '../../utils/useSelection'
 import { formatDate } from '../../utils/dateUtils'
+import usePageTitle from '../../hooks/usePageTitle'
 
 /**
  * CommentModeration component
@@ -28,6 +29,7 @@ import { formatDate } from '../../utils/dateUtils'
  * @date 2025-12-17
  */
 const CommentModeration = () => {
+  usePageTitle('Comment Moderation')
   const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)

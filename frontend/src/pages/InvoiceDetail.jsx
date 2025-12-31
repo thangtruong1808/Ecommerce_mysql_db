@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SkeletonLoader from "../components/SkeletonLoader";
 import logoImage from "../assets/images/Logo.png";
+import usePageTitle from '../hooks/usePageTitle';
 
 /**
  * InvoiceDetail component
@@ -25,6 +26,8 @@ const InvoiceDetail = () => {
   const { isAuthenticated } = useAuth();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(invoice ? `Invoice #${invoice.invoice_number}` : 'Invoice Detail');
 
   /**
    * Fetch invoice details
