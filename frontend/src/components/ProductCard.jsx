@@ -49,7 +49,6 @@ const ProductCard = ({ product, onAddToCart }) => {
     0;
   const reviewCount = product.num_reviews ?? 0;
   const rating = parseFloat(product.rating) || 0;
-
   return (
     /* Product card layout */
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-150 relative">
