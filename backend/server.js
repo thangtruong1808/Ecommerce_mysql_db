@@ -63,12 +63,27 @@ const limiter = rateLimit({
 });
 
 // CORS configuration for cookies
-let frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-if (frontendUrl.endsWith("/")) {
-  frontendUrl = frontendUrl.slice(0, -1);
-}
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://ecommerce-mysql-db-2839.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173", // Default Vite port
+].filter(Boolean); // Filter out undefined/empty values
+
 const corsOptions = {
-  origin: frontendUrl,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests)
+    if (!origin) return callback(null, true);
+
+    // Clean up the origin URL (remove trailing slash)
+    const normalizedOrigin = origin.endsWith("/") ? origin.slice(0, -1) : origin;
+
+    if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true, // Allow cookies
 };
 
