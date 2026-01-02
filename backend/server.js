@@ -67,7 +67,6 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   "https://ecommerce-mysql-db-2839.vercel.app",
   "http://localhost:3000",
-  "http://localhost:5173", // Default Vite port
 ].filter(Boolean); // Filter out undefined/empty values
 
 const corsOptions = {
@@ -76,7 +75,9 @@ const corsOptions = {
     if (!origin) return callback(null, true);
 
     // Clean up the origin URL (remove trailing slash)
-    const normalizedOrigin = origin.endsWith("/") ? origin.slice(0, -1) : origin;
+    const normalizedOrigin = origin.endsWith("/")
+      ? origin.slice(0, -1)
+      : origin;
 
     if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
       callback(null, true);

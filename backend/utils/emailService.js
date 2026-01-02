@@ -1,19 +1,19 @@
 /**
  * Email Service
  * Handles sending emails using Nodemailer
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
 
-import nodemailer from 'nodemailer'
-import { generateInvoicePDF } from './pdfService.js'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import nodemailer from "nodemailer";
+import { generateInvoicePDF } from "./pdfService.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Create email transporter
@@ -22,28 +22,33 @@ const __dirname = path.dirname(__filename)
  * @date 2025-12-12
  */
 const createTransporter = () => {
-  const smtpUser = process.env.SMTP_USER
-  const smtpPass = process.env.SMTP_PASS
-  
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+
   // Check if SMTP credentials are configured
-  if (!smtpUser || !smtpPass || smtpUser === 'your-email@gmail.com' || !smtpPass.trim()) {
-    return null
+  if (
+    !smtpUser ||
+    !smtpPass ||
+    smtpUser === "your-email@gmail.com" ||
+    !smtpPass.trim()
+  ) {
+    return null;
   }
 
   try {
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
+      secure: process.env.SMTP_SECURE === "true",
       auth: {
         user: smtpUser,
         pass: smtpPass,
       },
-    })
+    });
   } catch (error) {
-    return null
+    return null;
   }
-}
+};
 
 /**
  * Send password reset email
@@ -62,20 +67,25 @@ const createTransporter = () => {
  * @date 2025-12-12
  */
 export const sendPasswordResetEmail = async (email, resetToken, userName) => {
-  const transporter = createTransporter()
-  
+  const transporter = createTransporter();
+
   if (!transporter) {
-    const errorMsg = 'Email service not configured. Please configure SMTP settings in environment variables.'
-    throw new Error(errorMsg)
+    const errorMsg =
+      "Email service not configured. Please configure SMTP settings in environment variables.";
+    throw new Error(errorMsg);
   }
 
   try {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`
-    
+    const resetUrl = `${
+      process.env.FRONTEND_URL || "http://localhost:3000"
+    }/reset-password/${resetToken}`;
+
     const mailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME || 'Ecommerce Store'}" <${process.env.EMAIL_FROM || 'noreply@ecommerce.com'}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || "Ecommerce Store"}" <${
+        process.env.EMAIL_FROM || "noreply@ecommerce.com"
+      }>`,
       to: email,
-      subject: 'Password Reset Request',
+      subject: "Password Reset Request",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Password Reset Request</h2>
@@ -89,14 +99,16 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
           <p style="color: #999; font-size: 12px; margin-top: 30px;">This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
         </div>
       `,
-    }
+    };
 
-    const info = await transporter.sendMail(mailOptions)
-    return { success: true, messageId: info.messageId }
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
-    throw new Error(`Failed to send password reset email: ${error.message || 'Unknown error'}`)
+    throw new Error(
+      `Failed to send password reset email: ${error.message || "Unknown error"}`
+    );
   }
-}
+};
 
 /**
  * Send invoice email to buyer
@@ -108,34 +120,40 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
  * @date 2025-12-12
  */
 export const sendInvoiceEmail = async (email, userName, invoice) => {
-  const transporter = createTransporter()
-  
+  const transporter = createTransporter();
+
   if (!transporter) {
     // Don't throw error - email sending is optional, just log silently
-    return { success: false, message: 'Email service not configured' }
+    return { success: false, message: "Email service not configured" };
   }
 
-  let pdfPath = null
+  let pdfPath = null;
   try {
-    const invoiceUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invoices/${invoice.id}`
+    const invoiceUrl = `${
+      process.env.FRONTEND_URL || "http://localhost:3000"
+    }/invoices/${invoice.id}`;
     // Logo URL - can be configured via EMAIL_LOGO_URL env var, or use frontend URL
-    const logoUrl = process.env.EMAIL_LOGO_URL || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/Logo.png`
-    const billingAddress = typeof invoice.billing_address === 'object' 
-      ? invoice.billing_address 
-      : JSON.parse(invoice.billing_address || '{}')
-    const shippingAddress = typeof invoice.shipping_address === 'object'
-      ? invoice.shipping_address
-      : JSON.parse(invoice.shipping_address || '{}')
-    
+    const logoUrl =
+      process.env.EMAIL_LOGO_URL ||
+      `${process.env.FRONTEND_URL || "http://localhost:3000"}/Logo.png`;
+    const billingAddress =
+      typeof invoice.billing_address === "object"
+        ? invoice.billing_address
+        : JSON.parse(invoice.billing_address || "{}");
+    const shippingAddress =
+      typeof invoice.shipping_address === "object"
+        ? invoice.shipping_address
+        : JSON.parse(invoice.shipping_address || "{}");
+
     // Generate PDF attachment
-    const tempDir = path.join(__dirname, '../../temp')
+    const tempDir = path.join(__dirname, "../../temp");
     if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true })
+      fs.mkdirSync(tempDir, { recursive: true });
     }
-    const pdfFileName = `invoice-${invoice.invoice_number}-${Date.now()}.pdf`
-    pdfPath = path.join(tempDir, pdfFileName)
-    await generateInvoicePDF(invoice, pdfPath)
-    
+    const pdfFileName = `invoice-${invoice.invoice_number}-${Date.now()}.pdf`;
+    pdfPath = path.join(tempDir, pdfFileName);
+    await generateInvoicePDF(invoice, pdfPath);
+
     /**
      * Format date to dd-MMM-yyyy, hh:mm AM/PM format
      * @param {string} dateString - Date string
@@ -144,18 +162,31 @@ export const sendInvoiceEmail = async (email, userName, invoice) => {
      * @date 2025-12-12
      */
     const formatDate = (dateString) => {
-      if (!dateString) return 'N/A'
-      const date = new Date(dateString)
-      const day = String(date.getDate()).padStart(2, '0')
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      const month = months[date.getMonth()]
-      const year = date.getFullYear()
-      let hours = date.getHours()
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const ampm = hours >= 12 ? 'PM' : 'AM'
-      hours = hours % 12 || 12
-      return `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`
-    }
+      if (!dateString) return "N/A";
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      return `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`;
+    };
     /**
      * Format order number for display
      * @returns {string} Formatted order number
@@ -163,22 +194,24 @@ export const sendInvoiceEmail = async (email, userName, invoice) => {
      * @date 2025-12-12
      */
     const formatOrderNumber = () => {
-      if (invoice.order_number) return invoice.order_number
-      const date = new Date(invoice.created_at)
-      const datePart = date.toISOString().slice(0, 10).replace(/-/g, '')
-      return `ORD-${datePart}-${String(invoice.order_id).padStart(5, '0')}`
-    }
-    
+      if (invoice.order_number) return invoice.order_number;
+      const date = new Date(invoice.created_at);
+      const datePart = date.toISOString().slice(0, 10).replace(/-/g, "");
+      return `ORD-${datePart}-${String(invoice.order_id).padStart(5, "0")}`;
+    };
+
     const mailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME || 'Ecommerce Store'}" <${process.env.EMAIL_FROM || 'noreply@ecommerce.com'}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || "Ecommerce Store"}" <${
+        process.env.EMAIL_FROM || "noreply@ecommerce.com"
+      }>`,
       to: email,
       subject: `Invoice ${invoice.invoice_number} - Order Confirmation`,
       attachments: [
         {
           filename: pdfFileName,
           path: pdfPath,
-          contentType: 'application/pdf'
-        }
+          contentType: "application/pdf",
+        },
       ],
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
           <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb;">
@@ -195,16 +228,30 @@ export const sendInvoiceEmail = async (email, userName, invoice) => {
           <p style="color: #374151; font-size: 16px; line-height: 1.6;">Hello ${userName},</p>
           <p style="color: #374151; font-size: 16px; line-height: 1.6;">Thank you for your purchase! Your order has been confirmed and your invoice is ready.</p>
           <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Invoice Number:</strong> ${invoice.invoice_number}</p>
+            <p style="margin: 5px 0;"><strong>Invoice Number:</strong> ${
+              invoice.invoice_number
+            }</p>
             <p style="margin: 5px 0;"><strong>Order Number:</strong> ${formatOrderNumber()}</p>
-            <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(invoice.created_at)}</p>
-            <p style="margin: 5px 0;"><strong>Total Amount:</strong> $${parseFloat(invoice.total_amount).toFixed(2)}</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(
+              invoice.created_at
+            )}</p>
+            <p style="margin: 5px 0;"><strong>Total Amount:</strong> $${parseFloat(
+              invoice.total_amount
+            ).toFixed(2)}</p>
           </div>
           <div style="margin: 20px 0;"><h3 style="color: #333; font-size: 16px;">Billing Address</h3>
-            <p style="color: #666; margin: 5px 0;">${billingAddress.address || ''}<br />${billingAddress.city || ''}, ${billingAddress.postal_code || ''}<br />${billingAddress.country || ''}</p>
+            <p style="color: #666; margin: 5px 0;">${
+              billingAddress.address || ""
+            }<br />${billingAddress.city || ""}, ${
+        billingAddress.postal_code || ""
+      }<br />${billingAddress.country || ""}</p>
           </div>
           <div style="margin: 20px 0;"><h3 style="color: #333; font-size: 16px;">Shipping Address</h3>
-            <p style="color: #666; margin: 5px 0;">${shippingAddress.address || ''}<br />${shippingAddress.city || ''}, ${shippingAddress.postal_code || ''}<br />${shippingAddress.country || ''}</p>
+            <p style="color: #666; margin: 5px 0;">${
+              shippingAddress.address || ""
+            }<br />${shippingAddress.city || ""}, ${
+        shippingAddress.postal_code || ""
+      }<br />${shippingAddress.country || ""}</p>
           </div>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${invoiceUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Invoice Online</a>
@@ -222,19 +269,28 @@ export const sendInvoiceEmail = async (email, userName, invoice) => {
             <p style="color: #6b7280; font-size: 12px; margin: 0;">This ecommerce platform was thoughtfully designed and developed by Thang Truong. Thank you for shopping with us!</p>
           </div>
         </div>`,
-    }
+    };
 
-    const info = await transporter.sendMail(mailOptions)
+    const info = await transporter.sendMail(mailOptions);
     setTimeout(() => {
       if (fs.existsSync(pdfPath)) {
-        try { fs.unlinkSync(pdfPath) } catch (err) {}
+        try {
+          fs.unlinkSync(pdfPath);
+        } catch (err) {}
       }
-    }, 5000)
-    return { success: true, messageId: info.messageId }
+    }, 5000);
+    return { success: true, messageId: info.messageId };
   } catch (error) {
     if (pdfPath && fs.existsSync(pdfPath)) {
-      try { fs.unlinkSync(pdfPath) } catch (err) {}
+      try {
+        fs.unlinkSync(pdfPath);
+      } catch (err) {}
     }
-    return { success: false, message: `Failed to send invoice email: ${error.message || 'Unknown error'}` }
+    return {
+      success: false,
+      message: `Failed to send invoice email: ${
+        error.message || "Unknown error"
+      }`,
+    };
   }
-}
+};
