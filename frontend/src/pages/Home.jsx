@@ -118,14 +118,14 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero banner section with features */}
-      <div className="bg-gradient-to-r from-green-800 to-green-900 text-white py-10 mb-16">
+      <div className="bg-gradient-to-r from-green-800 to-green-900 text-white py-4 mb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero content */}
-          <div className="text-center mb-6">
-            <h1 className="text-5xl font-bold mb-6">
+          <div className="text-center mb-2">
+            <h1 className="text-4xl font-bold mb-2">
               Welcome to Badminton Stores
             </h1>
-            <p className="text-xl mb-8 text-blue-100">
+            <p className="text-lg text-blue-100">
               Discover amazing products at unbeatable prices and amazing
               discounts with our exclusive voucher codes!
             </p>
@@ -147,7 +147,7 @@ const Home = () => {
                   ))}
                 </div>
                 {vouchers.length > 4 && (
-                  <p className="text-sm text-blue-100 mt-3">
+                  <p className="text-sm text-blue-100 mt-2">
                     +{vouchers.length - 4} more voucher
                     {vouchers.length - 4 !== 1 ? "s" : ""} available
                   </p>
@@ -157,7 +157,7 @@ const Home = () => {
           )}
 
           {/* Features section */}
-          <div className="flex flex-wrap justify-center items-center gap-6 pt-6 border-t border-blue-400/20">
+          <div className="flex flex-wrap justify-center items-center gap-6 pt-4 border-t border-blue-400/20">
             <div className="flex items-center gap-2">
               <FaShippingFast className="text-white text-sm" />
               <span className="text-sm text-blue-100">
@@ -182,10 +182,10 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-8">
         {/* Categories section */}
         {categories.length > 0 && (
-          <section className="mb-16">
+          <section className="mb-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-bold text-gray-900">
                 Shop by Category
@@ -239,7 +239,7 @@ const Home = () => {
         )}
 
         {/* Featured products section */}
-        <section className="mb-16">
+        <section className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900">
               Featured Products

@@ -13,7 +13,7 @@
     "api",
     "ecommerce"
   ],
-  "author": "",
+  "author": "Thang Truong <thangtruong1808@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.948.0",

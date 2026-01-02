@@ -1,9 +1,11 @@
-# Ecommerce API Documentation - Products Endpoints
+# Ecommerce API Documentation
 
 **Base URL:** `http://localhost:5000/api`
 
 **Author:** Thang Truong  
 **Date:** 2024-12-19
+
+> **Note:** This documentation is currently a work in progress and primarily covers the **Products API**. Documentation for other services like Cart, Orders, and Authentication is forthcoming.
 
 ---
 
@@ -64,13 +66,23 @@ Other test users (all with password `Password123!`):
 ---
 
 ## Table of Contents
-1. [Public Endpoints](#public-endpoints)
-2. [Protected Endpoints (Admin Only)](#protected-endpoints-admin-only)
-3. [Authentication](#authentication)
+1. [Authentication API (TODO)](#authentication-api-todo)
+2. [Products API](#products-api)
+3. [Categories API (TODO)](#categories-api-todo)
+4. [Cart API (TODO)](#cart-api-todo)
+5. [Orders API (TODO)](#orders-api-todo)
+6. [Reviews & Comments API (TODO)](#reviews--comments-api-todo)
+7. [Vouchers API (TODO)](#vouchers-api-todo)
+8. [Admin API (TODO)](#admin-api-todo)
 
 ---
 
-## Public Endpoints
+## Authentication API (TODO)
+*Documentation for `/api/auth` endpoints to be added here.*
+
+---
+
+## Products API
 
 ### 1. Get All Products
 Get a paginated list of products with optional filtering, sorting, and search.
@@ -570,6 +582,7 @@ Content-Type: multipart/form-data
 Other test users (all with password `Password123!`):
 - `sarah.johnson@email.com`
 - `michael.brown@email.com`
+-
 - `emily.davis@email.com`
 - `david.wilson@email.com`
 - `jessica.martinez@email.com`
@@ -690,3 +703,26 @@ All endpoints may return the following error responses:
 **Last Updated:** 2024-12-19  
 **Author:** Thang Truong
 
+---
+## Categories API (TODO)
+*Documentation for `/api/categories` endpoints to be added here.*
+
+---
+## Cart API (TODO)
+*Documentation for `/api/cart` endpoints to be added here.*
+
+---
+## Orders API (TODO)
+*Documentation for `/api/orders` endpoints to be added here.*
+
+---
+## Reviews & Comments API (TODO)
+*Documentation for `/api/reviews` and `/api/comments` endpoints to be added here.*
+
+---
+## Vouchers API (TODO)
+*Documentation for `/api/vouchers` endpoints to be added here.*
+
+---
+## Admin API (TODO)
+*Documentation for `/api/admin` endpoints to be added here.*

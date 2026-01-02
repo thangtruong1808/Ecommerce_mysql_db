@@ -35,7 +35,7 @@ import {
 } from "../../utils/dashboardApi";
 import { shouldSuppress401Toast } from "../../utils/authUtils";
 import { ensureValidAccessToken } from "../../utils/tokenUtils";
-import usePageTitle from '../../hooks/usePageTitle';
+import usePageTitle from "../../hooks/usePageTitle";
 
 /**
  * Get activity icon based on activity type
@@ -89,8 +89,8 @@ const formatActivityDate = (dateString) => {
  * @date 2025-12-17
  */
 const Dashboard = () => {
-  usePageTitle('Admin Dashboard');
-  const [period, setPeriod] = useState("month");
+  usePageTitle("Admin Dashboard");
+  const [period, setPeriod] = useState("all");
   const [stats, setStats] = useState(null);
   const [categoryData, setCategoryData] = useState([]);
   const [customerGrowthData, setCustomerGrowthData] = useState([]);
@@ -188,8 +188,6 @@ const Dashboard = () => {
     }, 5 * 60 * 1000); // 5 minutes
     return () => clearInterval(interval);
   }, [period]);
-
-  // }, 1 * 60 * 30); // 1 minute 30 seconds
 
   if (loading && !stats) {
     return (
@@ -317,7 +315,7 @@ const Dashboard = () => {
         </div>
 
         {/* Charts Section - Increased size */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-2 py-2">
           <div className="h-80">
             <SalesByCategoryChart data={categoryData} />
           </div>
@@ -327,7 +325,7 @@ const Dashboard = () => {
         </div>
 
         {/* Data Tables Section - Increased size */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-2 py-2">
           {/* Top Selling Products */}
           <div className="bg-white rounded-lg shadow-md p-4">
             <h2 className="text-lg font-semibold mb-3">Top Selling Products</h2>
@@ -347,7 +345,7 @@ const Dashboard = () => {
                     </span>
                     <div className="text-right text-sm">
                       <span className="text-gray-600 mr-4">
-                        {product.units_sold || product.quantity || 0} sold
+                        {product.unitsSold || product.quantity || 0} sold
                       </span>
                       <span className="font-semibold">
                         $
@@ -422,7 +420,7 @@ const Dashboard = () => {
         </div>
 
         {/* Low Stock and Recent Activity Section - Side by side with same height */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-0 py-2">
           {/* Low Stock Alerts */}
           <div className="bg-white rounded-lg shadow-md p-4 flex flex-col h-80">
             <h2 className="text-lg font-semibold mb-3 flex items-center">

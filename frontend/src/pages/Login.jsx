@@ -181,7 +181,7 @@ const Login = () => {
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Work email
+                    Email
                   </label>
                   <input
                     {...register("email", {

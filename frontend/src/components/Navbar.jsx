@@ -463,7 +463,7 @@ const Navbar = () => {
       {/* Row 2 - Category Navigation - hidden on mobile */}
       <div className="hidden md:block border-t border-blue-700 relative">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center py-3">
+          <div className="flex justify-between items-center py-2">
             {categories
               .sort((a, b) => {
                 return a.id - b.id; // sort by ID ascending
@@ -479,7 +479,7 @@ const Navbar = () => {
                   >
                     <Link
                       to={`/products?category=${category.id}`}
-                      className={`text-sm font-medium transition-colors ${
+                      className={`text-md font-medium transition-colors ${
                         isActive(`/products?category=${category.id}`) ||
                         isHovered
                           ? "text-white bg-blue-700 font-semibold px-2 py-1 rounded"

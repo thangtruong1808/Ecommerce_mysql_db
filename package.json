@@ -1,7 +1,7 @@
 {
-  "name": "ecommerce-fullstack",
+  "name": "Badminton Stores-Ecommerce-fullstack-showcase",
   "version": "1.0.0",
-  "description": "Full-stack ecommerce application with React and Express.js",
+  "description": "A feature-rich, full-stack E-commerce platform built with Node.js, Express, React, and MySQL. Includes user authentication, product management, shopping cart, and more.",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "cd frontend && npm run dev",
@@ -10,11 +10,25 @@
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start"
   },
-  "keywords": ["ecommerce", "react", "express", "fullstack"],
-  "author": "",
+  "keywords": [
+    "ecommerce",
+    "react",
+    "express",
+    "fullstack",
+    "mysql",
+    "nodejs"
+  ],
+  "author": "Thang Truong <thangtruong1808@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thangtruong1808/Ecommerce_mysql_db"
+  },
+  "bugs": {
+    "url": "https://github.com/thangtruong1808/Ecommerce_mysql_db/issues"
+  },
+  "homepage": "https://github.com/thangtruong1808/Ecommerce_mysql_db#readme",
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
 }
-

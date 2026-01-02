@@ -126,7 +126,7 @@ const CategoryCarousel = ({ categories = [] }) => {
           <div className="w-full flex flex-col lg:flex-row overflow-hidden">
             {/* Image column */}
             {/* max-w-full h-full flex items-center justify-center bg-gray-100 overflow-hidden  */}
-            <div className="w-full lg:w-3/5 flex items-center justify-center bg-white overflow-hidden">
+            <div className="w-full lg:w-3/5 h-full flex items-center justify-center bg-white overflow-hidden">
               {showCurrentPhoto ? (
                 <img
                   src={currentPhotoUrl}
@@ -185,7 +185,7 @@ const CategoryCarousel = ({ categories = [] }) => {
                   onClick={() => handleThumbClick(index)}
                   className={`p-2 rounded-lg transition text-center w-full ${
                     index === currentIndex
-                      ? "bg-blue-500 text-white shadow-md"
+                      ? "bg-zinc-200 text-blue-600 shadow-md"
                       : "bg-white shadow-sm hover:shadow-md hover:bg-gray-200 text-gray-700"
                   }`}
                   aria-label={`View ${category.name}`}

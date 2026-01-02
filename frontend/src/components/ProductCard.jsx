@@ -51,7 +51,7 @@ const ProductCard = ({ product, onAddToCart }) => {
   const rating = parseFloat(product.rating) || 0;
   return (
     /* Product card layout */
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-150 relative">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:bg-red-600transition-shadow duration-150 relative">
       {/* Discount badge */}
       {product.has_discount && product.discounted_price && (
         <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold z-10 flex items-center space-x-1">
@@ -66,14 +66,13 @@ const ProductCard = ({ product, onAddToCart }) => {
 
       {/* Product image */}
       <Link to={`/products/${product.id}`}>
-        <div className="w-full aspect-square bg-white overflow-hidden flex items-center justify-center relative">
+        <div className="w-full h-auto aspect-square bg-white overflow-hidden flex items-center justify-center relative">
           <img
             src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover"
             loading="eager"
             decoding="async"
-            // style={{ aspectRatio: '6 / 7' }}
             onError={(e) => {
               if (e.target.src !== comingSoon) e.target.src = comingSoon;
             }}

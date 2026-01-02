@@ -1,12 +1,12 @@
 /**
  * Metric Card Component
  * Enhanced stats card with trend indicators
- * 
+ *
  * @author Thang Truong
  * @date 2025-12-12
  */
 
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa'
+import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 
 /**
  * MetricCard component
@@ -18,9 +18,9 @@ import { FaArrowUp, FaArrowDown } from 'react-icons/fa'
  * @returns {JSX.Element} Metric card component
  */
 const MetricCard = ({ title, value, change, icon: Icon }) => {
-  const isPositive = change >= 0
-  const changeColor = isPositive ? 'text-green-600' : 'text-red-600'
-  const bgColor = isPositive ? 'bg-green-50' : 'bg-red-50'
+  const isPositive = change >= 0;
+  const changeColor = isPositive ? "text-green-600" : "text-red-600";
+  const bgColor = isPositive ? "bg-green-50" : "bg-red-50";
 
   return (
     <div className="bg-white rounded-lg shadow-md p-3">
@@ -36,7 +36,9 @@ const MetricCard = ({ title, value, change, icon: Icon }) => {
               ) : (
                 <FaArrowDown className="mr-0.5" />
               )}
-              <span className="font-semibold">{Math.abs(change).toFixed(1)}%</span>
+              <span className="font-semibold">
+                {Math.abs(change).toFixed(1)}%
+              </span>
             </div>
           )}
         </div>
@@ -47,7 +49,7 @@ const MetricCard = ({ title, value, change, icon: Icon }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MetricCard
+export default MetricCard;
