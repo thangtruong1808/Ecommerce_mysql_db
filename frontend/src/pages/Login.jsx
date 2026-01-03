@@ -24,6 +24,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showSample, setShowSample] = useState(false);
   const [loginError, setLoginError] = useState("");
   const {
     register,
@@ -260,6 +261,32 @@ const Login = () => {
                     Forgot password?
                   </Link>
                 </div>
+              </div>
+
+              {/* Sample Credentials */}
+              <div className="my-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowSample(!showSample)}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                >
+                  {showSample ? "Hide" : "Show"} sample credentials
+                </button>
+                {showSample && (
+                  <div className="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-200 text-left">
+                    <p className="text-sm text-gray-700">
+                      <strong>Admin Role:</strong> thangtruong1808@gmail.com
+                      <br />
+                      <strong>Password:</strong> UserTest123!
+                    </p>
+                    <hr className="my-2" />
+                    <p className="text-sm text-gray-700">
+                      <strong>User Role:</strong> alice.johnson@gmail.com
+                      <br />
+                      <strong>Password:</strong> 123456
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Submit + helper */}

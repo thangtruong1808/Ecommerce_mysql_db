@@ -19,6 +19,7 @@ import VoucherForm from "../components/VoucherForm";
 import Button from "../components/Button";
 import { FaCheck, FaMapMarkerAlt } from "react-icons/fa";
 import usePageTitle from "../hooks/usePageTitle";
+import PaymentCards from "../assets/images/payment-cards.jpg";
 
 /**
  * Checkout component
@@ -351,6 +352,17 @@ const Checkout = () => {
                 <span>Total</span>
                 <span>${finalTotal.toFixed(2)}</span>
               </div>
+            </div>
+            <div className="m-4 text-center text-sm text-gray-600">
+              We accept all major payment cards.
+            </div>
+            {/* Payment icons */}
+            <div className="mt-2 flex justify-center items-center gap-3 opacity-80">
+              <img
+                src={PaymentCards}
+                alt="Payment Cards"
+                className="w-full h-full"
+              />
             </div>
           </div>
         </div>

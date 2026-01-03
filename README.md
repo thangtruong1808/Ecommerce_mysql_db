@@ -1,6 +1,6 @@
 # 🚀 Full-Stack E-commerce Platform
 
-This is a feature-rich, full-stack E-commerce platform built with the MERN stack (MySQL, Express, React, Node.js) and designed to showcase a wide range of modern web development practices. It includes a beautiful, responsive frontend and a powerful, secure backend.
+This is a feature-rich, full-stack E-commerce platform built with the MERN stack (MySQL, Express, React, Node.js and AWS S3 bucket) and designed to showcase a wide range of modern web development practices. It includes a beautiful, responsive frontend and a powerful, secure backend.
 
 ## ✨ Showcase & Key Features
 

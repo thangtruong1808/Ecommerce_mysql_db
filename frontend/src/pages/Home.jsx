@@ -27,6 +27,7 @@ import { useCart } from "../context/CartContext";
 import { loadCategories } from "../utils/categoryCache";
 
 import usePageTitle from "../hooks/usePageTitle";
+// import bannerImage from "../assets/images/Banner-BadmintonStores.png";
 
 /**
  * Home component
@@ -118,7 +119,7 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero banner section with features */}
-      <div className="bg-gradient-to-r from-green-800 to-green-900 text-white py-4 mb-6">
+      <div className="bg-gradient-to-r from-green-800 to-green-900 text-white py-4 ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero content */}
           <div className="text-center mb-2">
@@ -181,7 +182,17 @@ const Home = () => {
           </div>
         </div>
       </div>
-
+      {/* Display banner images */}
+      {/* <div
+        className="relative w-full overflow-hidden rounded-top mb-6"
+        style={{ paddingTop: "18%" }}
+      >
+        <img
+          src={bannerImage}
+          alt="banner images"
+          className="absolute top-0 left-0 w-full h-full "
+        />
+      </div> */}
       <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-8">
         {/* Categories section */}
         {categories.length > 0 && (
