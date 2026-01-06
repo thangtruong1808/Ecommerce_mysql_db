@@ -14,7 +14,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SkeletonLoader from "../components/SkeletonLoader";
-import usePageTitle from '../hooks/usePageTitle';
+import usePageTitle from "../hooks/usePageTitle";
 
 /**
  * OrderDetails component
@@ -27,7 +27,7 @@ const OrderDetails = () => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  usePageTitle(order ? `Order #${order.id}` : 'Order Details');
+  usePageTitle(order ? `Order #${order.id}` : "Order Details");
 
   /**
    * Fetch invoice for order
@@ -232,7 +232,11 @@ const OrderDetails = () => {
                     key={item.id}
                     className="flex items-center border-b pb-4 last:border-0"
                   >
-                    <div className="w-20 h-20 bg-gray-200 rounded-lg mr-4"></div>
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-20 h-20 object-cover rounded mr-4"
+                    />
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="text-gray-600 text-sm">

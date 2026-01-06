@@ -275,9 +275,9 @@ const Login = () => {
                 {showSample && (
                   <div className="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-200 text-left">
                     <p className="text-sm text-gray-700">
-                      <strong>Admin Role:</strong> thangtruong1808@gmail.com
+                      <strong>Admin Role:</strong> adminuser@gmail.com
                       <br />
-                      <strong>Password:</strong> UserTest123!
+                      <strong>Password:</strong> 123456!
                     </p>
                     <hr className="my-2" />
                     <p className="text-sm text-gray-700">
