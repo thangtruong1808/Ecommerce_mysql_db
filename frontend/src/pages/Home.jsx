@@ -193,7 +193,7 @@ const Home = () => {
           className="absolute top-0 left-0 w-full h-full "
         />
       </div> */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-8 mt-16">
         {/* Categories section */}
         {categories.length > 0 && (
           <section className="mb-6">
@@ -218,7 +218,7 @@ const Home = () => {
 
         {/* Clearance deals section */}
         {clearanceProducts.length > 0 && (
-          <section className="mb-16">
+          <section className="mb-16 mt-16">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <FaTag className="text-red-500 text-2xl" />

@@ -35,11 +35,11 @@ import usePageTitle from "../../hooks/usePageTitle";
  * @date 2025-12-17
  */
 const MediaManagement = () => {
-  usePageTitle(loading ? "Loading..." : "Media Management");
-
   const { productId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+
+  usePageTitle(loading ? "Loading..." : "Media Management");
   const [activeTab, setActiveTab] = useState("images");
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
