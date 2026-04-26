@@ -55,3 +55,7 @@ temp/
 # Local deployment docs
 DEPLOY_EC2_DOCKER.md
 
+# AWS local deployment assets
+aws/
+aws-deploy/
+
