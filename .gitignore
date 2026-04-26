@@ -52,3 +52,6 @@ backend/uploads/
 backend/temp/
 temp/
 
+# Local deployment docs
+DEPLOY_EC2_DOCKER.md
+
