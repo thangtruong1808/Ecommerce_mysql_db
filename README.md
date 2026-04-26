@@ -85,6 +85,27 @@ This will launch:
 - Frontend development server on `http://localhost:5173` (or the next available port, via Vite).
 - Backend API server on `http://localhost:5000`.
 
+### Docker (Production-like local run)
+
+Run frontend and backend with Docker:
+
+```bash
+docker compose up -d --build
+```
+
+This will launch:
+
+- Frontend on `http://localhost:3000`
+- Backend on `http://localhost:5000`
+
+Stop containers:
+
+```bash
+docker compose down
+```
+
+For AWS EC2 deployment steps, see `DEPLOY_EC2_DOCKER.md`.
+
 ## 📂 Project Structure
 
 ```

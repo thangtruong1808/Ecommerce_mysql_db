@@ -18,6 +18,7 @@ import productRoutes from "./routes/productRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
@@ -30,6 +31,7 @@ import subcategoryRoutes from "./routes/subcategoryRoutes.js";
 import childCategoryRoutes from "./routes/childCategoryRoutes.js";
 import cartAdminRoutes from "./routes/cartAdminRoutes.js";
 import productViewRoutes from "./routes/productViewRoutes.js";
+import shippingRoutes from "./routes/shippingRoutes.js";
 
 // Load environment variables from root .env file
 // Note: db.js also loads dotenv, but we load it here too for other modules
@@ -93,6 +95,7 @@ app.use(helmet()); // Security headers
 app.use(limiter); // Apply rate limiting
 app.use(cors(corsOptions)); // Enable CORS
 app.use(cookieParser()); // Parse cookies
+app.use("/api/payments", paymentRoutes); // Stripe webhook route (raw body)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -104,6 +107,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/shipping", shippingRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api", commentRoutes);

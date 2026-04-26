@@ -13,8 +13,58 @@ import * as invoiceModel from '../models/invoiceModel.js'
 import * as voucherModel from '../models/voucherModel.js'
 import { protect, admin } from '../middleware/authMiddleware.js'
 import { sendInvoiceEmail } from '../utils/emailService.js'
+import { getStripeClient } from '../utils/stripeService.js'
+import { getShippingQuote } from '../utils/shippingQuoteService.js'
 
 const router = express.Router()
+
+const buildInvoiceData = (order, paymentStatus) => ({
+  order_id: order.id,
+  user_id: order.user_id,
+  subtotal: parseFloat(order.total_price) - parseFloat(order.tax_price) - parseFloat(order.shipping_price),
+  tax_amount: parseFloat(order.tax_price),
+  shipping_amount: parseFloat(order.shipping_price),
+  total_amount: parseFloat(order.total_price),
+  payment_method: order.payment_method,
+  payment_status: paymentStatus,
+  billing_address: {
+    address: order.address,
+    city: order.city,
+    postal_code: order.postal_code,
+    country: order.country,
+  },
+  shipping_address: {
+    address: order.address,
+    city: order.city,
+    postal_code: order.postal_code,
+    country: order.country,
+  },
+})
+
+const finalizePaymentAndInvoice = async (order, paymentData) => {
+  if (!order.is_paid) {
+    await orderModel.updateOrderPayment(order.id, paymentData)
+  }
+
+  const existingInvoice = await invoiceModel.getInvoiceByOrderId(order.id)
+  if (existingInvoice) {
+    return
+  }
+
+  const invoiceId = await invoiceModel.createInvoice(
+    buildInvoiceData(order, paymentData.payment_status)
+  )
+  const createdInvoice = await invoiceModel.getInvoiceById(invoiceId, order.user_id)
+
+  if (createdInvoice && order.user_email) {
+    try {
+      await sendInvoiceEmail(order.user_email, order.user_name || 'Customer', createdInvoice)
+      await invoiceModel.markInvoiceEmailSent(invoiceId)
+    } catch (emailError) {
+      // Email sending is optional and shouldn't block order completion
+    }
+  }
+}
 
 /**
  * POST /api/orders
@@ -64,7 +114,12 @@ router.post('/', protect, async (req, res) => {
     // Calculate totals (voucher discount applied before tax and shipping)
     const subtotalAfterDiscount = Math.max(0, subtotal - voucherDiscount)
     const taxPrice = subtotalAfterDiscount * 0.1 // 10% tax
-    const shippingPrice = subtotalAfterDiscount > 100 ? 0 : 10 // Free shipping over $100
+    const shippingQuote = await getShippingQuote({
+      subtotal: subtotalAfterDiscount,
+      destinationPostcode: shippingAddress.postalCode,
+      destinationCountry: shippingAddress.country,
+    })
+    const shippingPrice = Number(shippingQuote.amount) || 0
     const totalPrice = subtotalAfterDiscount + taxPrice + shippingPrice
 
     // Create order
@@ -72,7 +127,7 @@ router.post('/', protect, async (req, res) => {
       user_id: req.user.id,
       orderItems,
       shippingAddress,
-      paymentMethod: paymentMethod || 'Mock Payment',
+      paymentMethod: paymentMethod || 'Stripe',
       taxPrice,
       shippingPrice,
       totalPrice,
@@ -91,6 +146,51 @@ router.post('/', protect, async (req, res) => {
     res.status(201).json({
       message: 'Order created successfully',
       orderId,
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
+
+/**
+ * POST /api/orders/:id/payment-intent
+ * Create Stripe PaymentIntent for an existing order
+ */
+router.post('/:id/payment-intent', protect, async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.id)
+    const order = await orderModel.getOrderById(orderId, req.user.id)
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' })
+    }
+
+    if (order.is_paid) {
+      return res.status(400).json({ message: 'Order is already paid' })
+    }
+
+    const totalAmount = Number(order.total_price)
+    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+      return res.status(400).json({ message: 'Invalid order total amount' })
+    }
+
+    const stripe = getStripeClient()
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(totalAmount * 100),
+      currency: 'usd',
+      metadata: {
+        orderId: String(order.id),
+        userId: String(req.user.id),
+      },
+      receipt_email: req.user.email || undefined,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    })
+
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
     })
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -147,59 +247,38 @@ router.put('/:id/pay', protect, async (req, res) => {
       return res.status(404).json({ message: 'Order not found' })
     }
 
-    // Update payment status
+    if (order.is_paid) {
+      return res.json({ message: 'Payment already processed' })
+    }
+
+    const paymentIntentId = req.body.payment_intent_id
+    if (!paymentIntentId) {
+      return res.status(400).json({ message: 'payment_intent_id is required' })
+    }
+
+    const stripe = getStripeClient()
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ message: 'Payment has not succeeded yet' })
+    }
+
+    if (paymentIntent.metadata?.orderId !== String(orderId)) {
+      return res.status(400).json({ message: 'Payment does not match this order' })
+    }
+
+    if (paymentIntent.metadata?.userId && paymentIntent.metadata.userId !== String(req.user.id)) {
+      return res.status(400).json({ message: 'Payment does not match this user' })
+    }
+
     const paymentData = {
-      payment_result_id: req.body.payment_result_id || `MOCK-${Date.now()}`,
-      payment_status: req.body.payment_status || 'completed',
-      payment_update_time: req.body.payment_update_time || new Date().toISOString(),
-      payment_email: req.body.payment_email || req.user.email,
+      payment_result_id: paymentIntent.id,
+      payment_status: paymentIntent.status,
+      payment_update_time: new Date(paymentIntent.created * 1000).toISOString(),
+      payment_email: paymentIntent.receipt_email || req.user.email,
     }
 
-    await orderModel.updateOrderPayment(orderId, paymentData)
-
-    // Get updated order for invoice
-    const updatedOrder = await orderModel.getOrderById(orderId, req.user.id)
-    
-    // Generate invoice
-    const invoiceData = {
-      order_id: orderId,
-      user_id: req.user.id,
-      subtotal: parseFloat(updatedOrder.total_price) - parseFloat(updatedOrder.tax_price) - parseFloat(updatedOrder.shipping_price),
-      tax_amount: parseFloat(updatedOrder.tax_price),
-      shipping_amount: parseFloat(updatedOrder.shipping_price),
-      total_amount: parseFloat(updatedOrder.total_price),
-      payment_method: updatedOrder.payment_method,
-      payment_status: paymentData.payment_status,
-      billing_address: {
-        address: updatedOrder.address,
-        city: updatedOrder.city,
-        postal_code: updatedOrder.postal_code,
-        country: updatedOrder.country,
-      },
-      shipping_address: {
-        address: updatedOrder.address,
-        city: updatedOrder.city,
-        postal_code: updatedOrder.postal_code,
-        country: updatedOrder.country,
-      },
-    }
-
-    const invoiceId = await invoiceModel.createInvoice(invoiceData)
-    
-    // Get created invoice with full details for email
-    const createdInvoice = await invoiceModel.getInvoiceById(invoiceId, req.user.id)
-    
-    // Send invoice email to buyer
-    if (createdInvoice && req.user.email) {
-      try {
-        await sendInvoiceEmail(req.user.email, req.user.name || 'Customer', createdInvoice)
-        // Mark invoice email as sent
-        await invoiceModel.markInvoiceEmailSent(invoiceId)
-      } catch (emailError) {
-        // Don't fail the request if email fails - just log silently
-        // Email sending is optional and shouldn't block order completion
-      }
-    }
+    await finalizePaymentAndInvoice(order, paymentData)
 
     res.json({ message: 'Payment processed successfully' })
   } catch (error) {

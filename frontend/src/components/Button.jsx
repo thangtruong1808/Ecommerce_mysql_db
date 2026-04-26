@@ -53,6 +53,7 @@ const Button = ({
   variant = 'primary',
   size = 'md',
   loading = false,
+  loadingText = 'Loading...',
   icon,
   type = 'button',
   onClick,
@@ -113,7 +114,7 @@ const Button = ({
       {loading ? (
         <>
           <FaSpinner className="animate-spin" />
-          <span>Loading...</span>
+          <span>{loadingText}</span>
         </>
       ) : (
         <>

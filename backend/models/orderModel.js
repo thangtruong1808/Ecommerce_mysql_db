@@ -209,6 +209,23 @@ export const updateOrderPayment = async (orderId, paymentData) => {
 }
 
 /**
+ * Update order payment status without marking order paid
+ * @param {number} orderId - Order ID
+ * @param {Object} paymentData - Payment data
+ * @returns {Promise<boolean>} - True if updated, false otherwise
+ */
+export const updateOrderPaymentStatus = async (orderId, paymentData) => {
+  const { payment_result_id, payment_status, payment_update_time, payment_email } = paymentData
+  const [result] = await db.execute(
+    `UPDATE orders
+     SET payment_result_id = ?, payment_status = ?, payment_update_time = ?, payment_email = ?
+     WHERE id = ?`,
+    [payment_result_id, payment_status, payment_update_time, payment_email, orderId]
+  )
+  return result.affectedRows > 0
+}
+
+/**
  * Update order delivery status
  * @param {number} orderId - Order ID
  * @returns {Promise<boolean>} - True if updated, false otherwise
