@@ -38,6 +38,12 @@ const timeStringToMs = (timeString) => {
   }
 };
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieSecure = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === "true"
+  : isProduction;
+const cookieSameSite = process.env.COOKIE_SAMESITE || (cookieSecure ? "None" : "Lax");
+
 /**
  * Set access token cookie
  * @param {Object} res - Express response object
@@ -49,8 +55,8 @@ export const setAccessTokenCookie = (res, token) => {
 
   res.cookie("accessToken", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: cookieSecure,
+    sameSite: cookieSameSite,
     path: "/",
     maxAge,
   });
@@ -67,8 +73,9 @@ export const setRefreshTokenCookie = (res, token) => {
 
   res.cookie("refreshToken", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: cookieSecure,
+    sameSite: cookieSameSite,
+    path: "/",
     maxAge,
   });
 };
@@ -80,8 +87,9 @@ export const setRefreshTokenCookie = (res, token) => {
 export const clearAccessTokenCookie = (res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: cookieSecure,
+    sameSite: cookieSameSite,
+    path: "/",
   });
 };
 
@@ -92,8 +100,9 @@ export const clearAccessTokenCookie = (res) => {
 export const clearRefreshTokenCookie = (res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: true,
-    sameSite: "None",
+    secure: cookieSecure,
+    sameSite: cookieSameSite,
+    path: "/",
   });
 };
 
