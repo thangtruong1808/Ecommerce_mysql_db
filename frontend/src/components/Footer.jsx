@@ -246,7 +246,7 @@ const Footer = () => {
               <li>123 Main Street</li>
               <li>Melbourne Victoria 3000, Australia</li>
               <li>Email: thangtruong1808@gmail.com</li>
-              <li>Phone: +61 2 9876 5432</li>
+              <li>Phone: 0466828649</li>
             </ul>
           </div>
         </div>

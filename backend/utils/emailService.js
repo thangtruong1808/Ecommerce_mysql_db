@@ -220,7 +220,7 @@ export const sendInvoiceEmail = async (email, userName, invoice) => {
               <div style="flex: 1;">
                 <h2 style="color: #111827; font-size: 24px; font-weight: bold; margin: 0; line-height: 1.2;">Ecommerce Store</h2>
                 <p style="color: #6b7280; font-size: 14px; margin: 5px 0 0 0; line-height: 1.5;">Your trusted online shopping destination.</p>
-                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0; line-height: 1.6;">ABN: 12 345 678 901 | 123 Main Street, Melbourne Victoria 3000, Australia<br />Email: thangtruong1808@gmail.com | Phone: +61 2 9876 5432</p>
+                <p style="color: #6b7280; font-size: 12px; margin: 5px 0 0 0; line-height: 1.6;">ABN: 12 345 678 901 | 123 Main Street, Melbourne Victoria 3000, Australia<br />Email: thangtruong1808@gmail.com | Phone: 0466828649</p>
               </div>
             </div>
           </div>

@@ -58,7 +58,7 @@ const ContactUsModal = ({ isOpen, onClose }) => {
               <FaPhone className="text-blue-600 mt-1 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-gray-900">Phone</p>
-                <a href="tel:+61298765432" className="text-blue-600 hover:underline">+61 2 9876 5432</a>
+                <a href="tel:0466828649" className="text-blue-600 hover:underline">0466828649</a>
               </div>
             </div>
             <div className="flex items-start space-x-3">

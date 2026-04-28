@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { FaDownload, FaArrowLeft } from "react-icons/fa";
+import { FaDownload, FaArrowLeft, FaSpinner } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SkeletonLoader from "../components/SkeletonLoader";
@@ -26,6 +26,7 @@ const InvoiceDetail = () => {
   const { isAuthenticated } = useAuth();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   usePageTitle(invoice ? `Invoice #${invoice.invoice_number}` : 'Invoice Detail');
 
@@ -109,7 +110,9 @@ const InvoiceDetail = () => {
    * @date 2025-12-12
    */
   const handleDownloadPDF = async () => {
+    if (downloading) return;
     try {
+      setDownloading(true);
       const response = await axios.get(`/api/invoices/${id}/download`, {
         responseType: "blob",
         withCredentials: true,
@@ -127,6 +130,8 @@ const InvoiceDetail = () => {
       toast.error(
         error.response?.data?.message || "Failed to download invoice"
       );
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -196,7 +201,7 @@ const InvoiceDetail = () => {
               <div className="text-gray-600 text-xs mt-2 space-y-1">
                 <p>ABN: 12 345 678 901</p>
                 <p>123 Main Street, Melbourne Victoria 3000, Australia</p>
-                <p>Email: thangtruong1808@gmail.com | Phone: +61 2 9876 5432</p>
+                <p>Email: thangtruong1808@gmail.com | Phone: 0466828649</p>
               </div>
             </div>
           </div>
@@ -218,9 +223,24 @@ const InvoiceDetail = () => {
             </p>
             <button
               onClick={handleDownloadPDF}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2 transition"
+              disabled={downloading}
+              className={`mt-4 px-4 py-2 rounded-md flex items-center space-x-2 transition ${
+                downloading
+                  ? "bg-blue-400 text-white cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
             >
-              <FaDownload /> <span>Download PDF</span>
+              {downloading ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  <span>Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <FaDownload />
+                  <span>Download PDF</span>
+                </>
+              )}
             </button>
           </div>
         </div>

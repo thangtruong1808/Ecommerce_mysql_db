@@ -118,7 +118,7 @@ export const generateInvoicePDF = async (invoice, outputPath) => {
       doc
         .fontSize(9)
         .text(
-          "Email: thangtruong1808@gmail.com | Phone: +61 2 9876 5432",
+          "Email: thangtruong1808@gmail.com | Phone: 0466828649",
           textX,
           headerY + 65,
           { width: 300 }
