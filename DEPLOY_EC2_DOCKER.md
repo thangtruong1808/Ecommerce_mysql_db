@@ -110,6 +110,17 @@ DB_PASSWORD=...
 DB_NAME=...
 ```
 
+**Custom domain (e.g. `badmintonecommerce.store` → `api.…`):** the value of `FRONTEND_URL` must **exactly** match what users see in the browser (scheme + host, no trailing slash). Otherwise the SPA loads but API calls fail with a CORS error in DevTools.
+
+```env
+FRONTEND_URL=https://badmintonecommerce.store
+# If you also serve https://www.… put it here (comma-separated allowed)
+CORS_EXTRA_ORIGINS=https://www.badmintonecommerce.store
+VITE_API_URL=https://api.badmintonecommerce.store
+```
+
+After changing URLs, rebuild the frontend image (`docker compose up -d --build`) so `VITE_*` bake in correctly; restart backend so `FRONTEND_URL` / `CORS_EXTRA_ORIGINS` reload.
+
 Generate secure callback secret quickly:
 
 ```bash

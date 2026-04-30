@@ -64,36 +64,52 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-// CORS configuration for cookies
+// CORS: allow FRONTEND_URL and CORS_EXTRA_ORIGINS as comma-separated lists (apex + www, staging, etc.)
+function parseAllowedOrigins(...sources) {
+  const urls = [];
+  for (const src of sources) {
+    if (src == null || String(src).trim() === "") continue;
+    for (const part of String(src).split(",")) {
+      const trimmed = part.trim().replace(/\/+$/, "");
+      if (trimmed) urls.push(trimmed);
+    }
+  }
+  return urls;
+}
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "https://ecommerce-mysql-db-2839.vercel.app",
-  "http://localhost:3000",
-].filter(Boolean); // Filter out undefined/empty values
+  ...new Set([
+    ...parseAllowedOrigins(
+      process.env.FRONTEND_URL,
+      process.env.CORS_EXTRA_ORIGINS
+    ),
+    "https://ecommerce-mysql-db-2839.vercel.app",
+    "http://localhost:3000",
+  ]),
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl requests)
     if (!origin) return callback(null, true);
 
-    // Clean up the origin URL (remove trailing slash)
     const normalizedOrigin = origin.endsWith("/")
       ? origin.slice(0, -1)
       : origin;
 
-    if (allowedOrigins.indexOf(normalizedOrigin) !== -1) {
+    if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // Allow cookies
+  credentials: true,
 };
 
-// Middleware
-app.use(helmet()); // Security headers
-app.use(limiter); // Apply rate limiting
-app.use(cors(corsOptions)); // Enable CORS
+// Middleware: CORS before Helmet so preflight and responses always get ACAO headers
+app.use(cors(corsOptions));
+app.use(helmet());
+app.use(limiter);
 app.use(cookieParser()); // Parse cookies
 app.use("/api/payments", paymentRoutes); // Stripe webhook route (raw body)
 app.use(express.json());
