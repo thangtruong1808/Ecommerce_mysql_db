@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Showcase Temporarily Offline | Badminton Stores</title>
+    <meta
+      name="description"
+      content="This portfolio e-commerce showcase is available during scheduled business hours."
+    />
+    <link rel="icon" type="image/png" href="/Logo.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1rem;
+      }
+      .card {
+        width: 100%;
+        max-width: 32rem;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 1rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        padding: 2rem 1.5rem;
+        text-align: center;
+      }
+      @media (min-width: 640px) {
+        .card {
+          padding: 2.5rem;
+        }
+      }
+      .icon {
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto 1.5rem;
+        border-radius: 9999px;
+        background: #eff6ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+      }
+      @media (min-width: 640px) {
+        h1 {
+          font-size: 1.875rem;
+        }
+      }
+      .lead {
+        color: #4b5563;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+      .schedule {
+        text-align: left;
+        background: #f9fafb;
+        border: 1px solid #f3f4f6;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .schedule-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+      }
+      .schedule-time {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: #1f2937;
+      }
+      .schedule-hint {
+        margin-top: 0.75rem;
+        font-size: 0.875rem;
+        color: #4b5563;
+        line-height: 1.5;
+      }
+      .note {
+        font-size: 0.8125rem;
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      @media (min-width: 480px) {
+        .actions {
+          flex-direction: row;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 0.15s ease;
+      }
+      .btn-primary {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-primary:hover {
+        background: #1d4ed8;
+      }
+      .btn-secondary {
+        background: #fff;
+        color: #374151;
+        border: 1px solid #d1d5db;
+      }
+      .btn-secondary:hover {
+        background: #f9fafb;
+      }
+      .footer {
+        font-size: 0.75rem;
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="main">
+      <div class="icon" aria-hidden="true">&#128337;</div>
+      <h1>Showcase Temporarily Offline</h1>
+      <p class="lead">
+        This e-commerce project is a portfolio showcase for employers. To manage
+        hosting costs, it runs on a scheduled server that is only online during
+        business hours.
+      </p>
+      <div class="schedule">
+        <p class="schedule-label">Scheduled showcase hours</p>
+        <p class="schedule-time">Monday to Friday, 1:00 PM – 6:00 PM (Sydney time)</p>
+        <p class="schedule-hint">
+          Please check back during the hours above. The site will be available
+          when the server is running.
+        </p>
+      </div>
+      <p class="note">
+        Thank you for your interest. If you are a recruiter or hiring manager,
+        feel free to connect on LinkedIn or review the source code on GitHub.
+      </p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" onclick="location.reload()">
+          Check Again
+        </button>
+        <a
+          class="btn btn-secondary"
+          href="https://www.linkedin.com/in/thang-truong-00b245200/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >LinkedIn</a
+        >
+        <a
+          class="btn btn-secondary"
+          href="https://github.com/thangtruong1808/Ecommerce_mysql_db"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >
+      </div>
+      <p class="footer">Badminton Stores — Full-Stack E-commerce Portfolio Showcase</p>
+    </main>
+  </body>
+</html>

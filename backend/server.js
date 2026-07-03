@@ -84,6 +84,7 @@ const allowedOrigins = [
       process.env.CORS_EXTRA_ORIGINS
     ),
     "https://ecommerce-mysql-db-2839.vercel.app",
+    "https://badmintonecommerce.store",
     "http://localhost:3000",
   ]),
 ];

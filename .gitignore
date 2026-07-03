@@ -57,5 +57,8 @@ DEPLOY_EC2_DOCKER.md
 
 # AWS local deployment assets
 aws/
+
+# EC2 schedule Lambda package (build with npm ci && zip; do not commit)
 aws-deploy/
 
+deploy-guide/
