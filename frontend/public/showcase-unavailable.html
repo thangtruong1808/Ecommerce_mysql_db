@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Showcase Temporarily Offline | Badminton Stores</title>
+    <title>Live Demo Available by Request | Badminton Stores</title>
     <meta
       name="description"
-      content="This portfolio e-commerce showcase is available during scheduled business hours."
+      content="This portfolio e-commerce showcase is activated on request. Contact to try the live demo."
     />
     <link rel="icon" type="image/png" href="/Logo.png" />
     <link
@@ -100,6 +100,15 @@
         color: #4b5563;
         line-height: 1.5;
       }
+      .email-link {
+        color: #2563eb;
+        font-weight: 600;
+        text-decoration: none;
+        word-break: break-word;
+      }
+      .email-link:hover {
+        text-decoration: underline;
+      }
       .note {
         font-size: 0.8125rem;
         color: #6b7280;
@@ -156,29 +165,34 @@
   </head>
   <body>
     <main class="card" role="main">
-      <div class="icon" aria-hidden="true">&#128337;</div>
-      <h1>Showcase Temporarily Offline</h1>
+      <div class="icon" aria-hidden="true">&#9993;</div>
+      <h1>Live Demo Available by Request</h1>
       <p class="lead">
-        This e-commerce project is a portfolio showcase for employers. To manage
-        hosting costs, it runs on a scheduled server that is only online during
-        business hours.
+        This project is a portfolio showcase built to demonstrate my full-stack
+        development skills to potential employers and hiring teams.
       </p>
       <div class="schedule">
-        <p class="schedule-label">Scheduled showcase hours</p>
-        <p class="schedule-time">Monday to Friday, 1:00 PM – 6:00 PM (Sydney time)</p>
+        <p class="schedule-label">Request demo access</p>
         <p class="schedule-hint">
-          Please check back during the hours above. The site will be available
-          when the server is running.
+          The live environment is activated on request. If you would like to
+          explore the application, please email me at
+          <a class="email-link" href="mailto:thangtruong1808@gmail.com"
+            >thangtruong1808@gmail.com</a
+          >
+          and I will gladly enable access so you can try it out.
         </p>
       </div>
       <p class="note">
-        Thank you for your interest. If you are a recruiter or hiring manager,
-        feel free to connect on LinkedIn or review the source code on GitHub.
+        Thank you for your interest. In the meantime, you are welcome to review
+        the source code on GitHub or connect with me on LinkedIn.
       </p>
       <div class="actions">
-        <button type="button" class="btn btn-primary" onclick="location.reload()">
-          Check Again
-        </button>
+        <a
+          class="btn btn-primary"
+          href="mailto:thangtruong1808@gmail.com?subject=Demo%20access%20request%20-%20Badminton%20Stores%20portfolio"
+        >
+          Email Me
+        </a>
         <a
           class="btn btn-secondary"
           href="https://www.linkedin.com/in/thang-truong-00b245200/"

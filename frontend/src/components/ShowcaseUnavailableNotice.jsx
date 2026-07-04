@@ -1,19 +1,20 @@
 /**
- * Full-screen notice when the showcase is outside business hours
- * or the server is temporarily unavailable.
+ * Full-screen notice shown when the showcase server is not currently active.
+ * The live demo is activated on request to keep hosting costs low, so visitors
+ * are invited to reach out by email to try the application.
  */
 
 import {
-  FaClock,
+  FaEnvelope,
   FaGithub,
   FaLinkedin,
   FaRedo,
-  FaStore,
 } from "react-icons/fa";
-import {
-  formatBusinessHoursLabel,
-  getNextAvailabilityHint,
-} from "../utils/showcaseBusinessHours";
+
+const CONTACT_EMAIL = "thangtruong1808@gmail.com";
+const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+  "Demo access request — Badminton Stores portfolio"
+)}`;
 
 /**
  * @param {Object} props
@@ -21,69 +22,61 @@ import {
  * @param {() => void | Promise<void>} [props.onRetry]
  * @param {boolean} [props.isRetrying]
  */
-const ShowcaseUnavailableNotice = ({
-  reason = "outside-hours",
-  onRetry,
-  isRetrying = false,
-}) => {
-  const scheduleLabel = formatBusinessHoursLabel();
-  const nextHint = getNextAvailabilityHint();
-
-  const isOutsideHours = reason === "outside-hours";
-
-  const title = isOutsideHours
-    ? "Showcase Temporarily Offline"
-    : "We’ll Be Back Shortly";
-
-  const description = isOutsideHours
-    ? "This e-commerce project is a portfolio showcase for employers. To manage hosting costs, it runs on a scheduled server that is only online during business hours."
-    : "Our showcase server is starting up or temporarily unavailable. This usually happens outside scheduled hours or while the instance is waking up.";
-
+const ShowcaseUnavailableNotice = ({ onRetry, isRetrying = false }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center px-4 py-10 sm:py-16">
       <div className="w-full max-w-lg">
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-10 text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            {isOutsideHours ? (
-              <FaClock className="h-8 w-8" aria-hidden="true" />
-            ) : (
-              <FaStore className="h-8 w-8" aria-hidden="true" />
-            )}
+            <FaEnvelope className="h-7 w-7" aria-hidden="true" />
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            {title}
+            Live Demo Available by Request
           </h1>
 
           <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6">
-            {description}
+            This project is a portfolio showcase built to demonstrate my
+            full-stack development skills to potential employers and hiring
+            teams.
           </p>
 
-          <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-4 mb-6 text-left">
+          <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-4 sm:px-5 mb-6 text-left">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-              Scheduled showcase hours
+              Request demo access
             </p>
-            <p className="text-sm sm:text-base font-medium text-gray-800">
-              {scheduleLabel}
-            </p>
-            <p className="text-sm text-gray-600 mt-3 leading-relaxed">
-              {nextHint}
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+              The live environment is activated on request. If you would like to
+              explore the application, please email me at{" "}
+              <a
+                href={CONTACT_MAILTO}
+                className="font-semibold text-blue-600 hover:text-blue-700 break-words"
+              >
+                {CONTACT_EMAIL}
+              </a>{" "}
+              and I will gladly enable access so you can try it out.
             </p>
           </div>
 
           <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
-            Thank you for your interest. If you are a recruiter or hiring
-            manager, feel free to connect on LinkedIn or review the source
-            code on GitHub while you wait.
+            Thank you for your interest. In the meantime, you are welcome to
+            review the source code on GitHub or connect with me on LinkedIn.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-6">
+            <a
+              href={CONTACT_MAILTO}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            >
+              <FaEnvelope className="h-4 w-4" aria-hidden="true" />
+              Email Me
+            </a>
             {onRetry && (
               <button
                 type="button"
                 onClick={onRetry}
                 disabled={isRetrying}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 <FaRedo
                   className={`h-4 w-4 ${isRetrying ? "animate-spin" : ""}`}
@@ -92,6 +85,9 @@ const ShowcaseUnavailableNotice = ({
                 {isRetrying ? "Checking..." : "Check Again"}
               </button>
             )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-6">
             <a
               href="https://www.linkedin.com/in/thang-truong-00b245200/"
               target="_blank"

@@ -1,0 +1,11 @@
+name = "showcase-gate"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+workers_dev = true
+
+# Intercept site + API traffic so the Worker can show the contact page when EC2 is off.
+routes = [
+  { pattern = "badmintonecommerce.store/*", zone_name = "badmintonecommerce.store" },
+  { pattern = "www.badmintonecommerce.store/*", zone_name = "badmintonecommerce.store" },
+  { pattern = "api.badmintonecommerce.store/*", zone_name = "badmintonecommerce.store" },
+]
