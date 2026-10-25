@@ -32,12 +32,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         onClose={closeSidebar}
       />
       <div
-        className={`relative flex-1 overflow-y-auto ${isSidebarOpen ? "lg:ml-64" : "lg:ml-0"}`}
+        className={`flex min-w-0 flex-1 flex-col overflow-y-auto ${isSidebarOpen ? "lg:ml-64" : "lg:ml-0"}`}
       >
-        <div className="absolute right-3 top-2 z-20">
+        <header
+          className={`sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface ${
+            isSidebarOpen ? "px-3 sm:px-4" : "py-0 pl-16 pr-3 sm:pr-4"
+          }`}
+        >
+          <p className="font-ui text-sm font-semibold text-ink">Store admin</p>
           <ThemeToggle />
-        </div>
-        <div className="p-3 pt-12 sm:p-4">{children}</div>
+        </header>
+        <div className="p-3 sm:p-4">{children}</div>
       </div>
     </div>
   );

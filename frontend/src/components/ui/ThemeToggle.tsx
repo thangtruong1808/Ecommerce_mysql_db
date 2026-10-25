@@ -110,7 +110,7 @@ export function ThemeToggle({ tone = "surface", className }: ThemeToggleProps) {
         className={cn(
           "inline-flex items-center justify-center rounded-ui-sm p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           tone === "inverse"
-            ? "text-white hover:text-blue-100 focus-visible:ring-white focus-visible:ring-offset-blue-600"
+            ? "text-on-primary hover:bg-white/10 focus-visible:ring-on-primary focus-visible:ring-offset-primary"
             : cn(
                 "border border-line bg-surface text-ink hover:bg-surface-muted",
                 focusRing,

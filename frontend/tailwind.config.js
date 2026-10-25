@@ -9,6 +9,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'sans-serif'],
+        ui: ['Outfit', 'Inter', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
       },
       colors: {
         canvas: "rgb(var(--canvas) / <alpha-value>)",
@@ -37,6 +39,7 @@ export default {
         ui: "var(--radius-md)",
         "ui-sm": "var(--radius-sm)",
         "ui-lg": "var(--radius-lg)",
+        "ui-xl": "var(--radius-xl)",
       },
       boxShadow: {
         ui: "var(--shadow-sm)",

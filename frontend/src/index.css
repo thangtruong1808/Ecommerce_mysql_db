@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,71 +6,82 @@
 
 :root {
   color-scheme: light;
-  --canvas: 249 250 251;
-  --surface: 255 255 255;
-  --surface-muted: 243 244 246;
-  --ink: 17 24 39;
-  --muted: 75 85 99;
-  --line: 229 231 235;
-  --primary: 37 99 235;
-  --primary-hover: 29 78 216;
-  --on-primary: 255 255 255;
-  --secondary: 234 179 8;
-  --secondary-hover: 202 138 4;
-  --on-secondary: 17 24 39;
-  --accent: 185 28 28;
-  --accent-hover: 153 27 27;
-  --on-accent: 255 255 255;
-  --success: 21 128 61;
-  --warning: 161 98 7;
-  --danger: 185 28 28;
-  --danger-hover: 153 27 27;
-  --on-danger: 255 255 255;
-  --info: 37 99 235;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --shadow-sm: 0 1px 2px rgb(17 24 39 / 0.06);
-  --shadow-md: 0 8px 24px rgb(17 24 39 / 0.08);
+  --canvas: 244 241 234;
+  --surface: 255 252 247;
+  --surface-muted: 235 230 220;
+  --ink: 28 25 21;
+  --muted: 92 86 76;
+  --line: 228 221 208;
+  --primary: 31 107 74;
+  --primary-hover: 24 86 59;
+  --on-primary: 247 244 238;
+  --secondary: 196 161 90;
+  --secondary-hover: 168 132 62;
+  --on-secondary: 28 25 21;
+  --accent: 159 45 45;
+  --accent-hover: 127 36 36;
+  --on-accent: 247 244 238;
+  --success: 31 107 74;
+  --warning: 146 96 20;
+  --danger: 159 45 45;
+  --danger-hover: 127 36 36;
+  --on-danger: 247 244 238;
+  --info: 36 92 84;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --shadow-sm: 0 1px 2px rgb(28 25 21 / 0.08);
+  --shadow-md: 0 8px 24px rgb(28 25 21 / 0.08);
   --motion-fast: 150ms;
   --motion-base: 200ms;
 }
 
 .dark {
   color-scheme: dark;
-  --canvas: 17 24 39;
-  --surface: 31 41 55;
-  --surface-muted: 55 65 81;
-  --ink: 243 244 246;
-  --muted: 209 213 219;
-  --line: 75 85 99;
-  --primary: 37 99 235;
-  --primary-hover: 29 78 216;
-  --on-primary: 255 255 255;
-  --secondary: 250 204 21;
-  --secondary-hover: 234 179 8;
-  --on-secondary: 17 24 39;
-  --accent: 248 113 113;
-  --accent-hover: 252 165 165;
-  --on-accent: 17 24 39;
-  --success: 74 222 128;
-  --warning: 250 204 21;
-  --danger: 248 113 113;
-  --danger-hover: 252 165 165;
-  --on-danger: 17 24 39;
-  --info: 96 165 250;
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 12px 28px rgb(0 0 0 / 0.45);
+  --canvas: 18 20 16;
+  --surface: 28 31 26;
+  --surface-muted: 38 42 36;
+  --ink: 244 241 234;
+  --muted: 200 192 178;
+  --line: 58 63 54;
+  --primary: 125 206 160;
+  --primary-hover: 158 224 184;
+  --on-primary: 16 33 23;
+  --secondary: 228 194 122;
+  --secondary-hover: 240 214 160;
+  --on-secondary: 28 25 21;
+  --accent: 240 163 163;
+  --accent-hover: 245 196 196;
+  --on-accent: 28 25 21;
+  --success: 125 206 160;
+  --warning: 232 196 122;
+  --danger: 240 163 163;
+  --danger-hover: 245 196 196;
+  --on-danger: 28 25 21;
+  --info: 147 197 184;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow-md: 0 12px 32px rgb(0 0 0 / 0.5);
 }
 
 body {
   margin: 0;
   background: rgb(var(--canvas));
+  color: rgb(var(--ink));
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -86,12 +97,6 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-* {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
