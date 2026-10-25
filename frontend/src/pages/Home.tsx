@@ -15,6 +15,7 @@ import ProductCard from "../components/ProductCard";
 import RecentlyViewed from "../components/RecentlyViewed";
 import Recommendations from "../components/Recommendations";
 import VoucherCodeItem from "../components/VoucherCodeItem";
+import VoucherSection from "../components/VoucherSection";
 import { Button, EmptyState, Skeleton } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
@@ -56,9 +57,9 @@ function asProducts(data: unknown): HomeProduct[] | null {
   });
 }
 
-function asVouchers(data: unknown): Voucher[] {
+function asVouchers(data: unknown): Voucher[] | null {
   if (!Array.isArray(data)) {
-    return [];
+    return null;
   }
   return data.filter((item): item is Voucher => {
     return Boolean(item) && typeof item === "object" && typeof (item as Voucher).code === "string";
@@ -113,6 +114,7 @@ function Home() {
   const [featuredStatus, setFeaturedStatus] = useState<LoadStatus>("loading");
   const [clearanceStatus, setClearanceStatus] = useState<LoadStatus>("loading");
   const [categoryStatus, setCategoryStatus] = useState<LoadStatus>("loading");
+  const [voucherStatus, setVoucherStatus] = useState<LoadStatus>("loading");
   const [copiedCodes, setCopiedCodes] = useState<Set<string>>(new Set());
   const [retrying, setRetrying] = useState(false);
 
@@ -120,6 +122,7 @@ function Home() {
     setFeaturedStatus("loading");
     setClearanceStatus("loading");
     setCategoryStatus("loading");
+    setVoucherStatus("loading");
     const [productsResult, clearanceResult, categoriesResult, vouchersResult] =
       await Promise.allSettled([
         axios.get("/api/products?limit=10&sortBy=created_at&sortOrder=DESC"),
@@ -156,9 +159,12 @@ function Home() {
     }
 
     if (vouchersResult.status === "fulfilled") {
-      setVouchers(asVouchers(vouchersResult.value.data));
+      const list = asVouchers(vouchersResult.value.data);
+      setVouchers(list ?? []);
+      setVoucherStatus(list ? "ready" : "error");
     } else {
       setVouchers([]);
+      setVoucherStatus("error");
     }
   }, []);
 
@@ -263,6 +269,12 @@ function Home() {
       </section>
 
       <div className="mx-auto max-w-7xl space-y-16 px-4 py-12 sm:px-6 lg:px-8">
+        <VoucherSection
+          vouchers={vouchers}
+          status={voucherStatus}
+          retrying={retrying}
+          onRetry={() => void retry()}
+        />
         <section aria-labelledby="home-categories">
           <SectionHeading id="home-categories" title="Shop by category" to="/products" action="View all" />
           {categoryStatus === "loading" ? <Skeleton className="h-80" /> : null}

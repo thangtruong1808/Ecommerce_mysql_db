@@ -11,13 +11,13 @@ import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from
 /**
  * Pagination component
  * @param {Object} props - Component props
- * @param {string} props.position - Position: 'top' or 'bottom' (default: 'bottom')
+ * @param {string} [props.position] - Position: 'top' or 'bottom' (default: 'bottom')
  * @param {number} props.currentPage - Current page number
  * @param {number} props.totalPages - Total number of pages
- * @param {number} props.totalItems - Total number of items
- * @param {number} props.entriesPerPage - Entries per page
+ * @param {number} [props.totalItems] - Total number of items
+ * @param {number} [props.entriesPerPage] - Entries per page
  * @param {Function} props.onPageChange - Page change callback
- * @param {Function} props.onEntriesChange - Entries per page change callback
+ * @param {Function} [props.onEntriesChange] - Entries per page change callback
  * @returns {JSX.Element} Pagination component
  * @author Thang Truong
  * @date 2025-12-12

@@ -11,13 +11,13 @@ import { FaCheck } from 'react-icons/fa'
 /**
  * BulkSelectCheckbox component
  * @param {Object} props - Component props
- * @param {string|number} props.itemId - Item ID
- * @param {boolean} props.isSelected - Whether item is selected
- * @param {Function} props.onToggle - Toggle selection callback
- * @param {boolean} props.isSelectAll - Whether this is the select all checkbox
- * @param {Function} props.onSelectAll - Select all callback
- * @param {number} props.totalItems - Total items count
- * @param {number} props.selectedCount - Currently selected count
+ * @param {string|number} [props.itemId] - Item ID
+ * @param {boolean} [props.isSelected] - Whether item is selected
+ * @param {Function} [props.onToggle] - Toggle selection callback
+ * @param {boolean} [props.isSelectAll] - Whether this is the select all checkbox
+ * @param {Function} [props.onSelectAll] - Select all callback
+ * @param {number} [props.totalItems] - Total items count
+ * @param {number} [props.selectedCount] - Currently selected count
  * @returns {JSX.Element} Bulk select checkbox component
  */
 const BulkSelectCheckbox = ({ 

@@ -10,8 +10,8 @@ import { useState } from 'react'
 
 /**
  * useSelection hook
- * @param {Array} items - Array of items with id property
- * @returns {Object} Selection state and handlers
+ * @param {Array<{ id: number | string }>} [items] - Array of items with id property
+ * @returns {{ selected: Set<number | string>, toggle: (id: number | string) => void, selectAll: (select: boolean) => void, clear: () => void, selectedCount: number }} Selection state and handlers
  * @author Thang Truong
  * @date 2025-12-12
  */

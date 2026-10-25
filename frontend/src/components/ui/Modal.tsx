@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { cn } from "./cn";
 import { focusRing } from "./styles";
 
 interface ModalProps {
@@ -8,12 +9,13 @@ interface ModalProps {
   description?: string;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
 }
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function Modal({ open, title, description, onClose, children }: ModalProps) {
+export function Modal({ open, title, description, onClose, children, className }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,10 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
-        className="relative z-10 w-full max-w-lg rounded-ui border border-line bg-surface text-ink shadow-ui-md focus-visible:outline-none"
+        className={cn(
+          "relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-ui border border-line bg-surface text-ink shadow-ui-md focus-visible:outline-none",
+          className || "max-w-lg",
+        )}
       >
         <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
           <div>
@@ -113,7 +118,7 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
             Close
           </button>
         </header>
-        <div className="p-4">{children}</div>
+        <div className="overflow-y-auto p-4">{children}</div>
       </div>
     </div>,
     document.body,

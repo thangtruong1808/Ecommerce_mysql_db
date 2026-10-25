@@ -11,7 +11,7 @@ import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
 /**
  * ConfirmDeleteModal component
  * @param {Object} props - Component props
- * @param {Object} props.entity - Entity to delete
+ * @param {Object|null} props.entity - Entity to delete
  * @param {string} props.entityType - Entity type (order, product, user, etc.)
  * @param {Function} props.onConfirm - Confirm callback
  * @param {Function} props.onCancel - Cancel callback
@@ -95,6 +95,9 @@ const ConfirmDeleteModal = ({
             disabled={loading}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center"
           >
+            {loading ? (
+              <span className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent motion-safe:animate-spin" />
+            ) : null}
             {loading ? 'Deleting...' : 'Delete'}
           </button>
         </div>

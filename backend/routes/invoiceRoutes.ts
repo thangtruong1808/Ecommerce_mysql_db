@@ -28,6 +28,18 @@ const router = express.Router()
  */
 router.get('/', protect, async (req: Request, res: Response) => {
   try {
+    const orderId = Number(req.query.order_id)
+    if (Number.isInteger(orderId) && orderId > 0) {
+      const invoice = await invoiceModel.getInvoiceByOrderId(orderId)
+      if (!invoice || Number(invoice.user_id) !== Number(req.user!.id)) {
+        return res.json({ invoices: [], pagination: { page: 1, limit: 1, total: 0, pages: 0 } })
+      }
+      return res.json({
+        invoices: [invoice],
+        pagination: { page: 1, limit: 1, total: 1, pages: 1 },
+      })
+    }
+
     const page = parseInt(String(req.query.page)) || 1
     const result = await invoiceModel.getUserInvoices(req.user!.id, { page })
     res.json(result)

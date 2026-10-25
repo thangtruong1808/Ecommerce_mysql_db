@@ -15,11 +15,12 @@ import { FaTimes, FaTrash, FaCheck, FaTimesCircle, FaToggleOn, FaToggleOff } fro
  * @param {Array<Object>} props.actions - Available actions
  * @param {Function} props.onAction - Action callback
  * @param {Function} props.onCancel - Cancel selection callback
+ * @param {boolean} [props.busy] - Disables actions while a bulk request is running
  * @returns {JSX.Element} Bulk action bar component
  * @author Thang Truong
  * @date 2025-12-12
  */
-const BulkActionBar = ({ selectedCount, actions = [], onAction, onCancel }) => {
+const BulkActionBar = ({ selectedCount, actions = [], onAction, onCancel, busy = false }) => {
   /**
    * Get action icon
    * @param {string} actionType - Action type
@@ -71,10 +72,16 @@ const BulkActionBar = ({ selectedCount, actions = [], onAction, onCancel }) => {
           <button
             key={action.type}
             type="button"
-            onClick={() => onAction && onAction(action.type, action.data)}
-            className={`${getActionColor(action.type)} text-white px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors`}
+            onClick={() => onAction && !busy && onAction(action.type, action.data)}
+            disabled={busy}
+            aria-busy={busy || undefined}
+            className={`${getActionColor(action.type)} text-white px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors disabled:cursor-not-allowed disabled:opacity-60`}
           >
-            {getActionIcon(action.type)}
+            {busy ? (
+              <span className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent motion-safe:animate-spin" />
+            ) : (
+              getActionIcon(action.type)
+            )}
             {action.label}
           </button>
         ))}

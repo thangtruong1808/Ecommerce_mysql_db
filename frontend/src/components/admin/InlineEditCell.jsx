@@ -13,10 +13,10 @@ import { useState, useEffect, useRef } from 'react'
  * @param {Object} props - Component props
  * @param {string|number} props.value - Current value
  * @param {string} props.type - Input type (text, number, select)
- * @param {Array} props.options - Options for select type
+ * @param {Array} [props.options] - Options for select type
  * @param {Function} props.onSave - Save callback
- * @param {Function} props.onCancel - Cancel callback
- * @param {boolean} props.loading - Loading state
+ * @param {Function} [props.onCancel] - Cancel callback
+ * @param {boolean} [props.loading] - Loading state
  * @returns {JSX.Element} Inline edit cell component
  */
 const InlineEditCell = ({ 

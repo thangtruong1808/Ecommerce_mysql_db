@@ -14,8 +14,19 @@ import { shouldSuppress401Toast } from './authUtils'
 /**
  * useCrudOperations hook
  * @param {string} endpoint - API endpoint base path
- * @param {Function} onSuccess - Success callback
- * @returns {Object} CRUD operation handlers
+ * @param {Function} [onSuccess] - Success callback
+ * @returns {{
+ *   deleteModal: { isOpen: boolean, entity: any },
+ *   setDeleteModal: (value: { isOpen: boolean, entity: any }) => void,
+ *   editModal: { isOpen: boolean, entity: any },
+ *   setEditModal: (value: { isOpen: boolean, entity: any }) => void,
+ *   createModal: { isOpen: boolean },
+ *   setCreateModal: (value: { isOpen: boolean }) => void,
+ *   handleCreate: (data: Record<string, unknown>) => Promise<void>,
+ *   handleUpdate: (id: number, data: Record<string, unknown>) => Promise<void>,
+ *   handleDeleteConfirm: () => Promise<void>,
+ *   handleBulkDelete: (ids: number[], bulkEndpoint: string, idsKey: string) => Promise<void>
+ * }} CRUD operation handlers
  * @author Thang Truong
  * @date 2025-12-12
  */

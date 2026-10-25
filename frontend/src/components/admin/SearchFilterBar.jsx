@@ -14,10 +14,10 @@ import { FaSearch, FaTimes } from 'react-icons/fa'
  * @param {Object} props - Component props
  * @param {string} props.searchTerm - Search term value
  * @param {Function} props.onSearchChange - Search change callback
- * @param {string} props.filterValue - Filter value
- * @param {Function} props.onFilterChange - Filter change callback
- * @param {Array} props.filterOptions - Filter options [{value, label}]
- * @param {string} props.searchPlaceholder - Search placeholder text
+ * @param {string} [props.filterValue] - Filter value
+ * @param {Function} [props.onFilterChange] - Filter change callback
+ * @param {Array} [props.filterOptions] - Filter options [{value, label}]
+ * @param {string} [props.searchPlaceholder] - Search placeholder text
  * @returns {JSX.Element} Search filter bar component
  * @author Thang Truong
  * @date 2025-12-17
