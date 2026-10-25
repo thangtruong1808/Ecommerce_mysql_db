@@ -29,7 +29,13 @@ interface HomeProduct {
 type LoadStatus = "loading" | "ready" | "error";
 
 const viewAll =
-  "inline-flex items-center gap-2 rounded-ui-sm text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
+  "inline-flex items-center gap-2 rounded-ui font-ui text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
+
+const primaryAction =
+  "inline-flex h-12 items-center justify-center rounded-ui bg-primary px-5 font-ui text-base font-semibold text-on-primary shadow-ui hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
+
+const quietAction =
+  "inline-flex h-12 items-center justify-center rounded-ui border border-line bg-canvas px-5 font-ui text-base font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
 
 function asCategories(data: unknown): HomeCategory[] | null {
   if (!Array.isArray(data)) {
@@ -90,7 +96,7 @@ function SectionHeading({
 }) {
   return (
     <div className="mb-6 flex items-end justify-between gap-3">
-      <h2 id={id} className="text-2xl font-bold text-ink sm:text-3xl">
+      <h2 id={id} className="font-display text-3xl text-ink sm:text-4xl">
         {title}
       </h2>
       <Link to={to} className={viewAll}>
@@ -220,19 +226,39 @@ function Home() {
 
   return (
     <div>
-      <section className="bg-primary text-on-primary">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-center text-3xl font-bold sm:text-4xl">
-            Welcome to Badminton Stores
-          </h1>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-base text-on-primary/90">
-            Rackets, shoes, and court gear, with voucher codes on selected stock.
-          </p>
+      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        <div className="overflow-hidden rounded-ui-xl border border-line bg-surface shadow-ui-md">
+          <div className="grid gap-8 p-6 sm:p-10 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-7">
+              <h1 className="font-display text-4xl text-ink sm:text-6xl">
+                Welcome to Badminton Stores
+              </h1>
+              <p className="mt-4 max-w-xl text-base text-muted sm:text-lg">
+                Rackets, shoes, and court gear, with voucher codes on selected stock.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link to="/products" className={primaryAction}>
+                  Shop products
+                </Link>
+                <Link to="/clearance" className={quietAction}>
+                  View clearance
+                </Link>
+              </div>
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
+              {features.map((feature) => (
+                <li key={feature.label} className="inline-flex items-center gap-3 rounded-ui bg-canvas px-4 py-3 text-sm text-ink">
+                  <span className="text-primary">{feature.icon}</span>
+                  {feature.label}
+                </li>
+              ))}
+            </ul>
+          </div>
           {vouchers.length > 0 ? (
-            <div className="mt-6">
-              <ul className="flex flex-wrap items-center justify-center gap-3">
+            <div className="border-t border-line bg-canvas px-4 py-5 sm:px-6">
+              <ul className="flex flex-wrap items-stretch justify-center gap-3">
                 {vouchers.slice(0, 4).map((voucher, index) => (
-                  <li key={voucher.id}>
+                  <li key={voucher.id} className="min-w-0 max-w-full">
                     <VoucherCodeItem
                       voucher={voucher}
                       isCopied={copiedCodes.has(voucher.code)}
@@ -243,28 +269,12 @@ function Home() {
                 ))}
               </ul>
               {vouchers.length > 4 ? (
-                <p className="mt-2 text-center text-sm text-on-primary/80">
+                <p className="mt-3 text-center text-sm text-muted">
                   +{vouchers.length - 4} more voucher{vouchers.length - 4 === 1 ? "" : "s"} available
                 </p>
               ) : null}
             </div>
           ) : null}
-          <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/20 pt-4 text-sm text-on-primary/90">
-            {features.map((feature) => (
-              <li key={feature.label} className="inline-flex items-center gap-2">
-                {feature.icon}
-                {feature.label}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/products" className="inline-flex h-10 items-center rounded-ui-sm bg-secondary px-4 text-sm font-semibold text-on-secondary hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
-              Shop products
-            </Link>
-            <Link to="/clearance" className="inline-flex h-10 items-center rounded-ui-sm border border-white/40 px-4 text-sm font-semibold text-on-primary hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
-              View clearance
-            </Link>
-          </div>
         </div>
       </section>
 

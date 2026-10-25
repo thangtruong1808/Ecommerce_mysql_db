@@ -10,10 +10,10 @@ const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
 )}`;
 
 const primaryLink =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-ui-sm bg-primary px-4 text-sm font-medium text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-ui bg-primary px-4 font-ui text-sm font-semibold text-on-primary shadow-ui hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
 
 const outlineLink =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-ui-sm border border-line bg-surface px-4 text-sm font-medium text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-ui border border-line bg-surface px-4 font-ui text-sm font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
 
 interface ShowcaseUnavailableNoticeProps {
   reason: UnavailableReason;
@@ -30,11 +30,11 @@ export default function ShowcaseUnavailableNotice({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10 text-ink sm:py-16">
-      <main className="w-full max-w-lg rounded-ui border border-line bg-surface p-6 text-center shadow-ui sm:p-10">
+      <main className="w-full max-w-lg rounded-ui-lg border border-line bg-surface p-6 text-center shadow-ui sm:p-10">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <FaEnvelope className="h-7 w-7" aria-hidden="true" />
         </div>
-        <h1 className="text-2xl font-bold sm:text-3xl">Live Demo Available by Request</h1>
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">Live Demo Available by Request</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
           This project is a portfolio showcase built to demonstrate my full-stack development skills
           to potential employers and hiring teams.

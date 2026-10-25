@@ -82,7 +82,7 @@ const AppContent = () => {
     <div className="flex min-h-screen flex-col bg-canvas">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-ui-sm focus:bg-surface focus:px-3 focus:py-2 focus:text-ink focus:shadow-ui-md focus:outline-none focus:ring-2 focus:ring-primary"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-ui focus:bg-surface focus:px-3 focus:py-2 focus:font-ui focus:text-sm focus:font-semibold focus:text-ink focus:shadow-ui-md focus:outline-none focus:ring-2 focus:ring-primary"
       >
         Skip to content
       </a>

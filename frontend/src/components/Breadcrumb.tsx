@@ -59,7 +59,7 @@ function Breadcrumb({
 
   return (
     <nav className="mb-6" aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-2 text-sm">
+      <ol className="flex flex-wrap items-center gap-2 font-ui text-sm">
         {items.map((item, index) => {
           const current = index === items.length - 1;
           return (

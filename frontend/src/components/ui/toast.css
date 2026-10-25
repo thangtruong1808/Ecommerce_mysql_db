@@ -1,0 +1,45 @@
+.Toastify__toast {
+  background: rgb(var(--surface)) !important;
+  color: rgb(var(--ink)) !important;
+  border: 1px solid rgb(var(--line));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  font-family: Outfit, Inter, sans-serif;
+}
+
+.Toastify__toast--success {
+  border-color: rgb(var(--success));
+}
+
+.Toastify__toast--error {
+  border-color: rgb(var(--danger));
+}
+
+.Toastify__toast--warning {
+  border-color: rgb(var(--warning));
+}
+
+.Toastify__toast--info {
+  border-color: rgb(var(--info));
+}
+
+.Toastify__progress-bar--success {
+  background: rgb(var(--success));
+}
+
+.Toastify__progress-bar--error {
+  background: rgb(var(--danger));
+}
+
+.Toastify__progress-bar--warning {
+  background: rgb(var(--warning));
+}
+
+.Toastify__progress-bar--info {
+  background: rgb(var(--info));
+}
+
+.Toastify__close-button {
+  color: rgb(var(--muted));
+  opacity: 1;
+}

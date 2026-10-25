@@ -1,4 +1,4 @@
-import type { ComponentType, RefObject } from "react";
+import { useEffect, type ComponentType, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import {
   FaBoxOpen,
@@ -20,7 +20,6 @@ interface MenuItem {
 
 interface MobileMenuProps {
   open: boolean;
-  top: number;
   categories: NavCategory[];
   categoriesOpen: boolean;
   isAuthenticated: boolean;
@@ -37,12 +36,16 @@ interface MobileMenuProps {
   menuRef: RefObject<HTMLDivElement>;
 }
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 const row =
-  "flex w-full items-center gap-2 rounded-ui-sm px-2 py-2 text-left text-base font-medium text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "flex w-full items-center gap-2 rounded-ui px-3 py-2.5 text-left font-ui text-base font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+
+const rowActive = "bg-primary text-on-primary hover:bg-primary-hover";
 
 export function MobileMenu({
   open,
-  top,
   categories,
   categoriesOpen,
   isAuthenticated,
@@ -58,27 +61,88 @@ export function MobileMenu({
   onLogout,
   menuRef,
 }: MobileMenuProps) {
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const root = menuRef.current;
+    const previouslyFocused = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusable = () =>
+      Array.from(root?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
+    const initial = focusable()[0] ?? root;
+    initial?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") {
+        return;
+      }
+      const items = focusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        root?.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!first || !last) {
+        return;
+      }
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previouslyFocused instanceof HTMLElement) {
+        previouslyFocused.focus();
+      }
+    };
+  }, [open, menuRef]);
+
   if (!open) {
     return null;
   }
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 bg-gray-900/50 md:hidden"
-      style={{ top }}
+      className="fixed inset-0 z-50 bg-canvas md:hidden"
       onClick={onClose}
     >
       <div
         ref={menuRef}
         id="mobile-navigation"
-        className="h-full overflow-y-auto bg-surface text-ink shadow-ui-md"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        tabIndex={-1}
+        className="flex h-full flex-col overflow-y-auto bg-surface text-ink shadow-ui-md focus-visible:outline-none"
         onClick={(event) => event.stopPropagation()}
       >
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <p className="font-ui text-sm font-semibold text-ink">Menu</p>
+          <button
+            type="button"
+            className="rounded-ui border border-line px-3 py-1.5 font-ui text-sm font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
         <div className="space-y-2 px-4 py-4">
           <Link
             to="/"
             onClick={onClose}
-            className={row}
+            className={`${row} ${isActive("/", true) ? rowActive : ""}`}
             aria-current={isActive("/", true) ? "page" : undefined}
           >
             <FaHome aria-hidden="true" /> Home
@@ -140,7 +204,7 @@ export function MobileMenu({
           <Link
             to="/clearance"
             onClick={onClose}
-            className={`${row} text-accent`}
+            className={`${row} ${isActive("/clearance") ? rowActive : ""}`}
             aria-current={isActive("/clearance") ? "page" : undefined}
           >
             <FaTag aria-hidden="true" /> Clearance

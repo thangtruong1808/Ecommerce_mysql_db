@@ -72,7 +72,7 @@ function RecentlyViewed({
     <section className="mb-12" aria-labelledby={showTitle ? "recently-viewed-heading" : undefined}>
       {showTitle ? (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="recently-viewed-heading" className="flex items-center gap-2 text-2xl font-bold text-ink">
+          <h2 id="recently-viewed-heading" className="flex items-center gap-2 font-display text-3xl text-ink sm:text-4xl">
             <FaEye aria-hidden="true" />
             Your recently viewed items
           </h2>

@@ -105,7 +105,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
 
   return (
     <div
-      className="flex flex-col gap-4"
+      className="flex min-w-0 flex-col gap-4"
       role="region"
       aria-roledescription="carousel"
       aria-label="Shop by category"
@@ -118,7 +118,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
       <p className="sr-only" aria-live="polite">
         {current.name}, {currentIndex + 1} of {count}
       </p>
-      <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui">
+      <div className="overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui">
         <Link
           to={`/products?category=${current.id}`}
           className="grid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary lg:grid-cols-5"
@@ -142,7 +142,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
             )}
           </div>
           <div className="flex flex-col justify-center p-6 text-left lg:col-span-2 lg:p-8">
-            <h3 className="text-2xl font-bold text-ink sm:text-3xl">{current.name}</h3>
+            <h3 className="font-display text-3xl text-ink sm:text-4xl">{current.name}</h3>
             {current.description ? (
               <p className="mt-3 text-sm text-muted">{current.description}</p>
             ) : (
@@ -150,7 +150,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                 Browse {current.name.toLowerCase()} in the shop.
               </p>
             )}
-            <span className="mt-4 text-sm font-semibold text-primary">
+            <span className="mt-4 font-ui text-sm font-semibold text-primary">
               Shop {current.name}
             </span>
           </div>
@@ -160,7 +160,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
         <button type="button" className={control} aria-label="Previous category" onClick={() => showSlide(currentIndex - 1)}>
           <FaChevronLeft aria-hidden="true" />
         </button>
-        <div className="flex flex-1 gap-2 overflow-x-auto">
+        <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
           {categories.map((category, index) => {
             const thumb = photoUrl(category.photo_url);
             const showThumb = Boolean(thumb) && !failedIds.includes(category.id);
@@ -171,7 +171,7 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                 type="button"
                 aria-label={`Show ${category.name}`}
                 aria-pressed={selected}
-                className={`w-28 shrink-0 rounded-ui border p-2 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`w-28 shrink-0 rounded-ui-lg border p-2 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   selected
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-line bg-surface text-ink hover:bg-surface-muted"

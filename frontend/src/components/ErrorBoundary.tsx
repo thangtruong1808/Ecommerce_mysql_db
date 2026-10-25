@@ -28,7 +28,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return (
       <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
         <div className="max-w-md text-center" role="alert">
-          <h1 className="text-3xl font-bold text-ink">Something went wrong</h1>
+          <h1 className="font-display text-4xl text-ink">Something went wrong</h1>
           <p className="mt-3 text-muted">
             An unexpected error stopped this page. Reload it, or go back to the store.
           </p>

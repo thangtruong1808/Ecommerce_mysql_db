@@ -108,7 +108,7 @@ export function ThemeToggle({ tone = "surface", className }: ThemeToggleProps) {
         ref={buttonRef}
         type="button"
         className={cn(
-          "inline-flex items-center justify-center rounded-ui-sm p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          "inline-flex h-10 w-10 items-center justify-center rounded-ui p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           tone === "inverse"
             ? "text-on-primary hover:bg-white/10 focus-visible:ring-on-primary focus-visible:ring-offset-primary"
             : cn(
@@ -131,7 +131,7 @@ export function ThemeToggle({ tone = "surface", className }: ThemeToggleProps) {
           role="menu"
           aria-label="Theme"
           onKeyDown={onMenuKeyDown}
-          className="absolute right-0 z-50 mt-2 w-36 rounded-ui border border-line bg-surface p-1 text-ink shadow-ui-md"
+          className="absolute right-0 z-50 mt-2 w-40 rounded-ui-lg border border-line bg-surface p-1.5 text-ink shadow-ui-md"
         >
           {OPTIONS.map((option) => {
             const selected = option.mode === mode;
@@ -143,7 +143,7 @@ export function ThemeToggle({ tone = "surface", className }: ThemeToggleProps) {
                 aria-checked={selected}
                 onClick={() => choose(option.mode)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-ui-sm px-2 py-2 text-left text-sm",
+                  "flex w-full items-center gap-2 rounded-ui px-2 py-2 text-left font-ui text-sm font-semibold",
                   focusRing,
                   selected ? "bg-primary/10 text-primary" : "hover:bg-surface-muted",
                 )}

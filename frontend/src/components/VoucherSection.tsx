@@ -13,7 +13,7 @@ interface VoucherSectionProps {
 }
 
 const shopLink =
-  "inline-flex items-center rounded-ui-sm text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
+  "inline-flex items-center rounded-ui font-ui text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
 
 export default function VoucherSection({
   vouchers,
@@ -30,7 +30,7 @@ export default function VoucherSection({
   return (
     <section aria-labelledby="home-vouchers">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <h2 id="home-vouchers" className="text-2xl font-bold text-ink">
+        <h2 id="home-vouchers" className="font-display text-3xl text-ink sm:text-4xl">
           Special offers
         </h2>
         <Link to="/products" className={shopLink}>

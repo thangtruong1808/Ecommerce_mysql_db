@@ -36,8 +36,13 @@ interface ShellUser {
   role?: string;
 }
 
-const primaryLink =
-  "inline-flex items-center gap-1.5 rounded-ui-sm px-3 py-2 text-sm font-medium text-on-primary transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary";
+const navLink =
+  "inline-flex items-center gap-1.5 rounded-ui px-3 py-2 font-ui text-sm font-semibold text-ink transition-colors duration-150 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
+
+const navLinkActive = "bg-primary text-on-primary hover:bg-primary-hover";
+
+const iconButton =
+  "relative rounded-ui p-2 text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
 
 const menuItems = [
   { to: "/profile", icon: FaUser, label: "Profile" },
@@ -233,36 +238,36 @@ function Navbar() {
   }, []);
 
   return (
-    <header ref={headerRef} className="relative bg-primary shadow-ui">
+    <header ref={headerRef} className="sticky top-0 z-40 border-b border-line bg-surface shadow-ui">
       <nav aria-label="Primary" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-3">
-          <Link to="/" className="flex min-w-0 items-center gap-3 rounded-ui-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary">
+          <Link to="/" className="flex min-w-0 items-center gap-3 rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface">
             <img src={logoImage} alt="" className="h-10 w-auto object-contain" />
             <span className="min-w-0">
-              <span className="block truncate text-lg font-bold text-on-primary">
+              <span className="block truncate font-ui text-lg font-semibold text-ink">
                 Badminton Stores
               </span>
-              <span className="hidden text-xs text-on-primary/80 sm:block">
+              <span className="hidden text-xs text-muted sm:block">
                 Your trusted shopping destination
               </span>
             </span>
           </Link>
 
           <div className="hidden items-center gap-1 md:flex">
-            <Link to="/" className={`${primaryLink} ${isActive("/", true) ? "bg-primary-hover" : ""}`} aria-current={isActive("/", true) ? "page" : undefined}>
+            <Link to="/" className={`${navLink} ${isActive("/", true) ? navLinkActive : ""}`} aria-current={isActive("/", true) ? "page" : undefined}>
               <FaHome aria-hidden="true" /> Home
             </Link>
-            <Link to="/products" className={`${primaryLink} ${isActive("/products") ? "bg-primary-hover" : ""}`} aria-current={isActive("/products") ? "page" : undefined}>
+            <Link to="/products" className={`${navLink} ${isActive("/products") ? navLinkActive : ""}`} aria-current={isActive("/products") ? "page" : undefined}>
               <FaBoxOpen aria-hidden="true" /> Products
             </Link>
-            <button type="button" className={primaryLink} aria-haspopup="dialog" aria-controls="product-filters-drawer" onClick={openFilters}>
+            <button type="button" className={navLink} aria-haspopup="dialog" aria-controls="product-filters-drawer" onClick={openFilters}>
               <FaSearch aria-hidden="true" /> Filters
             </button>
-            <Link to="/clearance" className="inline-flex items-center gap-1.5 rounded-ui-sm bg-accent px-3 py-2 text-sm font-semibold text-on-accent hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-accent" aria-current={isActive("/clearance") ? "page" : undefined}>
+            <Link to="/clearance" className={`${navLink} ${isActive("/clearance") ? navLinkActive : ""}`} aria-current={isActive("/clearance") ? "page" : undefined}>
               <FaTag aria-hidden="true" /> Clearance
             </Link>
-            <ThemeToggle tone="inverse" />
-            <Link to="/cart" className={`${primaryLink} relative ${isActive("/cart") ? "bg-primary-hover" : ""}`} aria-label={itemCount > 0 ? `Cart, ${itemCount} items` : "Cart"}>
+            <ThemeToggle />
+            <Link to="/cart" className={`${navLink} relative ${isActive("/cart") ? navLinkActive : ""}`} aria-label={itemCount > 0 ? `Cart, ${itemCount} items` : "Cart"}>
               <FaShoppingCart aria-hidden="true" /> Cart
               {itemCount > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-xs text-on-accent">
@@ -274,7 +279,7 @@ function Navbar() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   type="button"
-                  className={primaryLink}
+                  className={`${navLink} ${userMenuOpen ? navLinkActive : ""}`}
                   aria-expanded={userMenuOpen}
                   aria-haspopup="menu"
                   aria-controls="account-menu"
@@ -284,7 +289,7 @@ function Navbar() {
                   <span className="max-w-32 truncate">{auth.user?.name || "Account"}</span>
                 </button>
                 {userMenuOpen ? (
-                  <div id="account-menu" role="menu" className="absolute right-0 z-50 mt-2 w-56 rounded-ui border border-line bg-surface py-1 text-ink shadow-ui-md">
+                  <div id="account-menu" role="menu" className="absolute right-0 z-50 mt-2 w-56 rounded-ui-lg border border-line bg-surface py-1 text-ink shadow-ui-md">
                     <div className="border-b border-line px-3 py-2">
                       <p className="text-sm font-semibold">{auth.user?.name}</p>
                       <p className="text-xs text-muted">{auth.user?.email}</p>
@@ -294,7 +299,7 @@ function Navbar() {
                         key={item.to}
                         to={item.to}
                         role="menuitem"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                        className="flex items-center gap-2 rounded-ui px-3 py-2 font-ui text-sm font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <item.icon className="text-muted" /> {item.label}
@@ -304,7 +309,7 @@ function Navbar() {
                       <Link
                         to="/admin/dashboard"
                         role="menuitem"
-                        className="flex items-center gap-2 border-t border-line px-3 py-2 text-sm text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+                        className="flex items-center gap-2 border-t border-line px-3 py-2 font-ui text-sm font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <FaCog className="text-muted" /> Admin dashboard
@@ -319,15 +324,15 @@ function Navbar() {
                 ) : null}
               </div>
             ) : (
-              <Link to="/login" className={`${primaryLink} ${isActive("/login") ? "bg-primary-hover" : ""}`} aria-current={isActive("/login") ? "page" : undefined}>
+              <Link to="/login" className={`${navLink} ${isActive("/login") ? navLinkActive : ""}`} aria-current={isActive("/login") ? "page" : undefined}>
                 <FaSignInAlt aria-hidden="true" /> Login
               </Link>
             )}
           </div>
 
           <div className="flex items-center gap-1 md:hidden">
-            <ThemeToggle tone="inverse" />
-            <Link to="/cart" className="relative rounded-ui-sm p-2 text-on-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary" aria-label={itemCount > 0 ? `Cart, ${itemCount} items` : "Cart"}>
+            <ThemeToggle />
+            <Link to="/cart" className={iconButton} aria-label={itemCount > 0 ? `Cart, ${itemCount} items` : "Cart"}>
               <FaShoppingBag aria-hidden="true" />
               {itemCount > 0 ? (
                 <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-xs text-on-accent">
@@ -338,7 +343,7 @@ function Navbar() {
             <button
               ref={menuButtonRef}
               type="button"
-              className="rounded-ui-sm p-2 text-on-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+              className={iconButton}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
               aria-controls="mobile-navigation"
@@ -363,7 +368,6 @@ function Navbar() {
       />
       <MobileMenu
         open={mobileOpen}
-        top={menuTop || 64}
         categories={categories}
         categoriesOpen={mobileCategoriesOpen}
         isAuthenticated={Boolean(auth.isAuthenticated)}

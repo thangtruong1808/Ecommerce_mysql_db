@@ -95,13 +95,13 @@ export function Modal({ open, title, description, onClose, children, className }
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={cn(
-          "relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-ui border border-line bg-surface text-ink shadow-ui-md focus-visible:outline-none",
+          "relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-ui-lg border border-line bg-surface text-ink shadow-ui-md focus-visible:outline-none",
           className || "max-w-lg",
         )}
       >
-        <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
+        <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div>
-            <h2 id={titleId} className="text-base font-semibold">
+            <h2 id={titleId} className="font-ui text-lg font-semibold">
               {title}
             </h2>
             {description ? (
@@ -113,12 +113,12 @@ export function Modal({ open, title, description, onClose, children, className }
           <button
             type="button"
             onClick={() => onCloseRef.current()}
-            className={`rounded-ui-sm px-2 py-1 text-sm text-muted hover:bg-surface-muted hover:text-ink ${focusRing}`}
+            className={`rounded-ui border border-line px-3 py-1.5 font-ui text-sm font-semibold text-muted hover:bg-surface-muted hover:text-ink ${focusRing}`}
           >
             Close
           </button>
         </header>
-        <div className="overflow-y-auto p-4">{children}</div>
+        <div className="overflow-y-auto p-5">{children}</div>
       </div>
     </div>,
     document.body,

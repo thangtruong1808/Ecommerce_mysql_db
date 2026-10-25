@@ -9,7 +9,7 @@ export function Skeleton({ className }: SkeletonProps) {
     <div
       aria-hidden="true"
       className={cn(
-        "rounded-ui-sm bg-surface-muted motion-safe:animate-pulse",
+        "rounded-ui bg-surface-muted motion-safe:animate-pulse",
         className,
       )}
     />

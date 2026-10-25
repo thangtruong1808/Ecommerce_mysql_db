@@ -78,7 +78,7 @@ export function Tabs({
         role="tablist"
         aria-label={label}
         onKeyDown={onKeyDown}
-        className="flex flex-wrap gap-1 border-b border-line"
+        className="flex flex-wrap gap-1 rounded-ui bg-surface-muted p-1"
       >
         {tabs.map((tab, index) => {
           const active = tab.id === selected;
@@ -94,10 +94,10 @@ export function Tabs({
               tabIndex={active ? 0 : -1}
               onClick={() => select(tab.id)}
               className={cn(
-                "-mb-px rounded-t-ui-sm px-3 py-2 text-sm font-medium",
+                "rounded-ui px-3 py-2 font-ui text-sm font-semibold",
                 focusRing,
                 active
-                  ? "border-b-2 border-primary text-primary"
+                  ? "bg-surface text-ink shadow-ui"
                   : "text-muted hover:text-ink",
               )}
             >

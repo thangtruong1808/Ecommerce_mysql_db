@@ -1,5 +1,6 @@
 import { ToastContainer, toast } from "react-toastify";
 import { useTheme } from "../../theme/ThemeProvider";
+import "./toast.css";
 
 export function AppToast() {
   const { resolved } = useTheme();

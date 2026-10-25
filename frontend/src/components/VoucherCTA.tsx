@@ -19,12 +19,12 @@ function PromoLink({ title, detail }: { title: string; detail: string }) {
   return (
     <Link
       to="/products"
-      className="block h-full min-h-[200px] rounded-ui bg-primary p-6 text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+      className="block h-full min-h-[200px] rounded-ui-lg border border-line bg-surface p-6 text-ink shadow-ui hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
     >
-      <FaTag className="text-3xl" aria-hidden="true" />
-      <h4 className="mt-2 text-2xl font-bold">{title}</h4>
-      <p className="mt-1 text-sm text-on-primary/90">{detail}</p>
-      <span className="mt-6 inline-block text-sm font-semibold underline">Shop now</span>
+      <FaTag className="text-2xl text-accent" aria-hidden="true" />
+      <h4 className="mt-3 font-display text-2xl text-ink">{title}</h4>
+      <p className="mt-2 text-sm text-muted">{detail}</p>
+      <span className="mt-6 inline-block font-ui text-sm font-semibold text-primary">Shop now</span>
     </Link>
   );
 }
@@ -60,7 +60,7 @@ export default function VoucherCTA() {
   if (loading) {
     return (
       <div
-        className="h-full min-h-[200px] motion-safe:animate-pulse rounded-ui bg-primary/20"
+        className="h-full min-h-[200px] rounded-ui-lg bg-surface-muted motion-safe:animate-pulse"
         aria-hidden="true"
       />
     );

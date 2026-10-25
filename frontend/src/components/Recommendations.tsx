@@ -54,7 +54,7 @@ function Recommendations({
   return (
     <section className="mb-12" aria-labelledby={showTitle ? "recommendations-heading" : undefined}>
       {showTitle ? (
-        <h2 id="recommendations-heading" className="mb-6 flex items-center gap-2 text-2xl font-bold text-ink">
+        <h2 id="recommendations-heading" className="mb-6 flex items-center gap-2 font-display text-3xl text-ink sm:text-4xl">
           <FaThumbsUp aria-hidden="true" />
           You may also like
         </h2>

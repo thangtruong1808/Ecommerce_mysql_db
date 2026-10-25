@@ -20,7 +20,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-on-primary hover:bg-primary-hover",
+  primary: "bg-primary text-on-primary shadow-ui hover:bg-primary-hover",
   secondary: "bg-secondary text-on-secondary hover:bg-secondary-hover",
   accent: "bg-accent text-on-accent hover:bg-accent-hover",
   danger: "bg-danger text-on-danger hover:bg-danger-hover",
@@ -29,8 +29,8 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
+  sm: "h-9 px-3 text-sm",
+  md: "h-11 px-4 text-sm",
   lg: "h-12 px-5 text-base",
 };
 
@@ -73,7 +73,7 @@ export function Button({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-ui-sm font-medium transition-colors duration-150",
+        "inline-flex items-center justify-center gap-2 rounded-ui font-ui font-semibold transition-colors duration-150",
         "disabled:cursor-not-allowed disabled:opacity-60",
         variants[variant],
         sizes[size],

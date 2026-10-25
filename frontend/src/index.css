@@ -84,6 +84,20 @@ body {
   }
 }
 
+@layer utilities {
+  .font-ui {
+    font-family: Outfit, Inter, sans-serif;
+  }
+
+  .font-display {
+    font-family: Fraunces, Georgia, serif;
+  }
+
+  .rounded-ui-xl {
+    border-radius: var(--radius-xl);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

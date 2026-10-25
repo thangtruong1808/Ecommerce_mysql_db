@@ -38,7 +38,7 @@ export function Table<T>({
   emptyDescription,
 }: TableProps<T>) {
   return (
-    <div className="overflow-x-auto rounded-ui border border-line bg-surface">
+    <div className="overflow-x-auto rounded-ui-lg border border-line bg-surface shadow-ui">
       <table className="min-w-full border-collapse text-left text-sm text-ink">
         <caption className="px-4 py-3 text-left text-sm font-medium text-ink">
           {caption}
@@ -50,7 +50,7 @@ export function Table<T>({
                 key={column.key}
                 scope="col"
                 className={cn(
-                  "px-4 py-2 font-semibold text-ink",
+                  "px-4 py-3 font-ui text-xs font-semibold uppercase tracking-wide text-muted",
                   column.className,
                 )}
               >
@@ -68,7 +68,7 @@ export function Table<T>({
             </tr>
           ) : (
             rows.map((row, index) => (
-              <tr key={getRowKey(row, index)} className="border-t border-line">
+              <tr key={getRowKey(row, index)} className="border-t border-line hover:bg-surface-muted/70">
                 {columns.map((column) => (
                   <td
                     key={column.key}

@@ -12,7 +12,10 @@ import ShippingInfoModal from "./ShippingInfoModal";
 type FooterModal = "contact" | "shipping" | "returns" | "faq" | "developer" | null;
 
 const textLink =
-  "rounded-ui-sm text-sm text-canvas/80 hover:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-canvas focus-visible:ring-offset-2 focus-visible:ring-offset-ink";
+  "rounded-ui font-ui text-sm font-semibold text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
+
+const contactLink =
+  "rounded-ui font-ui text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface";
 
 const textButton = `${textLink} text-left`;
 
@@ -22,28 +25,28 @@ function Footer() {
   const closeModal = () => setOpenModal(null);
 
   return (
-    <footer className="mt-auto bg-ink text-canvas">
+    <footer className="mt-auto border-t border-line bg-surface text-ink">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-2 lg:grid-cols-5 lg:px-8">
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-3 rounded-ui-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-canvas focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+            className="inline-flex items-center gap-3 rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
             <img src={logoImage} alt="" className="h-12 w-auto object-contain" />
             <span>
-              <span className="block text-lg font-bold">Badminton Stores</span>
-              <span className="block text-xs text-canvas/70">
+              <span className="block font-ui text-lg font-semibold">Badminton Stores</span>
+              <span className="block text-xs text-muted">
                 Your trusted shopping destination
               </span>
             </span>
           </Link>
-          <p className="mt-3 text-sm text-canvas/80">
+          <p className="mt-3 text-sm text-muted">
             Quality products, exceptional service, and secure shopping experience.
           </p>
         </div>
 
         <nav aria-label="Footer">
-          <h2 className="text-sm font-semibold">Quick links</h2>
+          <h2 className="font-ui text-sm font-semibold">Quick links</h2>
           <ul className="mt-3 space-y-2">
             <li><Link className={textLink} to="/">Home</Link></li>
             <li><Link className={textLink} to="/products">Products</Link></li>
@@ -62,7 +65,7 @@ function Footer() {
         </nav>
 
         <div>
-          <h2 className="text-sm font-semibold">Customer service</h2>
+          <h2 className="font-ui text-sm font-semibold">Customer service</h2>
           <ul className="mt-3 space-y-2">
             <li><button type="button" className={textButton} onClick={() => setOpenModal("contact")}>Contact us</button></li>
             <li><button type="button" className={textButton} onClick={() => setOpenModal("shipping")}>Shipping info</button></li>
@@ -72,7 +75,7 @@ function Footer() {
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold">About</h2>
+          <h2 className="font-ui text-sm font-semibold">About</h2>
           <button type="button" className={`${textButton} mt-3`} onClick={() => setOpenModal("developer")}>
             Meet the developer
           </button>
@@ -101,23 +104,23 @@ function Footer() {
         </div>
 
         <div>
-          <h2 className="text-sm font-semibold">Contact</h2>
-          <ul className="mt-3 space-y-2 text-sm text-canvas/80">
+          <h2 className="font-ui text-sm font-semibold">Contact</h2>
+          <ul className="mt-3 space-y-2 text-sm text-muted">
             <li>ABN: 12 345 678 901</li>
             <li>123 Main Street</li>
             <li>Melbourne Victoria 3000, Australia</li>
             <li>
-              <a className={textLink} href="mailto:thangtruong1808@gmail.com">
+              <a className={contactLink} href="mailto:thangtruong1808@gmail.com">
                 thangtruong1808@gmail.com
               </a>
             </li>
             <li>
-              <a className={textLink} href="tel:0466828649">0466828649</a>
+              <a className={contactLink} href="tel:0466828649">0466828649</a>
             </li>
           </ul>
         </div>
       </div>
-      <p className="border-t border-canvas/20 px-4 py-6 text-center text-sm text-canvas/70">
+      <p className="border-t border-line bg-canvas px-4 py-6 text-center text-sm text-muted">
         This ecommerce platform was thoughtfully designed and developed by Thang Truong. Thank you for shopping with us!
       </p>
       <ContactUsModal isOpen={openModal === "contact"} onClose={closeModal} />

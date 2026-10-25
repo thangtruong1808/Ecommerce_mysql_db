@@ -35,9 +35,9 @@ export default function VoucherCard({ voucher }: VoucherCardProps) {
   };
 
   return (
-    <article className="flex h-full flex-col rounded-ui border border-line bg-surface p-4 text-ink shadow-ui">
+    <article className="flex h-full flex-col rounded-ui-lg border border-line bg-surface p-5 text-ink shadow-ui">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-3xl font-bold text-primary">{discountLabel(voucher)} off</p>
+        <p className="font-display text-3xl text-primary">{discountLabel(voucher)} off</p>
         <button
           type="button"
           onClick={() => void copyCode()}
@@ -55,7 +55,7 @@ export default function VoucherCard({ voucher }: VoucherCardProps) {
           )}
         </button>
       </div>
-      <p className="mt-3 inline-flex w-fit rounded-ui-sm bg-secondary px-3 py-1 font-mono text-lg font-semibold text-on-secondary">
+      <p className="mt-3 inline-flex w-fit rounded-ui bg-secondary px-3 py-1 font-mono text-lg font-semibold text-on-secondary">
         {voucher.code}
       </p>
       {voucher.description ? (

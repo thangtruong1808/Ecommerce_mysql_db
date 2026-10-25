@@ -32,14 +32,14 @@ export default function VoucherCodeItem({
   };
 
   return (
-    <div className="w-full rounded-ui border border-white/25 p-3">
+    <div className="w-full rounded-ui-lg border border-line bg-surface p-3">
       {showHeader ? (
-        <p className="mb-2 text-center text-sm font-medium text-on-primary">
+        <p className="mb-2 text-center font-ui text-sm font-semibold text-ink">
           Available voucher codes: {discountLabel(voucher)} off marked prices
         </p>
       ) : null}
       <div className="flex items-center justify-center gap-2">
-        <span className="rounded-ui-sm bg-secondary px-3 py-1 font-mono text-2xl font-semibold text-on-secondary sm:text-4xl">
+        <span className="rounded-ui bg-secondary px-3 py-1 font-mono text-lg font-semibold text-on-secondary sm:text-2xl">
           {voucher.code}
         </span>
         <button
@@ -48,10 +48,10 @@ export default function VoucherCodeItem({
           disabled={copying}
           aria-busy={copying || undefined}
           aria-label={`Copy voucher code ${voucher.code}`}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-ui-sm bg-white/15 text-on-primary hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-ui border border-line bg-canvas text-ink hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         >
           {copying ? (
-            <span className="h-3.5 w-3.5 rounded-full border-2 border-on-primary border-t-transparent motion-safe:animate-spin" />
+            <span className="h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent motion-safe:animate-spin" />
           ) : isCopied ? (
             <FaCheck className="text-xs" aria-hidden="true" />
           ) : (
@@ -59,7 +59,7 @@ export default function VoucherCodeItem({
           )}
         </button>
       </div>
-      <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-on-primary/90">
+      <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-muted">
         <span>
           Valid: {formatDate(voucher.start_date)} – {formatDate(voucher.end_date)}
         </span>

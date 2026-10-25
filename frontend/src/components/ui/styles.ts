@@ -5,7 +5,7 @@ export const focusRing =
 
 export function controlClass(invalid = false): string {
   return cn(
-    "w-full rounded-ui-sm border bg-surface px-3 py-2 text-sm text-ink shadow-ui placeholder:text-muted",
+    "min-h-11 w-full rounded-ui border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-ui placeholder:text-muted",
     "disabled:cursor-not-allowed disabled:opacity-60",
     focusRing,
     invalid ? "border-danger" : "border-line",
