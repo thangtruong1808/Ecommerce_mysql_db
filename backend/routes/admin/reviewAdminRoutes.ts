@@ -20,6 +20,8 @@ router.get("/", async (req: Request, res: Response) => {
       productId: req.query.productId ? parseInt(String(req.query.productId)) : null,
       userId: req.query.userId ? parseInt(String(req.query.userId)) : null,
       rating: req.query.rating ? parseInt(String(req.query.rating)) : null,
+      sortBy: req.query.sortBy ? String(req.query.sortBy) : "created_at",
+      sortOrder: req.query.sortOrder ? String(req.query.sortOrder) : "desc",
     };
     const result = await reviewModel.getAllReviews(filters);
     res.json(result);

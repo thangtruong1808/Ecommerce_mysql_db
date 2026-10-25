@@ -175,6 +175,8 @@ function OrderDetails() {
                     src={item.image_url || comingSoon}
                     alt={item.name || "Product"}
                     className="h-20 w-20 rounded-ui-sm object-cover"
+                    loading="lazy"
+                    decoding="async"
                     onError={(event) => {
                       event.currentTarget.src = comingSoon;
                     }}

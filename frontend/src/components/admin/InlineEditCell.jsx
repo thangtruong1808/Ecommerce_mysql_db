@@ -98,7 +98,7 @@ const InlineEditCell = ({
     return (
       <div
         onClick={() => !loading && setIsEditing(true)}
-        className={`cursor-pointer hover:bg-gray-50 px-2 py-1 rounded ${loading ? 'opacity-50' : ''}`}
+        className={`cursor-pointer hover:bg-surface-muted px-2 py-1 rounded ${loading ? 'opacity-50' : ''}`}
       >
         {type === 'number' ? (typeof value === 'number' ? value.toFixed(2) : value) : value}
       </div>

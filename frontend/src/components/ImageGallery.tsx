@@ -72,6 +72,8 @@ function ImageGallery({ images = [], productName = "Product" }: ImageGalleryProp
           src={src}
           alt=""
           className="h-full w-full object-contain"
+          decoding="async"
+          fetchPriority="high"
           onError={() => {
             const key = current?.id ?? index;
             setFailed((ids) => (ids.includes(key) ? ids : [...ids, key]));
@@ -109,6 +111,8 @@ function ImageGallery({ images = [], productName = "Product" }: ImageGalleryProp
                   src={image.image_url && !thumbFailed ? image.image_url : comingSoon}
                   alt=""
                   className="h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                   onError={() => setFailed((ids) => (ids.includes(key) ? ids : [...ids, key]))}
                 />
               </button>

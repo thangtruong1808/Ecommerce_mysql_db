@@ -6,6 +6,7 @@
  * @date 2025-12-12
  */
 
+import { lazy, Suspense } from "react";
 import {
   Route,
   BrowserRouter as Router,
@@ -18,41 +19,50 @@ import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
-
 import { CartProvider } from "./context/CartContext";
-import CartManagement from "./pages/admin/CartManagement";
-import CategoryManagement from "./pages/admin/CategoryManagement";
-import ChildCategoryManagement from "./pages/admin/ChildCategoryManagement";
-import CommentModeration from "./pages/admin/CommentModeration";
-import AdminDashboard from "./pages/admin/Dashboard";
-import ImageManagement from "./pages/admin/ImageManagement";
-import InvoiceManagement from "./pages/admin/InvoiceManagement";
-import MediaManagement from "./pages/admin/MediaManagement";
-import OrderManagement from "./pages/admin/OrderManagement";
-import ProductForm from "./pages/admin/ProductForm";
-import ProductManagement from "./pages/admin/ProductManagement";
-import ProductViewManagement from "./pages/admin/ProductViewManagement";
-import ReviewManagement from "./pages/admin/ReviewManagement";
-import SubcategoryManagement from "./pages/admin/SubcategoryManagement";
-import UserManagement from "./pages/admin/UserManagement";
-import VideoManagement from "./pages/admin/VideoManagement";
-import VoucherManagement from "./pages/admin/VoucherManagement";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import Clearance from "./pages/Clearance";
-import Home from "./pages/Home";
-import InvoiceDetail from "./pages/InvoiceDetail";
-import InvoiceList from "./pages/InvoiceList";
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import OrderDetails from "./pages/OrderDetails";
-import OrderHistory from "./pages/OrderHistory";
-import ProductDetail from "./pages/ProductDetail";
-import Products from "./pages/Products";
-import Profile from "./pages/Profile";
-import Register from "./pages/Register";
-import ResetPassword from "./pages/ResetPassword";
-import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
+
+const CartManagement = lazy(() => import("./pages/admin/CartManagement"));
+const CategoryManagement = lazy(() => import("./pages/admin/CategoryManagement"));
+const ChildCategoryManagement = lazy(() => import("./pages/admin/ChildCategoryManagement"));
+const CommentModeration = lazy(() => import("./pages/admin/CommentModeration"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const ImageManagement = lazy(() => import("./pages/admin/ImageManagement"));
+const InvoiceManagement = lazy(() => import("./pages/admin/InvoiceManagement"));
+const MediaManagement = lazy(() => import("./pages/admin/MediaManagement"));
+const OrderManagement = lazy(() => import("./pages/admin/OrderManagement"));
+const ProductForm = lazy(() => import("./pages/admin/ProductForm"));
+const ProductManagement = lazy(() => import("./pages/admin/ProductManagement"));
+const ProductViewManagement = lazy(() => import("./pages/admin/ProductViewManagement"));
+const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement"));
+const SubcategoryManagement = lazy(() => import("./pages/admin/SubcategoryManagement"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const VideoManagement = lazy(() => import("./pages/admin/VideoManagement"));
+const VoucherManagement = lazy(() => import("./pages/admin/VoucherManagement"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Clearance = lazy(() => import("./pages/Clearance"));
+const Home = lazy(() => import("./pages/Home"));
+const InvoiceDetail = lazy(() => import("./pages/InvoiceDetail"));
+const InvoiceList = lazy(() => import("./pages/InvoiceList"));
+const Login = lazy(() => import("./pages/Login"));
+const Maintenance = lazy(() => import("./pages/Maintenance"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
+const OrderHistory = lazy(() => import("./pages/OrderHistory"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Products = lazy(() => import("./pages/Products"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Register = lazy(() => import("./pages/Register"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ResetPasswordConfirm = lazy(() => import("./pages/ResetPasswordConfirm"));
+
+function RouteFallback() {
+  return (
+    <div className="px-4 py-16 text-center text-muted" role="status" aria-live="polite">
+      Loading…
+    </div>
+  );
+}
 
 /**
  * AppContent component - Handles conditional rendering of Navbar/Footer
@@ -78,6 +88,7 @@ const AppContent = () => {
       </a>
       {!isAdminPage && <Navbar />}
       <main id="main" className="flex-grow">
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
@@ -283,8 +294,10 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/maintenance" element={<Maintenance />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </main>
 
       <AppToast />

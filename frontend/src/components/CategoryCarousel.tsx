@@ -129,6 +129,8 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                 src={image ?? undefined}
                 alt=""
                 className="h-full max-h-80 w-full object-cover"
+                decoding="async"
+                fetchPriority="high"
                 onError={() =>
                   setFailedIds((ids) => (ids.includes(current.id) ? ids : [...ids, current.id]))
                 }
@@ -182,6 +184,8 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
                       src={thumb ?? undefined}
                       alt=""
                       className="h-full w-full object-contain"
+                      loading="lazy"
+                      decoding="async"
                       onError={() =>
                         setFailedIds((ids) =>
                           ids.includes(category.id) ? ids : [...ids, category.id],

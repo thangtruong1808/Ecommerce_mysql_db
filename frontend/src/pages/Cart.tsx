@@ -134,6 +134,8 @@ function Cart() {
                     src={item.image_url || comingSoon}
                     alt=""
                     className="h-full w-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                     onError={(event) => {
                       if (event.currentTarget.dataset.fallback === "1") {
                         return;

@@ -1,145 +1,101 @@
-# 🚀 Full-Stack E-commerce Platform
+# Badminton Stores
 
-This is a feature-rich, full-stack E-commerce platform built with the MERN stack (MySQL, Express, React, Node.js and AWS S3 bucket) and designed to showcase a wide range of modern web development practices. It includes a beautiful, responsive frontend and a powerful, secure backend.
+Full-stack shop for badminton gear. The API is Express and MySQL. The shop is React, Vite, and Tailwind. Product photos and videos are stored in Amazon S3 when that option is turned on, or on the API server's disk when it is not.
 
-## ✨ Showcase & Key Features
+## What you need
 
-This project is designed to be a comprehensive portfolio piece. Here’s what it demonstrates:
+- Node.js 18 or newer
+- npm
+- MySQL
+- An S3 bucket only if you want cloud media. Local disk storage works without it.
 
-- **Complex Backend Architecture:** A well-structured RESTful API with advanced features like authentication, authorization, and secure file handling.
-- **Modern Frontend:** A responsive and interactive user interface built with React, Tailwind CSS, and Vite for a fast development experience.
+## Install
 
-* **Admin Dashboard:** A comprehensive admin dashboard for managing products, users, orders, and more.
+From the repository root:
 
-- **Database Management:** A complete MySQL database schema with models for all major E-commerce entities.
-- **Cloud Integration:** Integration with AWS S3 for cloud-based media storage.
-- **And much more:** See the full feature list below.
+```bash
+npm run install:all
+```
 
-### Core Features
+That installs the root tools, the frontend, and the backend.
 
-- **User Authentication:** Secure user registration and login with JWT (JSON Web Tokens) and refresh tokens. Includes password reset functionality.
-- **Product Management:** Full CRUD operations for products, including nested categories and subcategories.
-- **Shopping Cart:** Persistent shopping cart functionality for authenticated users.
-- **Order & Invoicing:** Complete order management system with invoice generation (PDFs).
-- **Reviews & Comments:** Users can leave reviews and comments on products.
-- **Voucher System:** Create and manage discount vouchers.
-- **Admin Dashboard:** A powerful dashboard for site administrators to manage products, categories, orders, users, and view site analytics.
-- **Media Handling:** Image and video uploads for products, with integration with AWS S3 for cloud storage.
-- **Search & Filtering:** (Assumed from structure) Advanced product search and filtering capabilities.
-- **Analytics:** (Assumed from `analyticsModel.js`) Tracking of product views and other user interactions.
+## Environment
 
-## 💻 Technology Stack
+The apps do not read a `.env` file at the repository root.
 
-| Category     | Technologies                                                                |
-| ------------ | --------------------------------------------------------------------------- |
-| **Frontend** | React, React Router, Tailwind CSS, Vite, Axios, Recharts                    |
-| **Backend**  | Node.js, Express.js, MySQL2, JWT, Bcrypt, Multer, Sharp, Nodemailer, PDFKit |
-| **Database** | MySQL                                                                       |
-| **Cloud**    | AWS S3 (for media storage)                                                  |
-| **DevOps**   | Concurrently, Nodemon                                                       |
+```bash
+cp backend/.env.sample backend/.env
+cp frontend/.env.sample frontend/.env
+```
 
-## 🏁 Getting Started
+Fill in `backend/.env` on the machine that runs the API. The sample lists database, JWT, cookies, email, S3, Stripe, and Australia Post. Leave secrets empty until you have them.
 
-### Prerequisites
+For local Vite, leave `VITE_API_URL` empty. The dev server proxies `/api` to `http://localhost:5000`. Set `VITE_STRIPE_PUBLISHABLE_KEY` if checkout should use a publishable key from the frontend. The API can also return one from `GET /api/payments/config`.
 
-- Node.js (v18 or higher recommended)
-- npm (or yarn/pnpm)
-- A running MySQL database instance.
-- An AWS S3 bucket and credentials (optional, for media uploads).
+Local HTTP cookies: use `NODE_ENV=development`, `COOKIE_SECURE=false`, and `COOKIE_SAMESITE=Lax`. Production defaults mark cookies Secure.
 
-### Installation
+Create the tables with `backend/database/schema.sql`.
 
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/your-username/your-repo.git
-    cd your-repo
-    ```
-
-2.  **Install all dependencies** for the root, frontend, and backend projects:
-
-    ```bash
-    npm run install:all
-    ```
-
-3.  **Configure Environment Variables:**
-
-    - Copy `backend/.env.sample` to `backend/.env` and fill in the database, JWT, email, S3, and Stripe values.
-    - Copy `frontend/.env.sample` to `frontend/.env`. Leave `VITE_API_URL` empty for local development so Vite proxies `/api` to the API on port 5000.
-
-4.  **Set up the database:**
-    - Connect to your MySQL instance.
-    - Run the SQL script located at `backend/database/schema.sql` to create the necessary tables.
-
-### Running the Application
-
-Start both the frontend and backend servers concurrently with a single command from the root directory:
+## Run locally
 
 ```bash
 npm run dev
 ```
 
-This will launch:
+- Shop: http://localhost:3000
+- API: http://localhost:5000
+- Health: http://localhost:5000/api/health
 
-- Frontend development server on `http://localhost:5173` (or the next available port, via Vite).
-- Backend API server on `http://localhost:5000`.
-
-### Docker (Production-like local run)
-
-Run frontend and backend with Docker:
+## Check and build
 
 ```bash
-docker compose up -d --build
+npm run typecheck
+npm run build
 ```
 
-This will launch:
+`npm run build` compiles the API to `backend/dist` and builds the shop to `frontend/dist`. Start the compiled API with `npm start` from the root, which runs `node dist/server.js` inside `backend`.
 
-- Frontend on `http://localhost:3000`
-- Backend on `http://localhost:5000`
+Frontend lint checks the remaining JavaScript files:
 
-Stop containers:
+```bash
+cd frontend && npm run lint
+```
+
+TypeScript is checked by `npm run typecheck`, not by that lint command.
+
+## Docker
+
+`docker compose up -d --build` builds both images. The shop is published on port 3000 and the API on port 5000. Compose reads `backend/.env`. The frontend image reads `frontend/.env` at build time, so `VITE_` values are baked into that build.
 
 ```bash
 docker compose down
 ```
 
-## 📂 Project Structure
+## S3 media
 
-```
-/
-├── backend/            # Express.js API Server
-│   ├── config/         # Database configuration
-│   ├── middleware/     # Auth, error handling, etc.
-│   ├── models/         # MySQL data models
-│   ├── routes/         # API route definitions
-│   ├── utils/          # Email, S3, tokens
-│   └── server.js       # Server entry point
-├── frontend/           # React Client Application
-│   ├── src/
-│   │   ├── components/ # Reusable UI components
-│   │   ├── context/    # Auth and Cart context
-│   │   ├── hooks/      # Custom React hooks
-│   │   ├── pages/      # Application pages & views
-│   │   └── utils/      # API helpers, etc.
-│   └── ...
-├── package.json        # Root project scripts
-└── README.md
-```
+Set `USE_AWS_S3=true` and provide `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_S3_BUCKET_NAME`. `AWS_S3_BUCKET_URL` is optional. When it is empty, the API builds the object URL from the bucket and region.
 
-## 🔐 API Endpoints
+Uploads go through the API. The browser does not upload straight to the bucket. Product photos are shown with normal image tags, and list images load lazily. The bucket must allow public `GetObject` for those URLs, or the shop will show the placeholder image.
 
-This is a high-level overview of the available API routes. For detailed information, please refer to the `API_DOCUMENTATION.md` file.
+If a new site origin reads objects with JavaScript, add that origin to the bucket CORS policy for `GET` and `HEAD`. Image tags themselves do not need CORS. Point the API's `FRONTEND_URL` at the new shop origin so the browser can call the API with cookies.
 
-- `/api/auth` - User Authentication (login, register, logout)
-- `/api/products` - Product Management
-- `/api/categories` - Category Management
-- `/api/cart` - Shopping Cart operations
-- `/api/orders` - Order Management
-- `/api/reviews` - Product Reviews
-- `/api/vouchers` - Discount Vouchers
-- `/api/admin` - Admin-specific routes
-- ... and many more.
+S3 stays the media store. This repository does not include steps for EC2, Lambda, or Vercel.
 
-## 📄 License
+## Routes worth knowing
 
-This project is licensed under the ISC License. See the `LICENSE` file for details.
+- `/` shop home
+- `/products` and `/products/:id` catalog and product
+- `/cart` and `/checkout`
+- `/maintenance` offline notice. It is not shown automatically.
+- `/admin/dashboard` after an admin signs in
+- Unknown addresses use the 404 page. An unexpected render error uses the error boundary.
+
+The showcase-hours gate stays off in local development unless `VITE_SHOWCASE_HOURS_ENABLED=true`. A production build keeps the gate on unless that value is `false`.
+
+## API groups
+
+`/api/auth`, `/api/products`, `/api/cart`, `/api/orders`, `/api/shipping`, `/api/payments`, `/api/invoices`, `/api/product-views`, reviews, comments, likes, vouchers, and `/api/admin`.
+
+## License
+
+ISC.
