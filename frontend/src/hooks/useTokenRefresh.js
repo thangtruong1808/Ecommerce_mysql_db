@@ -8,12 +8,12 @@
 import { useEffect, useRef } from "react";
 import axios from "axios";
 import { isProtectedRoute } from "../utils/errorSuppression.js";
-import { handleTokenExpiration, hasRefreshToken } from "../utils/authUtils.js";
-import { initializeSession } from "../utils/authApi.js";
+import { handleTokenExpiration, hasRefreshToken } from "../utils/authUtils";
+import { initializeSession } from "../utils/authApi";
 
 /**
  * Hook to check refresh token expiration periodically
- * @param {Object} user - Current user object
+ * @param {Object | null} user - Current user object
  * @param {Object} refs - Refs object containing isRefreshingTokenRef, lastRefreshTimeRef, refreshFailureCountRef, userFetchedTimeRef
  * @param {Function} setUser - Function to set user state
  * @param {Function} setError - Function to set error state

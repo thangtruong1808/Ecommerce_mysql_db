@@ -8,14 +8,20 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import ShowcaseAvailabilityGate from './components/ShowcaseAvailabilityGate'
+import { ThemeProvider } from './theme/ThemeProvider'
 import './index.css'
 import axios from 'axios'
 
 // Get the base URL from environment variables.
+// Only an absolute http(s) origin is used. A blank value, or a leftover note,
+// keeps requests on this dev server so the Vite proxy can reach the API.
 let apiBaseUrl = import.meta.env.VITE_API_URL || ""
+if (!/^https?:\/\//i.test(apiBaseUrl)) {
+  apiBaseUrl = ""
+}
 
 // If the base URL ends with '/api' or '/api/', remove it to prevent duplication
 // since API calls in the code already include '/api'.
@@ -33,11 +39,13 @@ axios.defaults.withCredentials = true
 // Initialize React application
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* Error boundary wrapper */}
-    <ErrorBoundary>
-      <ShowcaseAvailabilityGate>
-        <App />
-      </ShowcaseAvailabilityGate>
-    </ErrorBoundary>
+    <ThemeProvider>
+      {/* Error boundary wrapper */}
+      <ErrorBoundary>
+        <ShowcaseAvailabilityGate>
+          <App />
+        </ShowcaseAvailabilityGate>
+      </ErrorBoundary>
+    </ThemeProvider>
   </React.StrictMode>,
 )

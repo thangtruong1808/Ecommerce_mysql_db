@@ -1,10 +1,11 @@
 services:
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: ecommerce_backend
     env_file:
-      - ./.env
+      - ./backend/.env
     environment:
       - NODE_ENV=production
       - PORT=5000
@@ -14,15 +15,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
-        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
-        VITE_SHOWCASE_HOURS_ENABLED: ${VITE_SHOWCASE_HOURS_ENABLED:-}
-        VITE_SHOWCASE_TIMEZONE: ${VITE_SHOWCASE_TIMEZONE:-}
-        VITE_SHOWCASE_HOURS_START: ${VITE_SHOWCASE_HOURS_START:-}
-        VITE_SHOWCASE_HOURS_END: ${VITE_SHOWCASE_HOURS_END:-}
-        VITE_SHOWCASE_BUSINESS_DAYS: ${VITE_SHOWCASE_BUSINESS_DAYS:-}
+      context: .
+      dockerfile: frontend/Dockerfile
     container_name: ecommerce_frontend
     ports:
       - "3000:80"

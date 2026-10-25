@@ -5,8 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
+    "dev": "nodemon --ignore dist --ignore uploads --ext ts,js --exec tsx server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
   },
   "keywords": [
     "express",
@@ -35,6 +37,17 @@
     "stripe": "^18.5.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.25",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^1.4.13",
+    "@types/node": "^20.19.43",
+    "@types/nodemailer": "^6.4.24",
+    "@types/pdfkit": "^0.17.7",
+    "nodemon": "^3.0.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

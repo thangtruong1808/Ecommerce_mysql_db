@@ -8,6 +8,7 @@
 
 import { useState } from 'react'
 import SidebarNavigation from './SidebarNavigation'
+import { ThemeToggle } from '../ui'
 
 /**
  * AdminLayout component
@@ -31,9 +32,12 @@ const AdminLayout = ({ children }) => {
 
   /* Admin layout with toggleable sidebar */
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+    <div className="h-screen bg-canvas flex overflow-hidden">
       <SidebarNavigation isOpen={isSidebarOpen} onToggle={toggleSidebar} />
-      <div className={`flex-1 transition-all duration-300 overflow-y-auto ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'}`}>
+      <div className={`relative flex-1 transition-all duration-300 overflow-y-auto ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'}`}>
+        <div className="absolute right-3 top-2 z-20">
+          <ThemeToggle />
+        </div>
         <div className="p-3 pt-10">
           {children}
         </div>

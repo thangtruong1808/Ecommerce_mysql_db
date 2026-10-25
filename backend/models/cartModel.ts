@@ -1,0 +1,341 @@
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import type * as Rows from "../types/domain.js";
+/**
+ * Cart Model
+ * Handles all database operations related to shopping carts
+ * Supports both authenticated users and guest sessions
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+
+import db from '../config/db.js'
+
+/**
+ * Get or create cart for user
+ * @param {number} userId - User ID (0 for guest)
+ * @param {string} sessionId - Session ID for guest carts
+ * @returns {Promise<number>} - Cart ID
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getOrCreateCart = async (userId: number, sessionId: string | null = null, cartId: any | null = null) => {
+  if (userId === 0 && cartId) {
+    // Use provided guest cart ID if valid (guest carts have user_id = NULL)
+    const [rows] = await db.execute<Rows.CartRow[]>('SELECT id FROM carts WHERE id = ? AND user_id IS NULL', [cartId])
+    if (rows.length > 0) {
+      return rows[0].id
+    }
+  }
+  if (userId === 0) {
+    // Create new guest cart with NULL user_id
+    const [result] = await db.execute<ResultSetHeader>('INSERT INTO carts (user_id) VALUES (NULL)', [])
+    return result.insertId
+  }
+  const [rows] = await db.execute<Rows.CartRow[]>('SELECT id FROM carts WHERE user_id = ?', [userId])
+  if (rows.length > 0) {
+    return rows[0].id
+  }
+  const [result] = await db.execute<ResultSetHeader>('INSERT INTO carts (user_id) VALUES (?)', [userId])
+  return result.insertId
+}
+
+/**
+ * Get cart with items and product details
+ * @param {number} userId - User ID (0 for guest)
+ * @param {string} sessionId - Session ID for guest carts
+ * @returns {Promise<Object|null>} - Cart with items or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getCartWithItems = async (userId: number, sessionId: string | null = null, cartId: any | null = null) => {
+  const finalCartId = await getOrCreateCart(userId, sessionId, cartId)
+
+  // Get cart items with product details
+  const [rows] = await db.execute<Rows.CartItemRow[]>(
+    `SELECT 
+      ci.id as cart_item_id,
+      ci.quantity,
+      p.id as product_id,
+      p.name,
+      p.price,
+      p.stock,
+      p.rating,
+      pi.image_url as image_url
+     FROM cart_items ci
+     JOIN products p ON ci.product_id = p.id
+     LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+     WHERE ci.cart_id = ?
+     ORDER BY ci.created_at DESC`,
+    [finalCartId]
+  )
+
+  return {
+    cartId: finalCartId,
+    items: rows
+  }
+}
+
+/**
+ * Add item to cart
+ * @param {number} userId - User ID (0 for guest)
+ * @param {number} productId - Product ID
+ * @param {number} quantity - Quantity to add
+ * @param {string} sessionId - Session ID for guest carts
+ * @returns {Promise<boolean>} - True if added, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const addItemToCart = async (userId: number, productId: number, quantity: number = 1, sessionId: string | null = null, cartId: any | null = null) => {
+  const finalCartId = await getOrCreateCart(userId, sessionId, cartId)
+
+  const [existing] = await db.execute<Rows.CartItemRow[]>(
+    'SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?',
+    [finalCartId, productId]
+  )
+
+  if (existing.length > 0) {
+    // Update quantity if item exists
+    const newQuantity = existing[0].quantity + quantity
+    await db.execute<ResultSetHeader>(
+      'UPDATE cart_items SET quantity = ? WHERE id = ?',
+      [newQuantity, existing[0].id]
+    )
+  } else {
+    await db.execute<ResultSetHeader>(
+      'INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)',
+      [finalCartId, productId, quantity]
+    )
+  }
+
+  return true
+}
+
+/**
+ * Update cart item quantity
+ * @param {number} itemId - Cart item ID
+ * @param {number} quantity - New quantity
+ * @returns {Promise<boolean>} - True if updated, false otherwise
+ */
+export const updateCartItemQuantity = async (itemId: number, quantity: number) => {
+  if (quantity <= 0) {
+    // Remove item if quantity is 0 or less
+    return removeCartItem(itemId)
+  }
+
+  const [result] = await db.execute<ResultSetHeader>(
+    'UPDATE cart_items SET quantity = ? WHERE id = ?',
+    [quantity, itemId]
+  )
+  return result.affectedRows > 0
+}
+
+/**
+ * Remove item from cart
+ * @param {number} itemId - Cart item ID
+ * @returns {Promise<boolean>} - True if removed, false otherwise
+ */
+export const removeCartItem = async (itemId: number) => {
+  const [result] = await db.execute<ResultSetHeader>(
+    'DELETE FROM cart_items WHERE id = ?',
+    [itemId]
+  )
+  return result.affectedRows > 0
+}
+
+/**
+ * Transfer guest cart to user cart
+ * @param {number} guestCartId - Guest cart ID
+ * @param {number} userId - User ID
+ * @returns {Promise<boolean>} - True if transferred, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const transferGuestCartToUser = async (guestCartId: number, userId: number) => {
+  const userCartId = await getOrCreateCart(userId, null)
+  const [guestItems] = await db.execute<Rows.CartItemRow[]>('SELECT product_id, quantity FROM cart_items WHERE cart_id = ?', [guestCartId])
+  for (const item of guestItems) {
+    const [existing] = await db.execute<Rows.CartItemRow[]>('SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?', [userCartId, item.product_id])
+    if (existing.length > 0) {
+      await db.execute<ResultSetHeader>('UPDATE cart_items SET quantity = quantity + ? WHERE id = ?', [item.quantity, existing[0].id])
+    } else {
+      await db.execute<ResultSetHeader>('INSERT INTO cart_items (cart_id, product_id, quantity) VALUES (?, ?, ?)', [userCartId, item.product_id, item.quantity])
+    }
+  }
+  await db.execute<ResultSetHeader>('DELETE FROM cart_items WHERE cart_id = ?', [guestCartId])
+  await db.execute<ResultSetHeader>('DELETE FROM carts WHERE id = ?', [guestCartId])
+  return true
+}
+
+
+/**
+ * Clear all items from cart
+ * @param {number} userId - User ID (0 for guest)
+ * @param {string} sessionId - Session ID for guest carts
+ * @returns {Promise<boolean>} - True if cleared, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const clearCart = async (userId: number, sessionId: string | null = null, cartId: any | null = null) => {
+  const finalCartId = await getOrCreateCart(userId, sessionId, cartId)
+  const [result] = await db.execute<ResultSetHeader>(
+    'DELETE FROM cart_items WHERE cart_id = ?',
+    [finalCartId]
+  )
+  return result.affectedRows >= 0
+}
+
+/**
+ * Get all carts with pagination and filters (admin only)
+ * @param {Object} filters - Filter options (page, limit, userId)
+ * @returns {Promise<Object>} - Carts with pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllCarts = async (filters: Rows.ListQuery = {}) => {
+  const page = parseInt(String(filters.page)) || 1
+  const limit = parseInt(String(filters.limit)) || 20
+  const offset = (page - 1) * limit
+  const userId = filters.userId ? parseInt(String(filters.userId)) : null
+  const search = filters.search ? String(filters.search).trim() : null
+  
+  let query = `
+    SELECT c.*, 
+           u.name as user_name,
+           u.email as user_email,
+           COUNT(ci.id) as item_count,
+           COALESCE(SUM(ci.quantity * p.price), 0) as total_value
+    FROM carts c
+    LEFT JOIN users u ON c.user_id = u.id
+    LEFT JOIN cart_items ci ON c.id = ci.cart_id
+    LEFT JOIN products p ON ci.product_id = p.id
+  `
+  const params: any[] = []
+  let whereConditions = []
+  
+  if (userId && !isNaN(userId)) {
+    whereConditions.push('c.user_id = ?')
+    params.push(userId)
+  }
+  
+  if (search) {
+    // Search by cart ID, user ID, user name, or user email
+    const searchParam = `%${search}%`
+    whereConditions.push('(c.id LIKE ? OR c.user_id LIKE ? OR u.name LIKE ? OR u.email LIKE ?)')
+    params.push(searchParam, searchParam, searchParam, searchParam)
+  }
+  
+  const whereClause = whereConditions.length > 0 
+    ? ` WHERE ${whereConditions.join(' AND ')}`
+    : ' WHERE 1=1'
+  query += whereClause
+  
+  // Get total count (before adding GROUP BY, ORDER BY and LIMIT)
+  let countQuery = `
+    SELECT COUNT(DISTINCT c.id) as total
+    FROM carts c
+    LEFT JOIN users u ON c.user_id = u.id
+    LEFT JOIN cart_items ci ON c.id = ci.cart_id
+    LEFT JOIN products p ON ci.product_id = p.id
+  `
+  countQuery += whereClause
+  const [countResult] = await db.execute<Rows.CountRow[]>(countQuery, params)
+  const total = Number(countResult[0]?.total) || 0
+  
+  query += ' GROUP BY c.id'
+  
+  // Sorting support
+  const sortBy = filters.sortBy || 'created_at'
+  const sortOrder = filters.sortOrder || 'desc'
+  const allowedSortColumns = ['id', 'user_id', 'user_name', 'item_count', 'total_value', 'created_at', 'updated_at']
+  const validSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+  const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC'
+  
+  // Map sort column to actual table column
+  let sortColumn = `c.${validSortBy}`
+  if (validSortBy === 'user_name') sortColumn = 'u.name'
+  else if (validSortBy === 'item_count') sortColumn = 'item_count'
+  else if (validSortBy === 'total_value') sortColumn = 'total_value'
+  
+  query += ` ORDER BY ${sortColumn} ${validSortOrder}`
+  query += ` LIMIT ${limit} OFFSET ${offset}`
+  
+  const [rows] = await db.execute<RowDataPacket[]>(query, params)
+  
+  return {
+    carts: rows,
+    pagination: {
+      page,
+      limit,
+      total: Number(total) || 0,
+      pages: Math.ceil((Number(total) || 0) / limit)
+    }
+  }
+}
+
+/**
+ * Get cart by ID with items (admin only)
+ * @param {number} cartId - Cart ID
+ * @returns {Promise<Object|null>} - Cart with items or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getCartById = async (cartId: number) => {
+  const id = parseInt(String(cartId))
+  if (isNaN(id) || id <= 0) {
+    return null
+  }
+  
+  const [cartRows] = await db.execute<Rows.CartRow[]>(
+    `SELECT c.*, u.name as user_name, u.email as user_email
+     FROM carts c
+     LEFT JOIN users u ON c.user_id = u.id
+     WHERE c.id = ?`,
+    [id]
+  )
+  
+  if (cartRows.length === 0) {
+    return null
+  }
+  
+  const cart = cartRows[0]
+  
+  const [itemRows] = await db.execute<Rows.CartItemRow[]>(
+    `SELECT ci.*, 
+            p.name as product_name,
+            p.price,
+            pi.image_url as product_image
+     FROM cart_items ci
+     JOIN products p ON ci.product_id = p.id
+     LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+     WHERE ci.cart_id = ?
+     ORDER BY ci.created_at DESC`,
+    [id]
+  )
+  
+  return {
+    ...cart,
+    items: itemRows
+  }
+}
+
+/**
+ * Delete cart (admin only)
+ * @param {number} cartId - Cart ID
+ * @returns {Promise<boolean>} - True if deleted, false otherwise
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const deleteCart = async (cartId: number) => {
+  const id = parseInt(String(cartId))
+  if (isNaN(id) || id <= 0) {
+    return false
+  }
+  
+  // Cart items will be deleted via CASCADE
+  const [result] = await db.execute<ResultSetHeader>(
+    'DELETE FROM carts WHERE id = ?',
+    [id]
+  )
+  return result.affectedRows > 0
+}
+

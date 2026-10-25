@@ -8,7 +8,7 @@
  * @date 2025-12-28 (Refactored)
  */
 import axios from "axios";
-import { handleTokenExpiration } from "./authUtils.js";
+import { handleTokenExpiration } from "./authUtils";
 
 let isRefreshing = false;
 let requestQueue = [];

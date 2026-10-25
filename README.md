@@ -64,9 +64,8 @@ This project is designed to be a comprehensive portfolio piece. Here’s what it
 
 3.  **Configure Environment Variables:**
 
-    - Navigate to the `backend` directory.
-    - Create a `.env` file by copying the `.env.sample`.
-    - Fill in the required environment variables, including your database credentials, JWT secret, and AWS keys.
+    - Copy `backend/.env.sample` to `backend/.env` and fill in the database, JWT, email, S3, and Stripe values.
+    - Copy `frontend/.env.sample` to `frontend/.env`. Leave `VITE_API_URL` empty for local development so Vite proxies `/api` to the API on port 5000.
 
 4.  **Set up the database:**
     - Connect to your MySQL instance.
@@ -103,8 +102,6 @@ Stop containers:
 ```bash
 docker compose down
 ```
-
-For AWS EC2 deployment steps, see `DEPLOY_EC2_DOCKER.md`.
 
 ## 📂 Project Structure
 

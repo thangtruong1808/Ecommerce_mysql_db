@@ -1,0 +1,586 @@
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import type * as Rows from "../types/domain.js";
+/**
+ * Product Model
+ * Handles all database operations related to products
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+
+import db from '../config/db.js'
+import * as productMediaModel from './productMediaModel.js'
+
+/**
+ * Calculate discounted price based on discount type and value
+ * @param {number} price - Original price
+ * @param {string} discountType - 'percentage' or 'fixed'
+ * @param {number} discountValue - Discount value
+ * @returns {number} - Discounted price
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+const calculateDiscountedPrice = (
+  price: number,
+  discountType: string | null,
+  discountValue: number | string | null
+) => {
+  if (!discountType || !discountValue) return price
+  
+  if (discountType === 'percentage') {
+    return price * (1 - Number(discountValue) / 100)
+  } else {
+    return Math.max(0, price - Number(discountValue))
+  }
+}
+
+/**
+ * Check if discount is currently active
+ * @param {string} discountStartDate - Start date
+ * @param {string} discountEndDate - End date
+ * @returns {boolean} - True if discount is active
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+const isDiscountActive = (
+  discountStartDate: string | Date | null,
+  discountEndDate: string | Date | null
+) => {
+  if (!discountStartDate || !discountEndDate) return false
+  
+  const now = new Date()
+  const start = new Date(discountStartDate)
+  const end = new Date(discountEndDate)
+  
+  return now >= start && now <= end
+}
+
+/**
+ * Get all products with filters, pagination, and sorting
+ * @param {Object} filters - Filter options
+ * @returns {Promise<Object>} - Products and pagination info
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getAllProducts = async (filters: Rows.ListQuery = {}) => {
+  const {
+    page = 1,
+    limit = 15,
+    category = null,
+    subcategory = null,
+    childCategory = null,
+    minPrice = null,
+    maxPrice = null,
+    search = null,
+    sortBy = 'created_at',
+    sortOrder = 'DESC'
+  } = filters
+
+  // Ensure limit and offset are valid integers
+  const validLimit = parseInt(String(limit)) || 12
+  const validPage = parseInt(String(page)) || 1
+  const offset = (validPage - 1) * validLimit
+  const conditions: string[] = []
+  const values: any[] = []
+
+  // Build WHERE clause
+  if (category) {
+    conditions.push('c.id = ?')
+    values.push(category)
+  }
+  if (subcategory) {
+    conditions.push('s.id = ?')
+    values.push(subcategory)
+  }
+  if (childCategory) {
+    conditions.push('p.child_category_id = ?')
+    values.push(childCategory)
+  }
+  if (minPrice !== null) {
+    conditions.push('p.price >= ?')
+    values.push(minPrice)
+  }
+  if (maxPrice !== null) {
+    conditions.push('p.price <= ?')
+    values.push(maxPrice)
+  }
+  if (search) {
+    conditions.push('(p.name LIKE ? OR p.description LIKE ?)')
+    values.push(`%${search}%`, `%${search}%`)
+  }
+  if (filters.minStock !== undefined) {
+    conditions.push('p.stock >= ?')
+    values.push(filters.minStock)
+  }
+  if (filters.maxStock !== undefined) {
+    conditions.push('p.stock <= ?')
+    values.push(filters.maxStock)
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+  
+  // Validate and sanitize sortBy to prevent SQL injection
+  const allowedSortFields = ['created_at', 'name', 'price', 'rating', 'stock']
+  const sanitizedSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at'
+  const sanitizedSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const orderBy = `ORDER BY p.${sanitizedSortBy} ${sanitizedSortOrder}`
+
+  // Get products with full 3-level hierarchy
+  // Ensure LIMIT and OFFSET are integers (MySQL requirement)
+  const limitInt = Number.isInteger(validLimit) ? validLimit : parseInt(String(validLimit), 10)
+  const offsetInt = Number.isInteger(offset) ? offset : parseInt(String(offset), 10)
+  
+  // Validate integers are valid numbers
+  if (isNaN(limitInt) || limitInt < 1) {
+    throw new Error('Invalid limit parameter')
+  }
+  if (isNaN(offsetInt) || offsetInt < 0) {
+    throw new Error('Invalid offset parameter')
+  }
+  
+  // Build query with LIMIT and OFFSET safely interpolated (already validated as integers)
+  // MySQL prepared statements sometimes have issues with LIMIT/OFFSET as parameters
+  // Since we've validated limitInt and offsetInt as safe integers, direct interpolation is safe
+  const safeLimit = Math.floor(Number(limitInt))
+  const safeOffset = Math.floor(Number(offsetInt))
+  
+  const query = `SELECT p.*, 
+            cc.name as child_category_name,
+            cc.id as child_category_id,
+            s.name as subcategory_name,
+            s.id as subcategory_id,
+            c.name as category_name,
+            c.id as category_id,
+            (SELECT COUNT(*) FROM product_likes WHERE product_id = p.id) as likes_count,
+            (SELECT COUNT(*) FROM product_comments WHERE product_id = p.id AND is_approved = 1) as comments_count,
+            (SELECT COUNT(*) FROM reviews WHERE product_id = p.id) as num_reviews,
+            (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE product_id = p.id) as rating
+     FROM products p 
+     JOIN child_categories cc ON p.child_category_id = cc.id
+     JOIN subcategories s ON cc.subcategory_id = s.id
+     JOIN categories c ON s.category_id = c.id
+     ${whereClause} 
+     ${orderBy} 
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`
+  
+  // Build parameters array - only include values that correspond to WHERE clause placeholders
+  // values array already contains only non-null values from conditions
+  const queryParams = [...values]
+  
+  let rows: RowDataPacket[] = []
+  try {
+    const result = await db.execute<RowDataPacket[]>(query, queryParams)
+    rows = result[0] || []
+  } catch (dbError) {
+    throw new Error(`Database query failed: ${dbError instanceof Error ? dbError.message : String(dbError)}`)
+  }
+
+  // Get total count (no LIMIT/OFFSET needed)
+  const countQuery = `SELECT COUNT(*) as total 
+     FROM products p
+     JOIN child_categories cc ON p.child_category_id = cc.id
+     JOIN subcategories s ON cc.subcategory_id = s.id
+     JOIN categories c ON s.category_id = c.id
+     ${whereClause}`
+  
+  let total = 0
+  try {
+    const [countResult] = await db.execute<Rows.CountRow[]>(countQuery, values)
+    total = countResult[0]?.total || 0
+  } catch (dbError) {
+    throw new Error(`Count query failed: ${dbError instanceof Error ? dbError.message : String(dbError)}`)
+  }
+
+  // Get images for each product (only if there are products)
+  let imagesMap: Record<string, any> = {}
+  if (rows.length > 0) {
+    try {
+      const productIds = rows.map(p => p.id)
+      imagesMap = await productMediaModel.getProductsImages(productIds)
+    } catch (imageError) {
+      // Continue without images rather than failing completely
+      imagesMap = {}
+    }
+  }
+
+  // Attach images and calculate discounted prices
+  // Convert MySQL DECIMAL to JavaScript numbers
+  const productsWithImages = rows.map(product => {
+    // Convert price from MySQL DECIMAL (string) to number
+    const price = parseFloat(product.price) || 0
+    const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
+    // Apply discount if active and discount fields exist (independent of clearance status)
+    const hasDiscountFields = product.discount_type && product.discount_value
+    const discountedPrice = isActive && hasDiscountFields
+      ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
+      : price
+    
+    return {
+      ...product,
+      price: price, // Ensure price is a number
+      images: imagesMap[product.id] || [],
+      discounted_price: discountedPrice,
+      has_discount: isActive && hasDiscountFields,
+      likes_count: parseInt(String(product.likes_count)) || 0,
+      comments_count: parseInt(String(product.comments_count)) || 0,
+      num_reviews: parseInt(String(product.num_reviews)) || 0,
+      rating: parseFloat(product.rating) || 0
+    }
+  })
+
+  return {
+    products: productsWithImages,
+    pagination: {
+      page: validPage,
+      limit: validLimit,
+      total,
+      pages: Math.ceil(total / validLimit)
+    }
+  }
+}
+
+/**
+ * Get product by ID with images and videos
+ * @param {number} id - Product ID
+ * @returns {Promise<Object|null>} - Product object with related data or null
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const getProductById = async (id: number) => {
+  // Validate id is a valid number
+  const productId = parseInt(String(id))
+  if (isNaN(productId) || productId <= 0) {
+    throw new Error('Invalid product ID')
+  }
+  
+  // Get product with full 3-level hierarchy
+  const [productRows] = await db.execute<Rows.ProductRow[]>(
+    `SELECT p.*, 
+            cc.name as child_category_name,
+            cc.id as child_category_id,
+            s.name as subcategory_name,
+            s.id as subcategory_id,
+            c.name as category_name,
+            c.id as category_id
+     FROM products p 
+     JOIN child_categories cc ON p.child_category_id = cc.id
+     JOIN subcategories s ON cc.subcategory_id = s.id
+     JOIN categories c ON s.category_id = c.id
+     WHERE p.id = ?`,
+    [productId]
+  )
+
+  if (productRows.length === 0) return null
+
+  const product = productRows[0]
+
+  // Convert price from MySQL DECIMAL (string) to number
+  product.price = parseFloat(String(product.price)) || 0
+
+  // Get product images and videos
+  product.images = await productMediaModel.getProductImages(productId)
+  product.videos = await productMediaModel.getProductVideos(productId)
+
+  // Calculate discounted price
+  const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
+  // Apply discount if active and discount fields exist (independent of clearance status)
+  const hasDiscountFields = product.discount_type && product.discount_value
+  product.discounted_price = isActive && hasDiscountFields
+    ? calculateDiscountedPrice(product.price, product.discount_type, product.discount_value)
+    : product.price
+  product.has_discount = isActive && hasDiscountFields
+
+  return product
+}
+
+/**
+ * Format date string for MySQL DATETIME/TIMESTAMP
+ * Converts ISO string to MySQL datetime format (YYYY-MM-DD HH:MM:SS)
+ * @param {string|null|undefined} dateString - ISO date string or null
+ * @returns {string|null} MySQL formatted date or null
+ * @author Thang Truong
+ * @date 2025-01-28
+ */
+const formatDateForMySQL = (dateString: string | null | undefined) => {
+  if (!dateString || dateString === 'null' || dateString === 'undefined') return null
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return null
+    // Convert to MySQL DATETIME format: YYYY-MM-DD HH:MM:SS
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Create a new product
+ * @param {Object} productData - Product data
+ * @returns {Promise<number>} - Inserted product ID
+ * @author Thang Truong
+ * @date 2025-12-12
+ */
+export const createProduct = async (productData: Rows.FieldMap) => {
+  const { 
+    name, 
+    description, 
+    price, 
+    child_category_id, 
+    stock,
+    discount_type = null,
+    discount_value = null,
+    discount_start_date = null,
+    discount_end_date = null,
+    is_on_clearance = false
+  } = productData
+
+  const [result] = await db.execute<ResultSetHeader>(
+    `INSERT INTO products (
+      name, description, price, child_category_id, stock,
+      discount_type, discount_value, discount_start_date, discount_end_date, is_on_clearance
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      name, 
+      description, 
+      price, 
+      child_category_id, 
+      stock,
+      discount_type,
+      discount_value,
+      formatDateForMySQL(discount_start_date),
+      formatDateForMySQL(discount_end_date),
+      is_on_clearance
+    ]
+  )
+  return result.insertId
+}
+
+/**
+ * Update product
+ * @param {number} id - Product ID
+ * @param {Object} updateData - Data to update
+ * @returns {Promise<Object|null>} - Updated product or null
+ */
+export const updateProduct = async (id: number, updateData: Rows.FieldMap) => {
+  const fields: string[] = []
+  const values: any[] = []
+
+  if (updateData.name) {
+    fields.push('name = ?')
+    values.push(updateData.name)
+  }
+  if (updateData.description) {
+    fields.push('description = ?')
+    values.push(updateData.description)
+  }
+  if (updateData.price !== undefined) {
+    fields.push('price = ?')
+    values.push(updateData.price)
+  }
+  if (updateData.child_category_id) {
+    fields.push('child_category_id = ?')
+    values.push(updateData.child_category_id)
+  }
+  if (updateData.stock !== undefined) {
+    fields.push('stock = ?')
+    values.push(updateData.stock)
+  }
+  if (updateData.discount_type !== undefined) {
+    fields.push('discount_type = ?')
+    values.push(updateData.discount_type)
+  }
+  if (updateData.discount_value !== undefined) {
+    fields.push('discount_value = ?')
+    values.push(updateData.discount_value)
+  }
+  if (updateData.discount_start_date !== undefined) {
+    fields.push('discount_start_date = ?')
+    values.push(formatDateForMySQL(updateData.discount_start_date))
+  }
+  if (updateData.discount_end_date !== undefined) {
+    fields.push('discount_end_date = ?')
+    values.push(formatDateForMySQL(updateData.discount_end_date))
+  }
+  if (updateData.is_on_clearance !== undefined) {
+    fields.push('is_on_clearance = ?')
+    values.push(updateData.is_on_clearance)
+  }
+
+  if (fields.length === 0) return null
+
+  values.push(id)
+  const [result] = await db.execute<ResultSetHeader>(
+    `UPDATE products SET ${fields.join(', ')} WHERE id = ?`,
+    values
+  )
+
+  if (result.affectedRows === 0) return null
+  return getProductById(id)
+}
+
+/**
+ * Delete product
+ * @param {number} id - Product ID
+ * @returns {Promise<boolean>} - True if deleted, false otherwise
+ */
+export const deleteProduct = async (id: number) => {
+  const [result] = await db.execute<ResultSetHeader>(
+    'DELETE FROM products WHERE id = ?',
+    [id]
+  )
+  return result.affectedRows > 0
+}
+
+/**
+ * Update product stock
+ * @param {number} id - Product ID
+ * @param {number} quantity - Quantity to subtract (negative) or add (positive)
+ * @returns {Promise<boolean>} - True if updated, false otherwise
+ */
+export const updateProductStock = async (id: number, quantity: number) => {
+  const [result] = await db.execute<ResultSetHeader>(
+    'UPDATE products SET stock = stock + ? WHERE id = ?',
+    [quantity, id]
+  )
+  return result.affectedRows > 0
+}
+
+/**
+ * Get clearance products (products marked for clearance)
+ * Business logic: Shows all products with is_on_clearance=true
+ * If discount fields exist and are active, discounted price is calculated
+ * Optionally filters by categoryId when provided
+ * @param {Object} filters - Filter options (page, limit, sortBy, sortOrder, categoryId)
+ * @returns {Promise<Object>} - Products and pagination info
+ * @author Thang Truong
+ * @date 2025-12-17
+ */
+export const getClearanceProducts = async (filters: Rows.ListQuery = {}) => {
+  const {
+    page = 1,
+    limit = 15,
+    sortBy = 'created_at',
+    sortOrder = 'DESC',
+    categoryId = null
+  } = filters
+
+  // Ensure limit and offset are valid integers
+  const validLimit = parseInt(String(limit)) || 15
+  const validPage = parseInt(String(page)) || 1
+  const offset = (validPage - 1) * validLimit
+  // Convert Date to MySQL datetime string format
+  const now = new Date().toISOString().slice(0, 19).replace('T', ' ')
+
+  // Validate and sanitize sortBy to prevent SQL injection
+  const allowedSortFields = ['created_at', 'name', 'price', 'rating', 'stock']
+  const sanitizedSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at'
+  const sanitizedSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+  const orderBy = `ORDER BY p.${sanitizedSortBy} ${sanitizedSortOrder}`
+
+  // Get products with active discounts
+  // Ensure LIMIT and OFFSET are integers (MySQL requirement)
+  const limitInt = Number.isInteger(validLimit) ? validLimit : parseInt(String(validLimit), 10)
+  const offsetInt = Number.isInteger(offset) ? offset : parseInt(String(offset), 10)
+  
+  // Validate integers are valid numbers
+  if (isNaN(limitInt) || limitInt < 1) {
+    throw new Error('Invalid limit parameter')
+  }
+  if (isNaN(offsetInt) || offsetInt < 0) {
+    throw new Error('Invalid offset parameter')
+  }
+  
+  // Build query with LIMIT and OFFSET safely interpolated (already validated as integers)
+  // MySQL prepared statements sometimes have issues with LIMIT/OFFSET as parameters
+  // Since we've validated limitInt and offsetInt as safe integers, direct interpolation is safe
+  const safeLimit = Math.floor(Number(limitInt))
+  const safeOffset = Math.floor(Number(offsetInt))
+  
+  const query = `SELECT p.*, 
+            cc.name as child_category_name,
+            cc.id as child_category_id,
+            s.name as subcategory_name,
+            s.id as subcategory_id,
+            c.name as category_name,
+            c.id as category_id,
+            (SELECT COUNT(*) FROM product_likes WHERE product_id = p.id) as likes_count,
+            (SELECT COUNT(*) FROM product_comments WHERE product_id = p.id AND is_approved = 1) as comments_count,
+            (SELECT COUNT(*) FROM reviews WHERE product_id = p.id) as num_reviews,
+            (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE product_id = p.id) as rating
+     FROM products p 
+     JOIN child_categories cc ON p.child_category_id = cc.id
+     JOIN subcategories s ON cc.subcategory_id = s.id
+     JOIN categories c ON s.category_id = c.id
+     WHERE p.is_on_clearance = ?
+     ${categoryId ? 'AND c.id = ?' : ''}
+     ${orderBy}
+     LIMIT ${safeLimit} OFFSET ${safeOffset}`
+  
+  const params = categoryId ? [true, categoryId] : [true]
+  
+  let rows: RowDataPacket[] = []
+  try {
+    const result = await db.execute<RowDataPacket[]>(query, params)
+    rows = result[0] || []
+  } catch (dbError) {
+    throw new Error(`Database query failed: ${dbError instanceof Error ? dbError.message : String(dbError)}`)
+  }
+
+  // Get total count
+  const countQuery = `SELECT COUNT(*) as total 
+     FROM products p
+     JOIN child_categories cc ON p.child_category_id = cc.id
+     JOIN subcategories s ON cc.subcategory_id = s.id
+     JOIN categories c ON s.category_id = c.id
+     WHERE p.is_on_clearance = ?
+     ${categoryId ? 'AND c.id = ?' : ''}`
+  const [countResult] = await db.execute<Rows.CountRow[]>(countQuery, params)
+  const total = countResult[0].total
+
+  // Get images for each product
+  const productIds = rows.map(p => p.id)
+  const imagesMap = await productMediaModel.getProductsImages(productIds)
+
+  // Attach images and calculate discounted prices
+  // Convert MySQL DECIMAL to JavaScript numbers
+  const productsWithImages = rows.map(product => {
+    // Convert price from MySQL DECIMAL (string) to number
+    const price = parseFloat(product.price) || 0
+    const isActive = isDiscountActive(product.discount_start_date, product.discount_end_date)
+    const hasDiscountFields = product.discount_type && product.discount_value
+    const discountedPrice = isActive && hasDiscountFields
+      ? calculateDiscountedPrice(price, product.discount_type, product.discount_value)
+      : price
+    
+    return {
+      ...product,
+      price: price, // Ensure price is a number
+      images: imagesMap[product.id] || [],
+      discounted_price: discountedPrice,
+      has_discount: isActive && hasDiscountFields,
+      likes_count: parseInt(String(product.likes_count)) || 0,
+      comments_count: parseInt(String(product.comments_count)) || 0,
+      num_reviews: parseInt(String(product.num_reviews)) || 0,
+      rating: parseFloat(product.rating) || 0
+    }
+  })
+
+  return {
+    products: productsWithImages,
+    pagination: {
+      page: validPage,
+      limit: validLimit,
+      total,
+      pages: Math.ceil(total / validLimit)
+    }
+  }
+}
+
+// Re-export media functions for convenience
+export { addProductImage, addProductVideo } from './productMediaModel.js'
+

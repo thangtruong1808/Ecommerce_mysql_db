@@ -5,7 +5,7 @@
  * @date 2025-12-23
  */
 
-import { hasRefreshToken } from "./authUtils.js";
+import { hasRefreshToken } from "./authUtils";
 
 /**
  * Check if current route is protected (requires authentication)

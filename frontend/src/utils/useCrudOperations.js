@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { shouldSuppress401Toast } from './authUtils.js'
+import { shouldSuppress401Toast } from './authUtils'
 
 /**
  * useCrudOperations hook

@@ -6,7 +6,7 @@
  */
 
 import axios from "axios";
-import { hasRefreshToken } from "./authUtils.js";
+import { hasRefreshToken } from "./authUtils";
 import { isProtectedRoute } from "./errorSuppression.js";
 
 // Store refs for token refresh state

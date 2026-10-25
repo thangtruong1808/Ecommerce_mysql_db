@@ -7,6 +7,8 @@ backend/node_modules/
 frontend/dist/
 frontend/build/
 backend/dist/
+shared/dist/
+*.tsbuildinfo
 
 # Environment variables
 .env
@@ -52,13 +54,5 @@ backend/uploads/
 backend/temp/
 temp/
 
-# Local deployment docs
-DEPLOY_EC2_DOCKER.md
-
-# AWS local deployment assets
-aws/
-
-# EC2 schedule Lambda package (build with npm ci && zip; do not commit)
-aws-deploy/
-
-deploy-guide/
+# Local planning notes (never push)
+documentation/

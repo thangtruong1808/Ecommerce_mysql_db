@@ -1,0 +1,10 @@
+# Build context is the repository root so shared types are available.
+.git
+**/.git
+**/node_modules
+**/dist
+backend/.env
+backend/uploads
+documentation
+*.log
+npm-debug.log
