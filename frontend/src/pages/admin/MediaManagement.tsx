@@ -130,11 +130,11 @@ export default function MediaManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-2">
-            <FaImages className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">Media — {product?.name || "Product"}</h1>
+          <div className="flex min-w-0 items-center gap-2">
+            <FaImages className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="min-w-0 break-words font-ui text-3xl font-semibold">Media — {product?.name || "Product"}</h1>
           </div>
           <Button id="back-to-products" variant="outline" onClick={() => navigate("/admin/products")}>Back to products</Button>
         </div>

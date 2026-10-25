@@ -6,7 +6,7 @@ import type { OrderItem } from "@shared/commerce";
 import type { DecimalValue } from "@shared/common";
 import comingSoon from "../assets/images/image_comming_soon.png";
 import logoImage from "../assets/images/Logo.png";
-import { Button, EmptyState, Skeleton } from "../components/ui";
+import { Button, Card, EmptyState, Skeleton } from "../components/ui";
 import usePageTitle from "../hooks/usePageTitle";
 import { formatWhen, messageFrom, money } from "./orders/format";
 import { addressLines, downloadMessage } from "./invoices/format";
@@ -39,14 +39,13 @@ function orderLabel(invoice: CustomerInvoice): string {
 
 function AddressBlock({ title, value }: { title: string; value: unknown }) {
   return (
-    <div>
-      <h3 className="font-semibold text-ink">{title}</h3>
-      <p className="mt-2 text-sm text-muted">
+    <Card title={title}>
+      <p className="break-words font-ui text-sm text-ink">
         {addressLines(value).map((line, index) => (
           <span key={`${index}-${line}`} className="block">{line}</span>
         ))}
       </p>
-    </div>
+    </Card>
   );
 }
 
@@ -147,7 +146,7 @@ function InvoiceDetail() {
           title="Invoice not found"
           description="This invoice is not on your account."
           action={
-            <Link to="/invoices" className="inline-flex h-10 items-center justify-center rounded-ui-sm bg-primary px-4 text-sm font-medium text-on-primary">
+            <Link to="/invoices" className="inline-flex h-12 items-center justify-center rounded-ui bg-primary px-5 font-ui text-sm font-semibold text-on-primary hover:bg-primary-hover">
               Back to invoices
             </Link>
           }
@@ -171,102 +170,100 @@ function InvoiceDetail() {
   const items = Array.isArray(invoice.items) ? invoice.items : [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      <Link to="/invoices" className="mb-4 inline-flex text-sm font-medium text-primary hover:underline">
+    <div className="mx-auto w-full min-w-0 max-w-4xl space-y-6 px-4 py-10 sm:px-6 sm:py-14">
+      <Link to="/invoices" className="inline-flex rounded-ui font-ui text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
         Back to invoices
       </Link>
-      <article className="rounded-ui border border-line bg-surface p-4 text-ink shadow-ui sm:p-8">
-        <div className="flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-start">
-          <img src={logoImage} alt="Badminton Stores" className="h-20 w-auto max-w-full object-contain" />
-          <div>
-            <h2 className="text-2xl font-bold">Ecommerce Store</h2>
-            <p className="mt-1 text-sm text-muted">Your trusted online shopping destination.</p>
-            <p className="mt-2 text-xs text-muted">ABN: 12 345 678 901</p>
-            <p className="text-xs text-muted">123 Main Street, Melbourne Victoria 3000, Australia</p>
-            <p className="text-xs text-muted">Email: thangtruong1808@gmail.com | Phone: 0466828649</p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Invoice</h1>
-            <p className="mt-2 text-muted">Invoice number: {invoice.invoice_number || invoice.id}</p>
-          </div>
-          <div className="text-sm text-muted sm:text-right">
-            <p>Date: {formatWhen(invoice.created_at)}</p>
+      <Card>
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
+          <img src={logoImage} alt="Badminton Stores" className="h-16 w-auto max-w-full object-contain" />
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-4xl text-ink">Invoice</h1>
+            <p className="mt-2 break-words font-ui text-sm text-muted">Invoice number: {invoice.invoice_number || invoice.id}</p>
+            <p className="font-ui text-sm text-muted">Date: {formatWhen(invoice.created_at)}</p>
+            <p className="mt-3 font-ui text-xs text-muted">ABN: 12 345 678 901</p>
+            <p className="font-ui text-xs text-muted">123 Main Street, Melbourne Victoria 3000, Australia</p>
+            <p className="break-words font-ui text-xs text-muted">Email: thangtruong1808@gmail.com | Phone: 0466828649</p>
             {invoice.order_id ? (
-              <Link to={`/orders/${invoice.order_id}`} className="text-primary hover:underline">
+              <Link to={`/orders/${invoice.order_id}`} className="mt-2 inline-flex rounded-ui font-ui text-sm font-semibold text-primary hover:underline">
                 Order {orderLabel(invoice)}
               </Link>
             ) : (
-              <p>Order {orderLabel(invoice)}</p>
+              <p className="mt-2 font-ui text-sm text-muted">Order {orderLabel(invoice)}</p>
             )}
-            <Button type="button" className="mt-4 w-full sm:w-auto" loading={downloading} onClick={() => void downloadPdf()}>
+          </div>
+          <div className="w-full sm:w-auto">
+            <Button type="button" className="w-full" loading={downloading} onClick={() => void downloadPdf()}>
               Download PDF
             </Button>
-            {downloadError ? <p className="mt-2 text-sm text-danger" role="alert">{downloadError}</p> : null}
+            {downloadError ? <p className="mt-2 font-ui text-sm text-danger" role="alert">{downloadError}</p> : null}
           </div>
         </div>
+      </Card>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <AddressBlock title="Billing address" value={invoice.billing_address} />
-          <AddressBlock title="Shipping address" value={invoice.shipping_address} />
-        </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <AddressBlock title="Billing address" value={invoice.billing_address} />
+        <AddressBlock title="Shipping address" value={invoice.shipping_address} />
+      </div>
 
-        {items.length > 0 ? (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold">Order items</h3>
-            <ul className="mt-4 space-y-4">
-              {items.map((item) => (
-                <li key={item.id} className="flex gap-4 border-b border-line pb-4 last:border-0 last:pb-0">
-                  <img
-                    src={item.image_url || comingSoon}
-                    alt={item.name || "Product"}
-                    className="h-16 w-16 rounded-ui-sm object-cover"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(event) => {
-                      event.currentTarget.src = comingSoon;
-                    }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-semibold">{item.name}</h4>
-                    <p className="text-sm text-muted">Quantity: {item.quantity}</p>
-                    <p className="text-sm text-muted">{money(item.price)} each</p>
-                  </div>
-                  <p className="font-semibold">{money((Number(item.price) || 0) * item.quantity)}</p>
-                </li>
-              ))}
-            </ul>
+      {items.length > 0 ? (
+        <Card title="Order items">
+          <ul className="space-y-3">
+            {items.map((item) => (
+              <li key={item.id} className="flex min-w-0 flex-wrap items-center gap-4 rounded-ui-lg bg-canvas p-4">
+                <img
+                  src={item.image_url || comingSoon}
+                  alt={item.name || "Product"}
+                  className="h-16 w-16 rounded-ui object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(event) => {
+                    event.currentTarget.src = comingSoon;
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <h2 className="break-words font-ui font-semibold text-ink">{item.name}</h2>
+                  <p className="font-ui text-sm text-muted">Quantity: {item.quantity}</p>
+                  <p className="font-ui text-sm text-secondary">{money(item.price)} each</p>
+                </div>
+                <p className="font-ui font-semibold text-secondary">{money((Number(item.price) || 0) * item.quantity)}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
+
+      <Card title="Payment">
+        <dl className="space-y-2 font-ui text-sm">
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Subtotal</dt>
+            <dd className="text-ink">{money(invoice.subtotal)}</dd>
           </div>
-        ) : null}
-
-        <dl className="mt-8 space-y-2 border-t border-line pt-4 text-sm">
-          <div className="flex justify-between"><dt className="text-muted">Subtotal</dt><dd>{money(invoice.subtotal)}</dd></div>
-          <div className="flex justify-between"><dt className="text-muted">Tax</dt><dd>{money(invoice.tax_amount)}</dd></div>
-          <div className="flex justify-between"><dt className="text-muted">Shipping</dt><dd>{money(invoice.shipping_amount)}</dd></div>
-          <div className="flex justify-between border-t border-line pt-2 text-lg font-bold">
-            <dt>Total</dt>
-            <dd>{money(invoice.total_amount)}</dd>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Tax</dt>
+            <dd className="text-ink">{money(invoice.tax_amount)}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Shipping</dt>
+            <dd className="text-ink">{money(invoice.shipping_amount)}</dd>
+          </div>
+          <div className="flex justify-between gap-3 border-t border-line pt-3 text-lg font-semibold">
+            <dt className="text-ink">Total</dt>
+            <dd className="text-secondary">{money(invoice.total_amount)}</dd>
           </div>
         </dl>
-
-        <div className="mt-8 border-t border-line pt-4 text-sm text-muted">
+        <div className="mt-4 space-y-1 border-t border-line pt-4 font-ui text-sm text-muted">
           <p><span className="font-semibold text-ink">Payment method:</span> {invoice.payment_method || "Not available"}</p>
           <p><span className="font-semibold text-ink">Payment status:</span> {invoice.payment_status || "Not available"}</p>
         </div>
-
-        <div className="mt-8 rounded-ui-sm border border-primary/30 bg-primary/10 p-4">
-          <h3 className="font-semibold">Estimated delivery</h3>
-          <p className="mt-2 text-sm text-muted">
+        <div className="mt-4 rounded-ui-lg bg-canvas p-4">
+          <h2 className="font-ui font-semibold text-ink">Estimated delivery</h2>
+          <p className="mt-2 font-ui text-sm text-muted">
             Your order will be delivered within 3-5 business days from the date of shipment.
             Tracking details will be sent by email once the order ships.
           </p>
         </div>
-        <p className="mt-8 border-t border-line pt-4 text-center text-xs text-muted">
-          This ecommerce platform was thoughtfully designed and developed by Thang Truong. Thank you for shopping with us!
-        </p>
-      </article>
+      </Card>
     </div>
   );
 }

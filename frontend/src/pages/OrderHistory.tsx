@@ -66,8 +66,11 @@ function OrderHistory() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="mb-8 text-3xl font-bold text-ink">Order history</h1>
+    <div className="mx-auto w-full min-w-0 max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+      <header className="mb-8">
+        <h1 className="font-display text-4xl text-ink">Order history</h1>
+        <p className="mt-2 font-ui text-sm text-muted">Orders you have placed with this account.</p>
+      </header>
       {loading ? (
         <div className="space-y-4">
           <Skeleton className="h-24" />
@@ -94,7 +97,7 @@ function OrderHistory() {
           action={
             <Link
               to="/products"
-              className="inline-flex h-10 items-center justify-center rounded-ui-sm bg-primary px-4 text-sm font-medium text-on-primary hover:bg-primary-hover"
+              className="inline-flex h-12 items-center justify-center rounded-ui bg-primary px-5 font-ui text-sm font-semibold text-on-primary hover:bg-primary-hover"
             >
               Browse products
             </Link>
@@ -110,18 +113,18 @@ function OrderHistory() {
               <Link
                 key={order.id}
                 to={`/orders/${order.id}`}
-                className="block rounded-ui border border-line bg-surface p-4 text-ink shadow-ui hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:p-6"
+                className="block min-w-0 rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:p-5"
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-lg font-semibold">Order {orderNumber(order)}</h2>
+                      <h2 className="font-ui text-lg font-semibold">Order {orderNumber(order)}</h2>
                       <Badge variant={status.variant}>{status.label}</Badge>
                     </div>
-                    <p className="mt-2 text-sm text-muted">Placed on {formatWhen(order.created_at)}</p>
-                    <p className="text-sm text-muted">{count === 1 ? "1 item" : `${count} items`}</p>
+                    <p className="mt-2 font-ui text-sm text-muted">Placed on {formatWhen(order.created_at)}</p>
+                    <p className="font-ui text-sm text-muted">{count === 1 ? "1 item" : `${count} items`}</p>
                   </div>
-                  <p className="text-xl font-bold text-primary">{money(order.total_price)}</p>
+                  <p className="shrink-0 font-ui text-xl font-semibold text-secondary">{money(order.total_price)}</p>
                 </div>
               </Link>
             );

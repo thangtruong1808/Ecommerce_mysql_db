@@ -64,15 +64,15 @@ function Register() {
       intro={
         <>
           Or{" "}
-          <Link to="/login" className="font-medium text-primary hover:text-primary-hover">
+          <Link to="/login" className="font-ui font-semibold text-primary underline-offset-2 hover:text-primary-hover hover:underline">
             sign in to your existing account
           </Link>
         </>
       }
       aside={
         <>
-          <p className="mb-2 text-sm font-semibold text-primary">New account</p>
-          <h2 className="mb-4 text-4xl font-bold leading-tight text-ink">Create an account to shop and track orders</h2>
+          <p className="mb-2 font-ui text-sm font-semibold text-primary">New account</p>
+          <h2 className="mb-3 font-ui text-lg font-semibold text-ink">Create an account to shop and track orders</h2>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <FaIdBadge className="mt-1 text-primary" aria-hidden="true" />

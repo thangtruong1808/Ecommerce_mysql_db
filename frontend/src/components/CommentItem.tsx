@@ -93,7 +93,7 @@ function CommentItem({ comment, onUpdate, onDelete }: CommentItemProps) {
   };
 
   return (
-    <article className="rounded-ui border border-line bg-surface p-4">
+    <article className="rounded-ui-lg border border-line bg-canvas p-4">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <FaUser className="text-muted" aria-hidden="true" />

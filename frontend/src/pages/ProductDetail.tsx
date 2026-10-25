@@ -220,20 +220,22 @@ function ProductDetail() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="mb-6 inline-flex items-center gap-2 rounded-ui-sm text-sm text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="mb-6 inline-flex items-center gap-2 rounded-ui font-ui text-sm font-semibold text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <FaArrowLeft aria-hidden="true" />
         Back
       </button>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <ImageGallery images={product.images} productName={product.name} />
-        <div>
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <h1 className="text-3xl font-bold text-ink">{product.name}</h1>
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+        <div className="min-w-0">
+          <ImageGallery images={product.images} productName={product.name} />
+        </div>
+        <div className="min-w-0 rounded-ui-lg border border-line bg-surface p-5 shadow-ui sm:p-6">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <h1 className="min-w-0 flex-1 font-display text-4xl text-ink sm:text-5xl">{product.name}</h1>
             <LikeButton productId={product.id} />
           </div>
-          <div className="mb-4 flex items-center gap-2 text-sm text-muted">
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted">
             <span aria-hidden="true">
               <StarRating rating={rating} readOnly size="sm" />
             </span>
@@ -245,10 +247,10 @@ function ProductDetail() {
           </div>
           <div className="mb-4">
             {onSale ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-3xl font-semibold text-primary">{money(product.discounted_price)}</p>
-                <p className="text-xl text-muted line-through">{money(product.price)}</p>
-                <Badge variant="danger">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="font-ui text-4xl font-semibold text-secondary">{money(product.discounted_price)}</p>
+                <p className="text-lg text-muted line-through">{money(product.price)}</p>
+                <Badge variant="danger" className="gap-1 px-2 py-0.5">
                   <FaTag aria-hidden="true" />
                   {product.discount_type === "percentage"
                     ? `${Math.round(Number.parseFloat(String(product.discount_value)))}% off`
@@ -256,22 +258,22 @@ function ProductDetail() {
                 </Badge>
               </div>
             ) : (
-              <p className="text-3xl font-semibold text-primary">{money(product.price)}</p>
+              <p className="font-ui text-4xl font-semibold text-secondary">{money(product.price)}</p>
             )}
           </div>
           {product.description ? <p className="mb-6 text-muted">{product.description}</p> : null}
-          <p className={`mb-6 text-sm font-medium ${product.stock > 0 ? "text-success" : "text-danger"}`}>
+          <p className={`mb-6 font-ui text-sm font-semibold ${product.stock > 0 ? "text-success" : "text-danger"}`}>
             {product.stock > 0 ? `In stock (${product.stock} available)` : "Out of stock"}
           </p>
           {product.stock > 0 ? (
-            <div className="mb-6 max-w-sm">
-              <label htmlFor="product-quantity" className="mb-2 block text-sm font-medium text-ink">
+            <div>
+              <label htmlFor="product-quantity" className="mb-2 block font-ui text-sm font-semibold text-ink">
                 Quantity
               </label>
-              <div className="mb-3 flex items-center gap-2">
+              <div className="mb-4 flex items-center gap-2">
                 <button
                   type="button"
-                  className="h-10 w-10 rounded-ui-sm border border-line bg-surface text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-ui border border-line bg-canvas font-ui text-lg text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
                   aria-label="Decrease quantity"
                   disabled={quantity <= 1}
                   onClick={() => setClampedQuantity(quantity - 1)}
@@ -285,12 +287,12 @@ function ProductDetail() {
                   max={product.stock}
                   value={quantity}
                   inputMode="numeric"
-                  className="h-10 w-20 rounded-ui-sm border border-line bg-surface text-center text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="h-12 w-20 rounded-ui border border-line bg-canvas text-center font-ui text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onChange={(event) => setClampedQuantity(Number.parseInt(event.target.value, 10))}
                 />
                 <button
                   type="button"
-                  className="h-10 w-10 rounded-ui-sm border border-line bg-surface text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-ui border border-line bg-canvas font-ui text-lg text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
                   aria-label="Increase quantity"
                   disabled={quantity >= product.stock}
                   onClick={() => setClampedQuantity(quantity + 1)}
@@ -314,7 +316,7 @@ function ProductDetail() {
       <VideoPlayer videos={product.videos} />
 
       <section className="mt-12" aria-labelledby="product-reviews-heading">
-        <h2 id="product-reviews-heading" className="mb-6 text-2xl font-bold text-ink">
+        <h2 id="product-reviews-heading" className="mb-6 font-display text-3xl text-ink sm:text-4xl">
           Reviews
         </h2>
         <div className="mb-8">
@@ -325,13 +327,13 @@ function ProductDetail() {
             }}
           />
         </div>
-        <div className="rounded-ui border border-line bg-surface p-6">
+        <div className="rounded-ui-lg border border-line bg-surface p-5 shadow-ui sm:p-6">
           <ReviewList productId={product.id} onRefetch={reviewListRef} />
         </div>
       </section>
 
       <section className="mt-12" aria-labelledby="product-comments-heading">
-        <h2 id="product-comments-heading" className="mb-6 text-2xl font-bold text-ink">
+        <h2 id="product-comments-heading" className="mb-6 font-display text-3xl text-ink sm:text-4xl">
           Comments
         </h2>
         <div className="mb-8">
@@ -342,7 +344,7 @@ function ProductDetail() {
             }}
           />
         </div>
-        <div className="rounded-ui border border-line bg-surface p-6">
+        <div className="rounded-ui-lg border border-line bg-surface p-5 shadow-ui sm:p-6">
           <CommentList productId={product.id} onRefetch={commentListRef} />
         </div>
       </section>

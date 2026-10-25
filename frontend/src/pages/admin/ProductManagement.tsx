@@ -6,13 +6,15 @@ import { FaBox, FaImages, FaTrash } from "react-icons/fa";
 import type { Product } from "@shared/catalog";
 import AdminLayout from "../../components/admin/AdminLayout";
 import InlineEditCell from "../../components/admin/InlineEditCell";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
 import ProductFormModal from "../../components/admin/ProductFormModal";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
+import {
+  ProductBulkBar,
+  ProductPageBar,
+  ProductSelectBox,
+  ProductSortHeader,
+  ProductToolbar,
+} from "./productListChrome";
 import { Badge, Button, EmptyState, Skeleton } from "../../components/ui";
 import { focusRing } from "../../components/ui/styles";
 import usePageTitle from "../../hooks/usePageTitle";
@@ -199,18 +201,18 @@ export default function ProductManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
-        <div className="mb-4 flex flex-col items-center justify-between gap-3 border-b border-line pb-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <FaBox className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">Product Management</h1>
+      <div className="mx-auto min-w-0 max-w-full text-ink">
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-2">
+            <FaBox className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="font-ui text-3xl font-semibold">Product Management</h1>
           </div>
           <Button id="add-product" onClick={() => setFormModal({ isOpen: true, product: null })}>
             Add product
           </Button>
         </div>
 
-        <SearchFilterBar
+        <ProductToolbar
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
@@ -230,7 +232,7 @@ export default function ProductManagement() {
           searchPlaceholder="Search products..."
         />
 
-        <Pagination
+        <ProductPageBar
           position="top"
           currentPage={page}
           totalPages={totalPages}
@@ -258,34 +260,33 @@ export default function ProductManagement() {
         ) : null}
 
         {!showLoadError && !(loading && products.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox
-                        isSelectAll
-                        totalItems={products.length}
-                        selectedCount={selectedCount}
-                        onSelectAll={selectAll}
+                    <th className="px-3 py-3 text-left">
+                      <ProductSelectBox
+                        pressed={products.length > 0 && selectedCount === products.length}
+                        label="Select all products on this page"
+                        onClick={() => selectAll(selectedCount < products.length)}
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Product" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Price" field="price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Child Category" field="child_category_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Stock" field="stock" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Rating" field="rating" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Reviews" field="num_reviews" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Discount Type" field="discount_type" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Discount Value" field="discount_value" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Clearance" field="is_on_clearance" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <ProductSortHeader label="ID Product" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Price" field="price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Child Category" field="child_category_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Stock" field="stock" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Rating" field="rating" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Reviews" field="num_reviews" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Discount Type" field="discount_type" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Discount Value" field="discount_value" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Clearance" field="is_on_clearance" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <ProductSortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
@@ -305,16 +306,16 @@ export default function ProductManagement() {
                       const discount = discountLabel(product);
                       return (
                         <tr key={product.id} className="hover:bg-surface-muted">
-                          <td className="px-6 py-4">
-                            <BulkSelectCheckbox
-                              itemId={product.id}
-                              isSelected={selectedProducts.has(product.id)}
-                              onToggle={toggle}
+                          <td className="px-3 py-3">
+                            <ProductSelectBox
+                              pressed={selectedProducts.has(product.id)}
+                              label={`Select ${product.name}`}
+                              onClick={() => toggle(product.id)}
                             />
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm">{(page - 1) * entriesPerPage + index + 1}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm">{product.id}</td>
-                          <td className="px-6 py-4 text-sm font-medium">
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm">{(page - 1) * entriesPerPage + index + 1}</td>
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm">{product.id}</td>
+                          <td className="px-3 py-3 font-ui text-sm font-medium">
                             <button
                               type="button"
                               onClick={() => setFormModal({ isOpen: true, product })}
@@ -324,19 +325,19 @@ export default function ProductManagement() {
                               {product.name}
                             </button>
                           </td>
-                          <td className="max-w-xs truncate px-6 py-4 text-sm text-muted" title={product.description}>
+                          <td className="max-w-xs truncate px-3 py-3 font-ui text-sm text-muted" title={product.description}>
                             {product.description || <span className="text-muted">No description</span>}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4">
+                          <td className="whitespace-nowrap px-3 py-3">
                             <InlineEditCell value={product.price || 0} type="number" onSave={(newPrice: string | number) => handlePriceUpdate(product.id, newPrice)} />
                           </td>
-                          <td className="px-6 py-4 text-sm text-muted">{product.child_category_name || "N/A"}</td>
-                          <td className="whitespace-nowrap px-6 py-4">
+                          <td className="px-3 py-3 font-ui text-sm text-muted">{product.child_category_name || "N/A"}</td>
+                          <td className="whitespace-nowrap px-3 py-3">
                             <InlineEditCell value={product.stock || 0} type="number" onSave={(newStock: string | number) => handleStockUpdate(product.id, newStock)} />
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{ratingLabel(product.rating)}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{product.num_reviews || 0}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm text-muted">{ratingLabel(product.rating)}</td>
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm text-muted">{product.num_reviews || 0}</td>
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm text-muted">
                             {product.discount_type ? (
                               <div className="flex flex-col items-start gap-1">
                                 <span className="capitalize">{product.discount_type}</span>
@@ -348,17 +349,17 @@ export default function ProductManagement() {
                               <span>N/A</span>
                             )}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{discount || "N/A"}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm">
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm text-muted">{discount || "N/A"}</td>
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm">
                             {product.is_on_clearance ? <Badge variant="warning">Yes</Badge> : <span className="text-muted">No</span>}
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(product.created_at || "")}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(product.updated_at || "")}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm">
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm text-muted">{formatDate(product.created_at || "")}</td>
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm text-muted">{formatDate(product.updated_at || "")}</td>
+                          <td className="whitespace-nowrap px-3 py-3 font-ui text-sm">
                             <div className="flex items-center gap-2">
                               <Link
                                 to={`/admin/products/${product.id}/media`}
-                                className={`inline-flex items-center gap-1 rounded-ui-sm bg-primary px-2 py-1 text-xs text-on-primary hover:bg-primary-hover ${focusRing}`}
+                                className={`inline-flex items-center gap-1 rounded-ui-sm bg-primary px-2 py-1 font-ui text-xs text-on-primary hover:bg-primary-hover ${focusRing}`}
                                 aria-label={`Manage media for ${product.name}`}
                               >
                                 <FaImages className="h-3 w-3" aria-hidden="true" />
@@ -367,7 +368,7 @@ export default function ProductManagement() {
                               <button
                                 type="button"
                                 onClick={() => setDeleteModal({ isOpen: true, product })}
-                                className={`inline-flex items-center gap-1 rounded-ui-sm bg-danger px-2 py-1 text-xs text-on-danger hover:bg-danger-hover ${focusRing}`}
+                                className={`inline-flex items-center gap-1 rounded-ui-sm bg-danger px-2 py-1 font-ui text-xs text-on-danger hover:bg-danger-hover ${focusRing}`}
                                 aria-label={`Delete ${product.name}`}
                               >
                                 <FaTrash className="h-3 w-3" aria-hidden="true" />
@@ -385,7 +386,7 @@ export default function ProductManagement() {
           </div>
         ) : null}
 
-        <Pagination
+        <ProductPageBar
           position="bottom"
           currentPage={page}
           totalPages={totalPages}
@@ -421,18 +422,16 @@ export default function ProductManagement() {
           product={formModal.product}
         />
 
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[
-              { type: "delete", label: "Delete Selected" },
-              { type: "update-stock", label: "Update Stock", data: { stock: 0 } },
-            ]}
-            onAction={handleBulkAction}
-            onCancel={clear}
-          />
-        ) : null}
+        <ProductBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[
+            { type: "delete", label: "Delete Selected" },
+            { type: "update-stock", label: "Update Stock", data: { stock: 0 } },
+          ]}
+          onAction={handleBulkAction}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

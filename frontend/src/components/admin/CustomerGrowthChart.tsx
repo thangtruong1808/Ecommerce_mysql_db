@@ -44,25 +44,26 @@ export default function CustomerGrowthChart({ data = [] }: CustomerGrowthChartPr
     customers: Number(item.newCustomers) || 0,
   }));
   const quiet = prefersReducedMotion();
-  const stroke = cssColor("--success", "#15803d");
-  const grid = cssColor("--line", "#e5e7eb");
-  const tick = cssColor("--muted", "#4b5563");
+  const stroke = cssColor("--primary", "#1f6b4a");
+  const grid = cssColor("--line", "#e4ddd0");
+  const tick = cssColor("--muted", "#5c564c");
+  const crowded = chartData.length > 7;
 
   return (
-    <section className="flex h-full flex-col rounded-ui border border-line bg-surface p-4 text-ink shadow-ui">
-      <h2 className="mb-2 text-base font-semibold">Customer growth</h2>
+    <section className="flex min-w-0 flex-col rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui">
+      <h2 className="mb-2 font-ui text-base font-semibold">Customer growth</h2>
       {chartData.length > 0 ? (
-        <div className="min-h-0 flex-1">
+        <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 8, left: 0, bottom: crowded ? 8 : 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={grid} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11, fill: tick }}
                 interval="preserveStartEnd"
-                angle={chartData.length > 7 ? -40 : 0}
-                textAnchor={chartData.length > 7 ? "end" : "middle"}
-                height={chartData.length > 7 ? 70 : 30}
+                angle={crowded ? -40 : 0}
+                textAnchor={crowded ? "end" : "middle"}
+                height={crowded ? 64 : 30}
               />
               <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: tick }} width={32} />
               <Tooltip content={<GrowthTooltip />} />

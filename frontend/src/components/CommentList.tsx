@@ -90,7 +90,7 @@ function CommentList({ productId, onRefetch }: CommentListProps) {
         />
       ) : null}
       {!loadError && comments.length === 0 ? (
-        <p className="rounded-ui border border-dashed border-line bg-surface-muted px-4 py-6 text-center text-sm text-muted">
+        <p className="rounded-ui-lg border border-dashed border-line bg-canvas px-4 py-6 text-center text-sm text-muted">
           No comments yet. Be the first to comment!
         </p>
       ) : null}

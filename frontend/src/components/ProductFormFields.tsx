@@ -1,6 +1,18 @@
+import type { ReactNode } from "react";
 import type { FieldErrors, UseFormRegister, UseFormWatch } from "react-hook-form";
 import { controlClass } from "./ui/styles";
 import type { NamedOption, ProductFormValues } from "../pages/admin/productFormModel";
+
+const labelClass = "mb-2 block font-ui text-sm font-medium text-ink";
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="min-w-0 rounded-ui-lg border border-line bg-canvas p-4">
+      <h3 className="mb-4 font-ui text-sm font-semibold text-ink">{title}</h3>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
+}
 
 interface ProductFormFieldsProps {
   register: UseFormRegister<ProductFormValues>;
@@ -17,7 +29,11 @@ function FieldError({ message }: { message?: string }) {
   if (!message) {
     return null;
   }
-  return <p className="mt-1 text-sm text-danger">{message}</p>;
+  return (
+    <p className="mt-1 font-ui text-sm text-danger" role="alert">
+      {message}
+    </p>
+  );
 }
 
 export default function ProductFormFields({
@@ -31,9 +47,10 @@ export default function ProductFormFields({
   selectedSubcategory,
 }: ProductFormFieldsProps) {
   return (
-    <>
+    <div className="space-y-4">
+      <Section title="Product details">
       <div>
-        <label htmlFor="product-name" className="mb-2 block text-sm font-medium text-ink">
+        <label htmlFor="product-name" className={labelClass}>
           Product name
         </label>
         <input
@@ -46,7 +63,7 @@ export default function ProductFormFields({
       </div>
 
       <div>
-        <label htmlFor="product-description" className="mb-2 block text-sm font-medium text-ink">
+        <label htmlFor="product-description" className={labelClass}>
           Description
         </label>
         <textarea
@@ -57,9 +74,11 @@ export default function ProductFormFields({
         />
         <FieldError message={errors.description?.message} />
       </div>
+      </Section>
 
+      <Section title="Category">
       <div>
-        <label htmlFor="product-category" className="mb-2 block text-sm font-medium text-ink">
+        <label htmlFor="product-category" className={labelClass}>
           Category
         </label>
         <select
@@ -78,7 +97,7 @@ export default function ProductFormFields({
       </div>
 
       <div>
-        <label htmlFor="product-subcategory" className="mb-2 block text-sm font-medium text-ink">
+        <label htmlFor="product-subcategory" className={labelClass}>
           Subcategory
         </label>
         <select
@@ -99,7 +118,7 @@ export default function ProductFormFields({
       </div>
 
       <div>
-        <label htmlFor="product-child-category" className="mb-2 block text-sm font-medium text-ink">
+        <label htmlFor="product-child-category" className={labelClass}>
           Child category
         </label>
         <select
@@ -118,10 +137,12 @@ export default function ProductFormFields({
         </select>
         <FieldError message={errors.child_category_id?.message} />
       </div>
+      </Section>
 
+      <Section title="Price and stock">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="product-price" className="mb-2 block text-sm font-medium text-ink">
+          <label htmlFor="product-price" className={labelClass}>
             Price
           </label>
           <input
@@ -137,7 +158,7 @@ export default function ProductFormFields({
           <FieldError message={errors.price?.message} />
         </div>
         <div>
-          <label htmlFor="product-stock" className="mb-2 block text-sm font-medium text-ink">
+          <label htmlFor="product-stock" className={labelClass}>
             Stock
           </label>
           <input
@@ -152,11 +173,11 @@ export default function ProductFormFields({
           <FieldError message={errors.stock?.message} />
         </div>
       </div>
+      </Section>
 
-      <div className="border-t border-line pt-4">
-        <h3 className="mb-4 text-sm font-semibold text-ink">Discount</h3>
-        <div className="mb-4">
-          <label htmlFor="product-discount-type" className="mb-2 block text-sm font-medium text-ink">
+      <Section title="Discount">
+        <div>
+          <label htmlFor="product-discount-type" className={labelClass}>
             Discount type
           </label>
           <select
@@ -178,7 +199,7 @@ export default function ProductFormFields({
           <FieldError message={errors.discount_type?.message} />
         </div>
         <div className="mb-4">
-          <label htmlFor="product-discount-value" className="mb-2 block text-sm font-medium text-ink">
+          <label htmlFor="product-discount-value" className={labelClass}>
             Discount value
           </label>
           <input
@@ -218,7 +239,7 @@ export default function ProductFormFields({
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="product-discount-start" className="mb-2 block text-sm font-medium text-ink">
+            <label htmlFor="product-discount-start" className={labelClass}>
               Start date
             </label>
             <input
@@ -241,7 +262,7 @@ export default function ProductFormFields({
             <FieldError message={errors.discount_start_date?.message} />
           </div>
           <div>
-            <label htmlFor="product-discount-end" className="mb-2 block text-sm font-medium text-ink">
+            <label htmlFor="product-discount-end" className={labelClass}>
               End date
             </label>
             <input
@@ -264,7 +285,7 @@ export default function ProductFormFields({
             <FieldError message={errors.discount_end_date?.message} />
           </div>
         </div>
-      </div>
-    </>
+      </Section>
+    </div>
   );
 }

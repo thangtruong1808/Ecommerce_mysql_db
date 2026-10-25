@@ -123,8 +123,8 @@ function Clearance() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8">
         <div className="mb-3 flex items-center gap-2">
-          <FaTag className="text-2xl text-accent" aria-hidden="true" />
-          <h1 className="text-3xl font-bold text-ink">{title}</h1>
+          <FaTag className="text-xl text-accent" aria-hidden="true" />
+          <h1 className="font-display text-4xl text-ink sm:text-5xl">{title}</h1>
         </div>
         <p className="text-muted">
           {categoryName
@@ -133,8 +133,8 @@ function Clearance() {
         </p>
       </div>
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="w-full sm:max-w-xs">
+      <div className="mb-6 flex min-w-0 flex-wrap items-end justify-between gap-3">
+        <div className="w-full min-w-0 sm:max-w-xs">
           <Select
             label="Sort by"
             value={`${filters.sortBy}|${filters.sortOrder}`}

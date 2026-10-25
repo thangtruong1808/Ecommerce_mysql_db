@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Button, Modal } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Input, Modal, Select } from "../ui";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 import type { ParentOption } from "../../pages/admin/categoryTree";
 
 interface ChildCategoryCreateModalProps {
@@ -38,31 +38,29 @@ export default function ChildCategoryCreateModal({ subcategories, isOpen, onClos
   };
 
   return (
-    <Modal open={isOpen} title="Create child category" onClose={close}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="child-create-parent" className="mb-1 block text-sm font-medium text-ink">Subcategory</label>
-          <select id="child-create-parent" name="subcategory_id" required className={controlClass()}>
-            <option value="">Select subcategory</option>
-            {subcategories.map((subcategory) => (
-              <option key={subcategory.id} value={subcategory.id}>
-                {subcategory.category_name ? `${subcategory.category_name} - ${subcategory.name}` : subcategory.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="child-create-name" className="mb-1 block text-sm font-medium text-ink">Name</label>
-          <input id="child-create-name" name="name" type="text" required className={controlClass()} />
-        </div>
-        <div>
-          <label htmlFor="child-create-description" className="mb-1 block text-sm font-medium text-ink">Description</label>
-          <textarea id="child-create-description" name="description" rows={3} className={controlClass()} />
-        </div>
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Create child category</Button>
-        </div>
+    <Modal open={isOpen} title="Create child category" onClose={close} className="max-w-xl">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+        <CategorySection title="Parent">
+          <Select
+            id="child-create-parent"
+            name="subcategory_id"
+            label="Subcategory"
+            required
+            defaultValue=""
+            options={[
+              { value: "", label: "Select subcategory" },
+              ...subcategories.map((subcategory) => ({
+                value: String(subcategory.id),
+                label: subcategory.category_name ? `${subcategory.category_name} - ${subcategory.name}` : subcategory.name,
+              })),
+            ]}
+          />
+        </CategorySection>
+        <CategorySection title="Details">
+          <Input id="child-create-name" name="name" label="Name" type="text" required />
+          <CategoryTextarea id="child-create-description" name="description" label="Description" />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Create child category" saving={saving} />
       </form>
     </Modal>
   );

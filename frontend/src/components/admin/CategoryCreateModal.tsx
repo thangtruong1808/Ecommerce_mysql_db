@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Button, Modal } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Input, Modal } from "../ui";
 import CategoryPhotoField from "./CategoryPhotoField";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 import { readPreview } from "../../pages/admin/categoryTree";
 
 interface CategoryCreateModalProps {
@@ -44,30 +44,25 @@ export default function CategoryCreateModal({ isOpen, onClose, onSave }: Categor
   };
 
   return (
-    <Modal open={isOpen} title="Create category" onClose={close}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="category-create-name" className="mb-1 block text-sm font-medium text-ink">Name</label>
-          <input id="category-create-name" name="name" type="text" required className={controlClass()} />
-        </div>
-        <div>
-          <label htmlFor="category-create-description" className="mb-1 block text-sm font-medium text-ink">Description</label>
-          <textarea id="category-create-description" name="description" rows={3} className={controlClass()} />
-        </div>
-        <CategoryPhotoField
-          id="category-create-photo"
-          preview={preview}
-          previewAlt="New category photo"
-          hint="Optional. Upload a photo for this category."
-          onFile={(next) => {
-            setFile(next);
-            readPreview(next, setPreview);
-          }}
-        />
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Create category</Button>
-        </div>
+    <Modal open={isOpen} title="Create category" onClose={close} className="max-w-xl">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+        <CategorySection title="Details">
+          <Input id="category-create-name" name="name" label="Name" type="text" required />
+          <CategoryTextarea id="category-create-description" name="description" label="Description" />
+        </CategorySection>
+        <CategorySection title="Photo">
+          <CategoryPhotoField
+            id="category-create-photo"
+            preview={preview}
+            previewAlt="New category photo"
+            hint="Optional. Upload a photo for this category."
+            onFile={(next) => {
+              setFile(next);
+              readPreview(next, setPreview);
+            }}
+          />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Create category" saving={saving} />
       </form>
     </Modal>
   );

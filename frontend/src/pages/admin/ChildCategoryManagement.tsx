@@ -3,11 +3,13 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaLayerGroup } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
 import ChildCategoryCreateModal from "../../components/admin/ChildCategoryCreateModal";
 import ChildCategoryEditModal from "../../components/admin/ChildCategoryEditModal";
@@ -165,20 +167,23 @@ export default function ChildCategoryManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
-        <div className="mb-4 flex flex-col items-center justify-between gap-3 border-b border-line pb-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <FaLayerGroup className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">Child Category Management</h1>
+      <div className="mx-auto min-w-0 max-w-full text-ink">
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-2">
+            <FaLayerGroup className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="min-w-0 font-ui text-3xl font-semibold">Child Category Management</h1>
           </div>
           <Button id="add-child-category" onClick={() => crud.setCreateModal({ isOpen: true })}>Add child category</Button>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="child-category-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          filterId="child-category-parent-filter"
+          filterLabel="Subcategory"
           filterValue={subcategoryFilter}
           onFilterChange={(value: string) => {
             setSubcategoryFilter(value);
@@ -193,28 +198,34 @@ export default function ChildCategoryManagement() {
           ]}
           searchPlaceholder="Search child categories by name, description, category, or subcategory..."
         />
-        <Pagination position="top" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
+        <CategoryPageBar position="top" pageSizeId="child-category-page-size" paginationLabel="Child categories pagination" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
         {loading && childCategories.length === 0 && !showLoadError ? <Skeleton className="h-96" /> : null}
         {showLoadError ? (
           <EmptyState title="Child categories could not be loaded" description={error} action={<Button id="child-categories-retry" loading={loading} onClick={() => setReloadKey((key) => key + 1)}>Try again</Button>} />
         ) : null}
         {!showLoadError && !(loading && childCategories.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left"><BulkSelectCheckbox isSelectAll totalItems={childCategories.length} selectedCount={selectedCount} onSelectAll={selectAll} /></th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Child Category" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Category" field="category_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Subcategory" field="subcategory_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Subcategory ID" field="subcategory_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={childCategories.length > 0 && selectedCount === childCategories.length}
+                        label="Select all child categories on this page"
+                        onClick={() => selectAll(selectedCount < childCategories.length)}
+                      />
+                    </th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Child Category" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Category" field="category_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Subcategory" field="subcategory_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Subcategory ID" field="subcategory_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
@@ -242,7 +253,7 @@ export default function ChildCategoryManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination position="bottom" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
+        <CategoryPageBar position="bottom" pageSizeId="child-category-page-size" paginationLabel="Child categories pagination" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
         <ChildCategoryCreateModal subcategories={subcategories} isOpen={crud.createModal.isOpen} onClose={() => crud.setCreateModal({ isOpen: false })} onSave={crud.handleCreate} />
         <ChildCategoryEditModal
           childCategory={crud.editModal.entity as ChildCategoryRecord | null}
@@ -263,19 +274,17 @@ export default function ChildCategoryManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

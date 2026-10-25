@@ -14,7 +14,6 @@ import { CategoryCarousel, type HomeCategory } from "../components/CategoryCarou
 import ProductCard from "../components/ProductCard";
 import RecentlyViewed from "../components/RecentlyViewed";
 import Recommendations from "../components/Recommendations";
-import VoucherCodeItem from "../components/VoucherCodeItem";
 import VoucherSection from "../components/VoucherSection";
 import { Button, EmptyState, Skeleton } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
@@ -121,7 +120,6 @@ function Home() {
   const [clearanceStatus, setClearanceStatus] = useState<LoadStatus>("loading");
   const [categoryStatus, setCategoryStatus] = useState<LoadStatus>("loading");
   const [voucherStatus, setVoucherStatus] = useState<LoadStatus>("loading");
-  const [copiedCodes, setCopiedCodes] = useState<Set<string>>(new Set());
   const [retrying, setRetrying] = useState(false);
 
   const loadHome = useCallback(async () => {
@@ -200,23 +198,6 @@ function Home() {
     toast.error(result?.error || "Failed to add item to cart");
   };
 
-  const handleCopyCode = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCodes((previous) => new Set(previous).add(code));
-      toast.success(`Voucher code ${code} copied`);
-      window.setTimeout(() => {
-        setCopiedCodes((previous) => {
-          const next = new Set(previous);
-          next.delete(code);
-          return next;
-        });
-      }, 2000);
-    } catch {
-      toast.error("Failed to copy code");
-    }
-  };
-
   const features: { icon: ReactNode; label: string }[] = [
     { icon: <FaShippingFast aria-hidden="true" />, label: "Free shipping over $100" },
     { icon: <FaShieldAlt aria-hidden="true" />, label: "Secure payment" },
@@ -254,27 +235,6 @@ function Home() {
               ))}
             </ul>
           </div>
-          {vouchers.length > 0 ? (
-            <div className="border-t border-line bg-canvas px-4 py-5 sm:px-6">
-              <ul className="flex flex-wrap items-stretch justify-center gap-3">
-                {vouchers.slice(0, 4).map((voucher, index) => (
-                  <li key={voucher.id} className="min-w-0 max-w-full">
-                    <VoucherCodeItem
-                      voucher={voucher}
-                      isCopied={copiedCodes.has(voucher.code)}
-                      onCopy={handleCopyCode}
-                      showHeader={index === 0}
-                    />
-                  </li>
-                ))}
-              </ul>
-              {vouchers.length > 4 ? (
-                <p className="mt-3 text-center text-sm text-muted">
-                  +{vouchers.length - 4} more voucher{vouchers.length - 4 === 1 ? "" : "s"} available
-                </p>
-              ) : null}
-            </div>
-          ) : null}
         </div>
       </section>
 

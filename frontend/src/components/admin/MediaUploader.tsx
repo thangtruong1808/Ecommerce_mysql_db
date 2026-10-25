@@ -103,19 +103,15 @@ export default function MediaUploader({
             addFiles(event.dataTransfer.files);
           }
         }}
-        className={`rounded-ui border-2 border-dashed p-8 text-center ${
-          dragActive ? "border-primary bg-primary/10" : "border-line bg-surface"
+        className={`rounded-ui-lg border-2 border-dashed p-8 text-center ${
+          dragActive ? "border-primary bg-primary/10" : "border-line bg-canvas"
         }`}
       >
-        <FaCloudUploadAlt className="mx-auto mb-4 text-4xl text-muted" aria-hidden="true" />
-        <p className="mb-2 text-ink">Drag and drop files here, or choose them from this device.</p>
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className={`font-medium text-primary hover:underline ${focusRing}`}
-        >
+        <FaCloudUploadAlt className="mx-auto mb-4 text-4xl text-primary" aria-hidden="true" />
+        <p className="mb-3 font-ui text-sm text-ink">Drag and drop files here, or choose them from this device.</p>
+        <Button type="button" variant="outline" onClick={() => inputRef.current?.click()}>
           Browse files
-        </button>
+        </Button>
         <input
           ref={inputRef}
           type="file"
@@ -130,24 +126,24 @@ export default function MediaUploader({
           }}
           className="hidden"
         />
-        <p className="mt-2 text-sm text-muted">Max {maxSize}MB per file, up to {maxFiles} {maxFiles === 1 ? "file" : "files"}.</p>
+        <p className="mt-3 font-ui text-sm text-muted">Max {maxSize}MB per file, up to {maxFiles} {maxFiles === 1 ? "file" : "files"}.</p>
       </div>
 
       {files.length > 0 ? (
         <div className="space-y-2">
           <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-medium text-ink">Selected files ({files.length})</h3>
+            <h3 className="font-ui text-sm font-semibold text-ink">Selected files ({files.length})</h3>
             <Button type="button" onClick={handleUpload} loading={uploading} disabled={uploading}>
               Upload
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {files.map((item, index) => (
-              <div key={`${item.file.name}-${item.file.lastModified}-${index}`} className="relative overflow-hidden rounded-ui border border-line bg-surface">
+              <div key={`${item.file.name}-${item.file.lastModified}-${index}`} className="relative overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui">
                 {item.file.type.startsWith("image/") ? (
-                  <img src={item.url} alt="" className="h-32 w-full object-cover" />
+                  <img src={item.url} alt="" className="aspect-square w-full object-cover" />
                 ) : (
-                  <div className="flex h-32 items-center justify-center bg-surface-muted px-2 text-center text-sm text-muted">{item.file.name}</div>
+                  <div className="flex aspect-square items-center justify-center bg-surface-muted px-2 text-center font-ui text-sm text-muted">{item.file.name}</div>
                 )}
                 <button
                   type="button"
@@ -158,7 +154,7 @@ export default function MediaUploader({
                 >
                   <FaTimes className="text-xs" aria-hidden="true" />
                 </button>
-                <p className="truncate p-1 text-xs text-muted">{item.file.name}</p>
+                <p className="truncate p-2 font-ui text-xs text-muted">{item.file.name}</p>
               </div>
             ))}
           </div>

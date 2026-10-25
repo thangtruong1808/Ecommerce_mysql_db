@@ -28,7 +28,7 @@ function ImageGallery({ images = [], productName = "Product" }: ImageGalleryProp
 
   if (usable.length === 0) {
     return (
-      <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-ui border border-line bg-surface-muted">
+      <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-ui-lg border border-line bg-surface-muted">
         <img src={comingSoon} alt="" className="h-full w-full object-contain" />
         <span className="sr-only">No photo for {productName}</span>
       </div>
@@ -61,13 +61,13 @@ function ImageGallery({ images = [], productName = "Product" }: ImageGalleryProp
       tabIndex={0}
       aria-roledescription="carousel"
       aria-label={`${productName} photos`}
-      className="rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="min-w-0 rounded-ui-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       onKeyDown={onKeyDown}
     >
       <p className="sr-only" aria-live="polite">
         Photo {index + 1} of {usable.length}
       </p>
-      <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-ui border border-line bg-surface-muted">
+      <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-ui-lg border border-line bg-surface-muted">
         <img
           src={src}
           alt=""
@@ -91,7 +91,7 @@ function ImageGallery({ images = [], productName = "Product" }: ImageGalleryProp
         ) : null}
       </div>
       {usable.length > 1 ? (
-        <div className="mt-3 flex gap-2 overflow-x-auto">
+        <div className="mt-3 flex min-w-0 gap-2 overflow-x-auto">
           {usable.map((image, imageIndex) => {
             const key = image.id ?? imageIndex;
             const thumbFailed = failed.includes(key);
@@ -102,7 +102,7 @@ function ImageGallery({ images = [], productName = "Product" }: ImageGalleryProp
                 type="button"
                 aria-label={`Show photo ${imageIndex + 1}`}
                 aria-pressed={selected}
-                className={`h-20 w-20 shrink-0 overflow-hidden rounded-ui-sm border-2 bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`h-20 w-20 shrink-0 overflow-hidden rounded-ui border-2 bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   selected ? "border-primary" : "border-line"
                 }`}
                 onClick={() => show(imageIndex)}

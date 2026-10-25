@@ -35,7 +35,7 @@ function ReviewItem({ review }: { review: ProductReview }) {
   const when = formatStamp(review.created_at);
 
   return (
-    <article className="border-b border-line pb-4 last:border-0">
+    <article className="rounded-ui-lg border border-line bg-canvas p-4">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-ink">{review.user_name || "Customer"}</p>

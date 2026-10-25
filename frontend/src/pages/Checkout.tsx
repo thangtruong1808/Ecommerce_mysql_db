@@ -18,6 +18,7 @@ import {
   addressValues,
   isDefaultAddress,
   messageFrom,
+  money,
   useShippingQuote,
   type AddressFields,
 } from "./checkout/checkoutModel";
@@ -75,10 +76,15 @@ function CheckoutForm() {
       style: {
         base: {
           fontSize: "16px",
-          color: resolved === "dark" ? "#f9fafb" : "#111827",
-          "::placeholder": { color: resolved === "dark" ? "#9ca3af" : "#6b7280" },
+          fontFamily: "Outfit, Inter, sans-serif",
+          color: resolved === "dark" ? "#f4f1ea" : "#1c1915",
+          iconColor: resolved === "dark" ? "#7dcea0" : "#1f6b4a",
+          "::placeholder": { color: resolved === "dark" ? "#c8c0b2" : "#5c564c" },
         },
-        invalid: { color: resolved === "dark" ? "#f87171" : "#b91c1c" },
+        invalid: {
+          color: resolved === "dark" ? "#f0a3a3" : "#9f2d2d",
+          iconColor: resolved === "dark" ? "#f0a3a3" : "#9f2d2d",
+        },
       },
     }),
     [resolved],
@@ -252,10 +258,10 @@ function CheckoutForm() {
 
   if (cartLoading && cart.items.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="mb-8 text-3xl font-bold text-ink">Checkout</h1>
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <Skeleton className="h-80 lg:col-span-2" />
+      <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+        <h1 className="font-display text-4xl text-ink">Checkout</h1>
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
         <p className="sr-only">Loading checkout</p>
@@ -265,7 +271,7 @@ function CheckoutForm() {
 
   if (loadError && cart.items.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-10 sm:py-14">
         <EmptyState
           title="Cart could not be loaded"
           description={loadError}
@@ -281,7 +287,7 @@ function CheckoutForm() {
 
   if (cart.items.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
+      <div className="mx-auto w-full min-w-0 max-w-3xl px-4 py-10 sm:py-14">
         <EmptyState
           title="Your cart is empty"
           description="Add a product before checking out."
@@ -298,25 +304,27 @@ function CheckoutForm() {
   const showAddressForm = useNewAddress || savedAddresses.length === 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="mb-8 text-3xl font-bold text-ink">Checkout</h1>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <Card title="Shipping address" className="lg:col-span-2">
-          {addressesLoading ? <Skeleton className="mb-4 h-24" /> : null}
-          {addressError ? (
-            <p className="mb-4 text-sm text-danger" role="alert">
-              {addressError}
-            </p>
-          ) : null}
-          <SavedAddressList
-            addresses={savedAddresses}
-            selectedAddressId={selectedAddressId}
-            useNewAddress={useNewAddress}
-            disabled={processing}
-            onSelect={selectAddress}
-          />
-
-          <form className="space-y-4" onSubmit={handleSubmit(placeOrder)} noValidate aria-busy={processing}>
+    <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+      <header className="mb-8">
+        <h1 className="font-display text-4xl text-ink">Checkout</h1>
+        <p className="mt-2 font-ui text-sm text-muted">Confirm the address, shipping, and payment.</p>
+      </header>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <form className="min-w-0 space-y-6" onSubmit={handleSubmit(placeOrder)} noValidate aria-busy={processing}>
+          <Card title="Shipping address">
+            {addressesLoading ? <Skeleton className="mb-4 h-24" /> : null}
+            {addressError ? (
+              <p className="mb-4 font-ui text-sm text-danger" role="alert">
+                {addressError}
+              </p>
+            ) : null}
+            <SavedAddressList
+              addresses={savedAddresses}
+              selectedAddressId={selectedAddressId}
+              useNewAddress={useNewAddress}
+              disabled={processing}
+              onSelect={selectAddress}
+            />
             {showAddressForm ? (
               <AddressForm register={register} errors={errors} disabled={processing} />
             ) : (
@@ -327,39 +335,66 @@ function CheckoutForm() {
                 <input type="hidden" {...register("country", { required: "Country is required" })} />
               </>
             )}
+          </Card>
 
-            <div className="space-y-3 rounded-ui-sm border border-line bg-surface-muted p-4">
+          <Card title="Shipping">
+            <div className="flex min-w-0 items-start justify-between gap-3 rounded-ui-lg bg-canvas p-4">
+              <div className="min-w-0">
+                <p className="font-ui font-semibold text-ink">
+                  {shippingLoading ? "Updating shipping..." : quote.service}
+                </p>
+                <p className="mt-1 font-ui text-sm text-muted">{quote.estimated_days}</p>
+                {quote.source === "auspost_pac" ? (
+                  <p className="mt-2 font-ui text-sm text-primary">
+                    Shipping estimate is calculated from Australia Post.
+                  </p>
+                ) : null}
+              </div>
+              <p className="inline-flex shrink-0 items-center gap-2 font-ui text-lg font-semibold text-secondary">
+                {shippingLoading ? (
+                  <span
+                    className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent motion-safe:animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {money(quote.amount)}
+              </p>
+            </div>
+          </Card>
+
+          <Card title="Payment">
+            <div className="space-y-3 rounded-ui-lg border border-line bg-canvas p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-ink">Stripe payment (test mode)</p>
-                  <p className="mt-1 text-xs text-muted">Your card details are encrypted by Stripe.</p>
+                  <p className="font-ui text-sm font-semibold text-ink">Stripe payment (test mode)</p>
+                  <p className="mt-1 font-ui text-xs text-muted">Your card details are encrypted by Stripe.</p>
                 </div>
                 <Badge variant="success">Secure</Badge>
               </div>
               <div
-                className={`rounded-ui-sm border bg-surface p-3 ${
+                className={`rounded-ui border bg-surface px-3 py-4 ${
                   cardState.error ? "border-danger" : cardState.complete ? "border-success" : "border-line"
                 }`}
               >
                 <CardElement options={cardOptions} onChange={onCardChange} />
               </div>
-              <p className="text-xs text-muted">
+              <p className="font-ui text-xs text-muted">
                 Test card: 4242 4242 4242 4242, any future expiry, any CVC, any postcode.
               </p>
               {cardState.complete && !cardState.error ? (
-                <p className="rounded-ui-sm border border-success/40 bg-success/10 px-3 py-2 text-xs text-success">
+                <p className="rounded-ui border border-success/40 bg-success/10 px-3 py-2 font-ui text-xs text-success">
                   Card details look good. You can place your order.
                 </p>
               ) : null}
             </div>
 
             {processing ? (
-              <p className="text-sm text-primary" role="status" aria-live="polite">
+              <p className="mt-4 font-ui text-sm text-primary" role="status" aria-live="polite">
                 {processingMessage || "Processing payment..."}
               </p>
             ) : null}
             {paymentError ? (
-              <p className="text-sm text-danger" role="alert">
+              <p className="mt-4 font-ui text-sm text-danger" role="alert">
                 {paymentError}
               </p>
             ) : null}
@@ -367,17 +402,17 @@ function CheckoutForm() {
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              className="mt-4 w-full"
               loading={processing}
               disabled={!stripe || !elements || processing || cardState.empty}
             >
               Place order
             </Button>
             {cardState.empty ? (
-              <p className="text-xs text-muted">Enter your card details to place the order.</p>
+              <p className="mt-2 font-ui text-xs text-muted">Enter your card details to place the order.</p>
             ) : null}
-          </form>
-        </Card>
+          </Card>
+        </form>
 
         <OrderSummary
           items={cart.items}

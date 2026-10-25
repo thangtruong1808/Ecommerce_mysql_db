@@ -109,7 +109,7 @@ function ResetPasswordConfirm() {
         </Button>
         <Link
           to="/login"
-          className="flex items-center justify-center gap-2 rounded-ui-sm text-sm text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="flex items-center justify-center gap-2 rounded-ui font-ui text-sm font-semibold text-ink hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <FaArrowLeft aria-hidden="true" />
           Back to sign in

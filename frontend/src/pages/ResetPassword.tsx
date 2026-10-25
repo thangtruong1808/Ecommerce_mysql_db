@@ -56,15 +56,15 @@ function ResetPassword() {
       intro={
         <>
           Remember your password?{" "}
-          <Link to="/login" className="font-medium text-primary hover:text-primary-hover">
+          <Link to="/login" className="font-ui font-semibold text-primary underline-offset-2 hover:text-primary-hover hover:underline">
             Sign in
           </Link>
         </>
       }
       aside={
         <>
-          <p className="mb-2 text-sm font-semibold text-primary">Password recovery</p>
-          <h2 className="mb-4 text-4xl font-bold leading-tight text-ink">Reset your password</h2>
+          <p className="mb-2 font-ui text-sm font-semibold text-primary">Password recovery</p>
+          <h2 className="mb-3 font-ui text-lg font-semibold text-ink">Reset your password</h2>
           <p className="mb-6 text-muted">We email a link that expires in 1 hour. The message does not confirm whether the address is registered.</p>
           <ul className="space-y-4 text-sm text-muted">
             <li className="flex items-start gap-3">
@@ -82,13 +82,13 @@ function ResetPassword() {
       {emailSent ? (
         <div className="space-y-4 text-center">
           <FaEnvelope className="mx-auto text-3xl text-success" aria-hidden="true" />
-          <h2 className="text-xl font-semibold text-ink">Check your email</h2>
+          <h2 className="font-display text-3xl text-ink">Check your email</h2>
           <p className="text-sm text-muted">
             If that address can receive mail from the store, a reset link is on its way. The link expires in 1 hour.
           </p>
           <Link
             to="/login"
-            className="inline-flex h-10 w-full items-center justify-center rounded-ui-sm bg-primary px-4 text-sm font-medium text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="inline-flex h-12 w-full items-center justify-center rounded-ui bg-primary px-4 font-ui text-sm font-semibold text-on-primary hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             Back to sign in
           </Link>
@@ -113,7 +113,7 @@ function ResetPassword() {
           </Button>
           <Link
             to="/login"
-            className="flex items-center justify-center gap-2 rounded-ui-sm text-sm text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex items-center justify-center gap-2 rounded-ui font-ui text-sm font-semibold text-ink hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <FaArrowLeft aria-hidden="true" />
             Back to sign in

@@ -3,11 +3,13 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaTags } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
 import CategoryCreateModal from "../../components/admin/CategoryCreateModal";
 import CategoryEditModal from "../../components/admin/CategoryEditModal";
@@ -158,16 +160,17 @@ export default function CategoryManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
-        <div className="mb-4 flex flex-col items-center justify-between gap-3 border-b border-line pb-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <FaTags className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">Category Management</h1>
+      <div className="mx-auto min-w-0 max-w-full text-ink">
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-2">
+            <FaTags className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="font-ui text-3xl font-semibold">Category Management</h1>
           </div>
           <Button id="add-category" onClick={() => crud.setCreateModal({ isOpen: true })}>Add category</Button>
         </div>
 
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="category-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
@@ -175,8 +178,10 @@ export default function CategoryManagement() {
           }}
           searchPlaceholder="Search categories by name or description..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="category-page-size"
+          paginationLabel="Categories pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -198,22 +203,26 @@ export default function CategoryManagement() {
         ) : null}
 
         {!showLoadError && !(loading && categories.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={categories.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={categories.length > 0 && selectedCount === categories.length}
+                        label="Select all categories on this page"
+                        onClick={() => selectAll(selectedCount < categories.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Category" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Photo</th>
-                    <SortableTableHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
-                    <SortableTableHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Category" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Photo</th>
+                    <CategorySortHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
+                    <CategorySortHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={(field: string, order: string) => { setSortBy(field); setSortOrder(order); setPage(1); }} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
@@ -242,8 +251,10 @@ export default function CategoryManagement() {
           </div>
         ) : null}
 
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="category-page-size"
+          paginationLabel="Categories pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -274,19 +285,17 @@ export default function CategoryManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

@@ -157,8 +157,8 @@ export default function ProductForm() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-4xl">
-        <h1 className="text-3xl font-bold text-ink">{isEdit ? "Edit product" : "Create product"}</h1>
+      <div className="mx-auto min-w-0 max-w-4xl">
+        <h1 className="font-ui text-3xl font-semibold text-ink">{isEdit ? "Edit product" : "Create product"}</h1>
         {loadError ? (
           <div className="mt-6">
             <EmptyState title="The product form could not be loaded" description={loadError} />
@@ -166,7 +166,7 @@ export default function ProductForm() {
         ) : null}
         {loadingProduct ? <Skeleton className="mt-6 h-96" /> : null}
         {!loadError && !loadingProduct ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4 rounded-ui border border-line bg-surface p-4 text-ink shadow-ui sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-6 min-w-0 space-y-4 rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui sm:p-6">
             <ProductFormFields
               register={register}
               errors={errors}
@@ -177,7 +177,7 @@ export default function ProductForm() {
               selectedCategory={selectedCategory}
               selectedSubcategory={selectedSubcategory}
             />
-            <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
+            <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-3 border-t border-line bg-surface px-4 py-3 sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-0 sm:px-0 sm:py-0">
               <Button type="button" variant="outline" onClick={() => navigate("/admin/products")} disabled={loading}>
                 Cancel
               </Button>

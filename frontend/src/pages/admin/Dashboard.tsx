@@ -126,12 +126,12 @@ export default function Dashboard() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full">
+      <div className="mx-auto min-w-0 max-w-full">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-ink">Admin dashboard</h1>
+          <div className="min-w-0">
+            <h1 className="font-ui text-3xl font-semibold text-ink">Admin dashboard</h1>
             {lastUpdated ? (
-              <p className="mt-1 text-sm text-muted">Updated {lastUpdated.toLocaleTimeString()}</p>
+              <p className="mt-1 font-ui text-sm text-muted">Updated {lastUpdated.toLocaleTimeString()}</p>
             ) : null}
           </div>
           <PeriodFilter period={period} onPeriodChange={setPeriod} disabled={loading} />
@@ -169,25 +169,21 @@ export default function Dashboard() {
               <MetricCard title="Total products" value={productsTotal} icon={FaBox} />
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <div className="h-80">
-                <SalesByCategoryChart data={categoryData} />
-              </div>
-              <div className="h-80">
-                <CustomerGrowthChart data={customerGrowthData} />
-              </div>
+            <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+              <SalesByCategoryChart data={categoryData} />
+              <CustomerGrowthChart data={customerGrowthData} />
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <section className="rounded-ui border border-line bg-surface p-4 text-ink shadow-ui">
-                <h2 className="text-base font-semibold">Top selling products</h2>
+            <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+              <section className="min-w-0 rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui">
+                <h2 className="font-ui text-base font-semibold">Top selling products</h2>
                 {topProducts.length > 0 ? (
                   <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
                     {topProducts.map((product) => (
                       <li key={product.id}>
-                        <Link to={`/products/${product.id}`} className="flex items-center justify-between gap-3 rounded-ui-sm p-2 hover:bg-surface-muted">
-                          <span className="text-sm font-medium text-primary">{product.name}</span>
-                          <span className="shrink-0 text-sm text-muted">
+                        <Link to={`/products/${product.id}`} className="flex min-w-0 items-center justify-between gap-3 rounded-ui-sm p-2 hover:bg-surface-muted">
+                          <span className="min-w-0 break-words font-ui text-sm font-medium text-primary">{product.name}</span>
+                          <span className="shrink-0 font-ui text-sm text-muted">
                             {product.unitsSold || 0} sold · {money(product.revenue)}
                           </span>
                         </Link>
@@ -199,8 +195,8 @@ export default function Dashboard() {
                 )}
               </section>
 
-              <section className="rounded-ui border border-line bg-surface p-4 text-ink shadow-ui">
-                <h2 className="text-base font-semibold">Recent orders</h2>
+              <section className="min-w-0 rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui">
+                <h2 className="font-ui text-base font-semibold">Recent orders</h2>
                 {stats.recentOrders?.length ? (
                   <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
                     {stats.recentOrders.map((order) => {
@@ -210,11 +206,11 @@ export default function Dashboard() {
                       const variant = delivered ? "success" : paid ? "primary" : "warning";
                       return (
                         <li key={order.id}>
-                          <Link to={`/orders/${order.id}`} className="block rounded-ui-sm border border-line p-3 hover:bg-surface-muted">
+                          <Link to={`/orders/${order.id}`} className="block min-w-0 rounded-ui-sm border border-line p-3 hover:bg-surface-muted">
                             <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="font-medium">{orderNumber(order)}</p>
-                                <p className="text-sm text-muted">{order.user_name || "Customer"}</p>
+                              <div className="min-w-0">
+                                <p className="break-words font-ui font-medium">{orderNumber(order)}</p>
+                                <p className="break-words font-ui text-sm text-muted">{order.user_name || "Customer"}</p>
                                 <p className="mt-1 text-xs text-muted">
                                   {order.created_at ? new Date(order.created_at).toLocaleDateString() : "Not available"}
                                 </p>
@@ -235,9 +231,9 @@ export default function Dashboard() {
               </section>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <section className="flex h-80 flex-col rounded-ui border border-line bg-surface p-4 text-ink shadow-ui">
-                <h2 className="flex items-center gap-2 text-base font-semibold">
+            <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+              <section className="flex h-80 min-w-0 flex-col rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui">
+                <h2 className="flex items-center gap-2 font-ui text-base font-semibold">
                   <FaExclamationTriangle className="text-warning" aria-hidden="true" />
                   Low stock products
                 </h2>
@@ -245,10 +241,10 @@ export default function Dashboard() {
                   <ul className="mt-3 flex-1 space-y-2 overflow-y-auto">
                     {stats.lowStockProducts.map((product) => (
                       <li key={product.id}>
-                        <Link to={`/products/${product.id}`} className="block rounded-ui-sm border border-line p-3 hover:bg-surface-muted">
+                        <Link to={`/products/${product.id}`} className="block min-w-0 rounded-ui-sm border border-line p-3 hover:bg-surface-muted">
                           <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <p className="font-medium">{product.name}</p>
+                            <div className="min-w-0">
+                              <p className="break-words font-ui font-medium">{product.name}</p>
                               <p className="text-sm text-muted">
                                 Current stock: <span className="font-semibold text-danger">{product.stock}</span>
                               </p>
@@ -264,15 +260,15 @@ export default function Dashboard() {
                 )}
               </section>
 
-              <section className="flex h-80 flex-col rounded-ui border border-line bg-surface p-4 text-ink shadow-ui">
-                <h2 className="text-base font-semibold">Recent activity</h2>
+              <section className="flex h-80 min-w-0 flex-col rounded-ui-lg border border-line bg-surface p-4 text-ink shadow-ui">
+                <h2 className="font-ui text-base font-semibold">Recent activity</h2>
                 {recentActivities.length > 0 ? (
                   <ul className="mt-3 flex-1 space-y-2 overflow-y-auto">
                     {recentActivities.map((activity) => (
                       <li key={`${activity.type}-${activity.id}`} className="flex gap-2 border-b border-line pb-2 last:border-0">
                         <span aria-hidden="true">{activityIcon(String(activity.type))}</span>
-                        <div>
-                          <p className="text-sm">{activity.description || activity.title || "Activity"}</p>
+                        <div className="min-w-0">
+                          <p className="break-words font-ui text-sm">{activity.description || activity.title || "Activity"}</p>
                           <p className="text-xs text-muted">{activityWhen(activity.createdAt)}</p>
                         </div>
                       </li>

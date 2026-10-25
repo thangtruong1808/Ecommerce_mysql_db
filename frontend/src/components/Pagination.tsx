@@ -9,7 +9,7 @@ interface PaginationProps {
 }
 
 const control =
-  "inline-flex h-10 min-w-10 items-center justify-center rounded-ui-sm border border-line bg-surface px-3 text-sm text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-10 min-w-10 items-center justify-center rounded-ui border border-line bg-surface px-3 font-ui text-sm font-semibold text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50";
 
 function pageNumbers(currentPage: number, totalPages: number): number[] {
   if (totalPages <= 5) {
@@ -45,7 +45,7 @@ function Pagination({
 
   return (
     <nav className="mt-8 space-y-4" aria-label="Pagination">
-      <p className="text-center text-sm text-muted">
+      <p className="text-center font-ui text-sm text-muted">
         Showing {start} to {end} of {total} items · {limit} per page · Page {currentPage} of {totalPages}
       </p>
       <div className="flex flex-wrap items-center justify-center gap-2">
@@ -61,7 +61,7 @@ function Pagination({
             type="button"
             className={
               page === currentPage
-                ? "inline-flex h-10 min-w-10 items-center justify-center rounded-ui-sm bg-primary px-3 text-sm font-semibold text-on-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                ? "inline-flex h-10 min-w-10 items-center justify-center rounded-ui bg-primary px-3 font-ui text-sm font-semibold text-on-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
                 : control
             }
             aria-label={`Page ${page}`}

@@ -3,11 +3,13 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaList } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
 import SubcategoryCreateModal from "../../components/admin/SubcategoryCreateModal";
 import SubcategoryEditModal from "../../components/admin/SubcategoryEditModal";
@@ -190,20 +192,23 @@ export default function SubcategoryManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
-        <div className="mb-4 flex flex-col items-center justify-between gap-3 border-b border-line pb-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <FaList className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">Subcategory Management</h1>
+      <div className="mx-auto min-w-0 max-w-full text-ink">
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 border-b border-line pb-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-2">
+            <FaList className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="font-ui text-3xl font-semibold">Subcategory Management</h1>
           </div>
           <Button id="add-subcategory" onClick={() => crud.setCreateModal({ isOpen: true })}>Add subcategory</Button>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="subcategory-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          filterId="subcategory-parent-filter"
+          filterLabel="Category"
           filterValue={categoryFilter}
           onFilterChange={(value: string) => {
             setCategoryFilter(value);
@@ -212,28 +217,34 @@ export default function SubcategoryManagement() {
           filterOptions={[{ value: "", label: "All Categories" }, ...categories.map((category) => ({ value: String(category.id), label: category.name }))]}
           searchPlaceholder="Search subcategories by name, description, or category..."
         />
-        <Pagination position="top" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
+        <CategoryPageBar position="top" pageSizeId="subcategory-page-size" paginationLabel="Subcategories pagination" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
         {loading && subcategories.length === 0 && !showLoadError ? <Skeleton className="h-96" /> : null}
         {showLoadError ? (
           <EmptyState title="Subcategories could not be loaded" description={error} action={<Button id="subcategories-retry" loading={loading} onClick={() => setReloadKey((key) => key + 1)}>Try again</Button>} />
         ) : null}
         {!showLoadError && !(loading && subcategories.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left"><BulkSelectCheckbox isSelectAll totalItems={subcategories.length} selectedCount={selectedCount} onSelectAll={selectAll} /></th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Subcategory" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Photo</th>
-                    <SortableTableHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Category" field="category_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Category ID" field="category_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={subcategories.length > 0 && selectedCount === subcategories.length}
+                        label="Select all subcategories on this page"
+                        onClick={() => selectAll(selectedCount < subcategories.length)}
+                      />
+                    </th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Subcategory" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Photo</th>
+                    <CategorySortHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Category" field="category_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Category ID" field="category_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Description" field="description" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
@@ -261,7 +272,7 @@ export default function SubcategoryManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination position="bottom" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
+        <CategoryPageBar position="bottom" pageSizeId="subcategory-page-size" paginationLabel="Subcategories pagination" currentPage={page} totalPages={totalPages} totalItems={totalItems} entriesPerPage={entriesPerPage} onPageChange={setPage} onEntriesChange={(value: number) => { setEntriesPerPage(value); setPage(1); }} />
         <SubcategoryCreateModal categories={categories} isOpen={crud.createModal.isOpen} onClose={() => crud.setCreateModal({ isOpen: false })} onSave={handleCreate} />
         <SubcategoryEditModal
           subcategory={crud.editModal.entity as SubcategoryRecord | null}
@@ -282,19 +293,17 @@ export default function SubcategoryManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

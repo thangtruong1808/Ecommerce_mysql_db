@@ -176,7 +176,7 @@ export default function ProductFormModal({
       }}
       className="max-w-4xl"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="min-w-0 space-y-4">
         <ProductFormFields
           register={register}
           errors={errors}
@@ -187,7 +187,7 @@ export default function ProductFormModal({
           selectedCategory={selectedCategory}
           selectedSubcategory={selectedSubcategory}
         />
-        <div className="flex flex-col-reverse justify-end gap-3 border-t border-line pt-4 sm:flex-row">
+        <div className="sticky bottom-0 z-10 -mx-5 flex flex-col-reverse gap-3 border-t border-line bg-surface px-5 py-3 sm:static sm:mx-0 sm:flex-row sm:justify-end sm:px-0">
           <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>

@@ -15,7 +15,7 @@ interface ReviewFields {
   comment: string;
 }
 
-const notice = "rounded-ui border border-line bg-surface-muted px-4 py-4 text-center text-sm text-muted";
+const notice = "rounded-ui-lg border border-line bg-surface px-4 py-4 text-center text-sm text-muted shadow-ui";
 
 function messageFrom(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -143,8 +143,8 @@ function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-ui border border-line bg-surface p-6" noValidate>
-      <h3 className="text-lg font-semibold text-ink">Write a review</h3>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-ui-lg border border-line bg-surface p-5 shadow-ui sm:p-6" noValidate>
+      <h3 className="font-ui text-lg font-semibold text-ink">Write a review</h3>
       <div>
         <p id="review-rating-label" className="mb-2 block text-sm font-medium text-ink">
           Rating
@@ -167,7 +167,7 @@ function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
         <textarea
           id="review-comment"
           rows={4}
-          className="w-full rounded-ui-sm border border-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="w-full rounded-ui border border-line bg-canvas px-3 py-2 text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           placeholder="Write your review here..."
           {...register("comment", { required: "Review comment is required" })}
         />

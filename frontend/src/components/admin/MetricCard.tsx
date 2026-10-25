@@ -12,27 +12,22 @@ export default function MetricCard({ title, value, change, icon: Icon }: MetricC
   const amount = Number(change);
   const hasChange = change !== undefined && change !== null && Number.isFinite(amount);
   const positive = hasChange && amount >= 0;
-  const iconTone = !hasChange
-    ? "bg-primary/10 text-primary"
-    : positive
-      ? "bg-success/15 text-success"
-      : "bg-danger/15 text-danger";
 
   return (
-    <article className="rounded-ui border border-line bg-surface p-3 text-ink shadow-ui">
+    <article className="min-w-0 rounded-ui-lg border border-line bg-surface p-3 text-ink shadow-ui">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-xs font-medium text-muted">{title}</h3>
-          <p className="mt-1 text-xl font-bold">{value}</p>
+        <div className="min-w-0">
+          <h3 className="font-ui text-xs font-medium text-muted">{title}</h3>
+          <p className="mt-1 break-words font-ui text-xl font-semibold text-ink">{value}</p>
           {hasChange ? (
-            <p className={`mt-1.5 inline-flex items-center text-xs font-semibold ${positive ? "text-success" : "text-danger"}`}>
+            <p className={`mt-1.5 inline-flex items-center font-ui text-xs font-semibold ${positive ? "text-success" : "text-danger"}`}>
               {positive ? <FaArrowUp className="mr-1" aria-hidden="true" /> : <FaArrowDown className="mr-1" aria-hidden="true" />}
               {Math.abs(amount).toFixed(1)}%
             </p>
           ) : null}
         </div>
         {Icon ? (
-          <span className={`inline-flex rounded-full p-2 ${iconTone}`}>
+          <span className="inline-flex shrink-0 rounded-full bg-primary/15 p-2 text-primary">
             <Icon aria-hidden="true" />
           </span>
         ) : null}

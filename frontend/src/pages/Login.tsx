@@ -62,15 +62,15 @@ function Login() {
       intro={
         <>
           Or{" "}
-          <Link to="/register" className="font-medium text-primary hover:text-primary-hover">
+          <Link to="/register" className="font-ui font-semibold text-primary underline-offset-2 hover:text-primary-hover hover:underline">
             create a new account
           </Link>
         </>
       }
       aside={
         <>
-          <p className="mb-2 text-sm font-semibold text-primary">Secure access</p>
-          <h2 className="mb-4 text-4xl font-bold leading-tight text-ink">Welcome back</h2>
+          <p className="mb-2 font-ui text-sm font-semibold text-primary">Secure access</p>
+          <h2 className="mb-3 font-ui text-lg font-semibold text-ink">Welcome back</h2>
           <p className="mb-6 text-muted">Sign in to manage orders, track deliveries, and continue shopping.</p>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
@@ -129,21 +129,21 @@ function Login() {
           </p>
         ) : null}
         <div className="text-right">
-          <Link to="/forgot-password" className="rounded-ui-sm text-sm font-medium text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Link to="/forgot-password" className="rounded-ui font-ui text-sm font-semibold text-primary underline-offset-2 hover:text-primary-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             Forgot password?
           </Link>
         </div>
         <div className="text-center">
           <button
             type="button"
-            className="rounded-ui-sm text-sm font-medium text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="rounded-ui font-ui text-sm font-semibold text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-expanded={showSample}
             onClick={() => setShowSample((value) => !value)}
           >
             {showSample ? "Hide" : "Show"} sample credentials
           </button>
           {showSample ? (
-            <div className="mt-2 rounded-ui border border-line bg-surface-muted p-4 text-left text-sm text-ink">
+            <div className="mt-2 rounded-ui-lg border border-line bg-canvas p-4 text-left text-sm text-ink">
               <p>
                 <strong>Admin:</strong> adminuser@gmail.com
                 <br />

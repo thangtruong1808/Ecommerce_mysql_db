@@ -22,21 +22,24 @@ const fields: { name: AddressName; id: string; label: string; placeholder: strin
 
 function AddressForm({ register, errors, disabled = false }: AddressFormProps) {
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 sm:grid-cols-2">
       {fields.map((field) => {
         const message = errors[field.name]?.message;
+        const wide = field.name === "address" || field.name === "country";
         return (
-          <Field key={field.name} id={field.id} label={field.label} error={message}>
-            <input
-              id={field.id}
-              type="text"
-              placeholder={field.placeholder}
-              disabled={disabled}
-              className={controlClass(Boolean(message))}
-              aria-invalid={message ? true : undefined}
-              {...register(field.name, { required: field.required })}
-            />
-          </Field>
+          <div key={field.name} className={wide ? "sm:col-span-2" : undefined}>
+            <Field id={field.id} label={field.label} error={message}>
+              <input
+                id={field.id}
+                type="text"
+                placeholder={field.placeholder}
+                disabled={disabled}
+                className={controlClass(Boolean(message))}
+                aria-invalid={message ? true : undefined}
+                {...register(field.name, { required: field.required })}
+              />
+            </Field>
+          </div>
         );
       })}
     </div>

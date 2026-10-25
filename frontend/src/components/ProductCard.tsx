@@ -79,11 +79,11 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
   };
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-ui border border-line bg-surface shadow-ui">
+    <article className="flex h-full flex-col overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui">
       <div className="relative">
         {onSale ? (
-          <div className="absolute right-2 top-2 z-10">
-            <Badge variant="danger">
+          <div className="absolute right-3 top-3 z-10">
+            <Badge variant="danger" className="gap-1 px-2 py-0.5">
               <FaTag aria-hidden="true" />
               {product.discount_type === "percentage"
                 ? `${Math.round(Number.parseFloat(String(product.discount_value)))}% off`
@@ -112,24 +112,22 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
           <span className="sr-only">{product.name || "Product"}</span>
         </Link>
       </div>
-      <div className="flex flex-1 flex-col gap-2 border-t border-line p-3">
-        <div className="flex items-start justify-between gap-2">
-          <Link
-            to={`/products/${product.id}`}
-            className="rounded-ui-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-ink">{product.name || "Product"}</h3>
-          </Link>
-          <div className="shrink-0 text-right">
-            {onSale ? (
-              <>
-                <p className="text-sm font-semibold text-primary">{money(product.discounted_price)}</p>
-                <p className="text-xs text-muted line-through">{money(product.price)}</p>
-              </>
-            ) : (
-              <p className="text-sm font-semibold text-primary">{money(product.price)}</p>
-            )}
-          </div>
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <Link
+          to={`/products/${product.id}`}
+          className="rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <h3 className="line-clamp-2 font-ui text-base font-semibold leading-6 text-ink">{product.name || "Product"}</h3>
+        </Link>
+        <div>
+          {onSale ? (
+            <>
+              <p className="font-ui text-lg font-semibold text-secondary">{money(product.discounted_price)}</p>
+              <p className="text-xs text-muted line-through">{money(product.price)}</p>
+            </>
+          ) : (
+            <p className="font-ui text-lg font-semibold text-secondary">{money(product.price)}</p>
+          )}
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 text-xs text-muted">
           <StarRating rating={rating} readOnly size="sm" />
@@ -141,8 +139,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         {onAddToCart ? (
           <Button
             type="button"
-            size="sm"
-            className="w-full"
+            className="mt-auto w-full"
             loading={adding}
             disabled={outOfStock}
             onClick={() => void addToCart()}

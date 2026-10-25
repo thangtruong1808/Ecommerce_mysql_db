@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Button, Modal } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Input, Modal, Select } from "../ui";
 import CategoryPhotoField from "./CategoryPhotoField";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 import { readPreview, type ParentOption } from "../../pages/admin/categoryTree";
 
 interface SubcategoryCreateModalProps {
@@ -46,39 +46,38 @@ export default function SubcategoryCreateModal({ categories, isOpen, onClose, on
   };
 
   return (
-    <Modal open={isOpen} title="Create subcategory" onClose={close}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="subcategory-create-parent" className="mb-1 block text-sm font-medium text-ink">Category</label>
-          <select id="subcategory-create-parent" name="category_id" required className={controlClass()}>
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="subcategory-create-name" className="mb-1 block text-sm font-medium text-ink">Name</label>
-          <input id="subcategory-create-name" name="name" type="text" required className={controlClass()} />
-        </div>
-        <div>
-          <label htmlFor="subcategory-create-description" className="mb-1 block text-sm font-medium text-ink">Description</label>
-          <textarea id="subcategory-create-description" name="description" rows={3} className={controlClass()} />
-        </div>
-        <CategoryPhotoField
-          id="subcategory-create-photo"
-          preview={preview}
-          previewAlt="New subcategory photo"
-          hint="Optional. Upload a photo for this subcategory."
-          onFile={(next) => {
-            setFile(next);
-            readPreview(next, setPreview);
-          }}
-        />
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Create subcategory</Button>
-        </div>
+    <Modal open={isOpen} title="Create subcategory" onClose={close} className="max-w-xl">
+      <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+        <CategorySection title="Parent">
+          <Select
+            id="subcategory-create-parent"
+            name="category_id"
+            label="Category"
+            required
+            defaultValue=""
+            options={[
+              { value: "", label: "Select category" },
+              ...categories.map((category) => ({ value: String(category.id), label: category.name })),
+            ]}
+          />
+        </CategorySection>
+        <CategorySection title="Details">
+          <Input id="subcategory-create-name" name="name" label="Name" type="text" required />
+          <CategoryTextarea id="subcategory-create-description" name="description" label="Description" />
+        </CategorySection>
+        <CategorySection title="Photo">
+          <CategoryPhotoField
+            id="subcategory-create-photo"
+            preview={preview}
+            previewAlt="New subcategory photo"
+            hint="Optional. Upload a photo for this subcategory."
+            onFile={(next) => {
+              setFile(next);
+              readPreview(next, setPreview);
+            }}
+          />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Create subcategory" saving={saving} />
       </form>
     </Modal>
   );

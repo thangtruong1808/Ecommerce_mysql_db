@@ -29,7 +29,7 @@ export function OrderSummary({
   onVoucherRemoved,
 }: OrderSummaryProps) {
   return (
-    <Card title="Order summary" className="h-fit lg:sticky lg:top-4">
+    <Card title="Order summary" className="h-fit min-w-0 lg:sticky lg:top-28">
       <VoucherForm
         orderTotal={subtotal}
         onVoucherApplied={(voucher, discount) => {
@@ -39,32 +39,32 @@ export function OrderSummary({
       />
       <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
         {items.map((item) => (
-          <li key={item.cart_item_id} className="flex justify-between gap-3 text-sm text-ink">
-            <span className="break-words">
+          <li key={item.cart_item_id} className="flex min-w-0 justify-between gap-3 rounded-ui bg-canvas px-3 py-2 font-ui text-sm text-ink">
+            <span className="min-w-0 break-words">
               {item.name} × {item.quantity}
             </span>
-            <span className="shrink-0">{money((Number(item.price) || 0) * item.quantity)}</span>
+            <span className="shrink-0 text-secondary">{money((Number(item.price) || 0) * item.quantity)}</span>
           </li>
         ))}
       </ul>
-      <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
-        <div className="flex justify-between">
+      <dl className="mt-4 space-y-2 border-t border-line pt-4 font-ui text-sm">
+        <div className="flex justify-between gap-3">
           <dt className="text-muted">Subtotal</dt>
-          <dd>{money(subtotal)}</dd>
+          <dd className="text-ink">{money(subtotal)}</dd>
         </div>
         {voucherDiscount > 0 ? (
-          <div className="flex justify-between text-success">
+          <div className="flex justify-between gap-3 text-success">
             <dt>Voucher discount</dt>
             <dd>-{money(voucherDiscount)}</dd>
           </div>
         ) : null}
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-3">
           <dt className="text-muted">Tax</dt>
-          <dd>{money(tax)}</dd>
+          <dd className="text-ink">{money(tax)}</dd>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-3">
           <dt className="text-muted">Shipping</dt>
-          <dd className="inline-flex items-center gap-2">
+          <dd className="inline-flex items-center gap-2 text-ink">
             {shippingLoading ? (
               <span
                 className="h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent motion-safe:animate-spin"
@@ -74,19 +74,19 @@ export function OrderSummary({
             {money(quote.amount)}
           </dd>
         </div>
-        <div className="flex justify-between text-xs text-muted">
+        <div className="flex justify-between gap-3 text-xs text-muted">
           <dt>{shippingLoading ? "Updating shipping..." : quote.service}</dt>
-          <dd>{quote.estimated_days}</dd>
+          <dd className="shrink-0">{quote.estimated_days}</dd>
         </div>
         {quote.source === "auspost_pac" ? (
           <p className="text-xs text-primary">Shipping estimate is calculated from Australia Post.</p>
         ) : null}
-        <div className="flex justify-between border-t border-line pt-2 text-lg font-bold text-ink">
-          <dt>Total</dt>
-          <dd>{money(finalTotal)}</dd>
+        <div className="flex justify-between gap-3 border-t border-line pt-3 text-lg font-semibold">
+          <dt className="text-ink">Total</dt>
+          <dd className="text-secondary">{money(finalTotal)}</dd>
         </div>
       </dl>
-      <p className="mt-4 text-center text-sm text-muted">We accept all major payment cards.</p>
+      <p className="mt-4 text-center font-ui text-sm text-muted">We accept all major payment cards.</p>
       <img
         src={PaymentCards}
         alt="Visa, Mastercard, and American Express"

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Button, Modal } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Input, Modal, Select } from "../ui";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 import type { ChildCategoryRecord, ParentOption } from "../../pages/admin/categoryTree";
 
 interface ChildCategoryEditModalProps {
@@ -45,31 +45,32 @@ export default function ChildCategoryEditModal({
   };
 
   return (
-    <Modal open={isOpen && Boolean(childCategory)} title="Edit child category" onClose={close}>
+    <Modal open={isOpen && Boolean(childCategory)} title="Edit child category" onClose={close} className="max-w-xl">
       {childCategory ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="child-edit-parent" className="mb-1 block text-sm font-medium text-ink">Subcategory</label>
-            <select id="child-edit-parent" name="subcategory_id" required defaultValue={childCategory.subcategory_id} className={controlClass()}>
-              {subcategories.map((subcategory) => (
-                <option key={subcategory.id} value={subcategory.id}>
-                  {subcategory.category_name ? `${subcategory.category_name} - ${subcategory.name}` : subcategory.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="child-edit-name" className="mb-1 block text-sm font-medium text-ink">Name</label>
-            <input id="child-edit-name" name="name" type="text" required defaultValue={childCategory.name} className={controlClass()} />
-          </div>
-          <div>
-            <label htmlFor="child-edit-description" className="mb-1 block text-sm font-medium text-ink">Description</label>
-            <textarea id="child-edit-description" name="description" rows={3} defaultValue={childCategory.description || ""} className={controlClass()} />
-          </div>
-          <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-            <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-            <Button type="submit" loading={saving}>Save</Button>
-          </div>
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+          <CategorySection title="Parent">
+            <p className="font-ui text-sm text-ink">
+              Parent: <span className="font-semibold">{childCategory.category_name || "None"}</span>
+              {" / "}
+              <span className="font-semibold">{childCategory.subcategory_name || "None"}</span>
+            </p>
+            <Select
+              id="child-edit-parent"
+              name="subcategory_id"
+              label="Subcategory"
+              required
+              defaultValue={String(childCategory.subcategory_id)}
+              options={subcategories.map((subcategory) => ({
+                value: String(subcategory.id),
+                label: subcategory.category_name ? `${subcategory.category_name} - ${subcategory.name}` : subcategory.name,
+              }))}
+            />
+          </CategorySection>
+          <CategorySection title="Details">
+            <Input id="child-edit-name" name="name" label="Name" type="text" required defaultValue={childCategory.name} />
+            <CategoryTextarea id="child-edit-description" name="description" label="Description" defaultValue={childCategory.description || ""} />
+          </CategorySection>
+          <CategoryDialogActions onCancel={close} submitLabel="Save" saving={saving} />
         </form>
       ) : null}
     </Modal>

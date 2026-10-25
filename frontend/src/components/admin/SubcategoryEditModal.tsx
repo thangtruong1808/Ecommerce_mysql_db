@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Button, Modal } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Input, Modal, Select } from "../ui";
 import CategoryPhotoField from "./CategoryPhotoField";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 import { messageFrom } from "../../pages/admin/dashboardFormat";
 import { photoSrc, readPreview, type ParentOption, type SubcategoryRecord } from "../../pages/admin/categoryTree";
 
@@ -94,42 +94,42 @@ export default function SubcategoryEditModal({
   };
 
   return (
-    <Modal open={isOpen && Boolean(subcategory)} title="Edit subcategory" onClose={close}>
+    <Modal open={isOpen && Boolean(subcategory)} title="Edit subcategory" onClose={close} className="max-w-xl">
       {subcategory ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="subcategory-edit-parent" className="mb-1 block text-sm font-medium text-ink">Category</label>
-            <select id="subcategory-edit-parent" name="category_id" required defaultValue={subcategory.category_id} className={controlClass()}>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>{category.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="subcategory-edit-name" className="mb-1 block text-sm font-medium text-ink">Name</label>
-            <input id="subcategory-edit-name" name="name" type="text" required defaultValue={subcategory.name} className={controlClass()} />
-          </div>
-          <div>
-            <label htmlFor="subcategory-edit-description" className="mb-1 block text-sm font-medium text-ink">Description</label>
-            <textarea id="subcategory-edit-description" name="description" rows={3} defaultValue={subcategory.description || ""} className={controlClass()} />
-          </div>
-          <CategoryPhotoField
-            id="subcategory-edit-photo"
-            preview={preview}
-            previewAlt={`${subcategory.name} photo`}
-            hint="Upload a new photo to replace the current one."
-            deleting={deletingPhoto}
-            canDelete={Boolean(subcategory.photo_url) && !file}
-            onDelete={handleDeletePhoto}
-            onFile={(next) => {
-              setFile(next);
-              readPreview(next, setPreview);
-            }}
-          />
-          <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-            <Button type="button" variant="outline" onClick={close} disabled={busy}>Cancel</Button>
-            <Button type="submit" loading={saving} disabled={deletingPhoto}>Save</Button>
-          </div>
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+          <CategorySection title="Parent">
+            <p className="font-ui text-sm text-ink">
+              Parent category: <span className="font-semibold">{subcategory.category_name || "None"}</span>
+            </p>
+            <Select
+              id="subcategory-edit-parent"
+              name="category_id"
+              label="Category"
+              required
+              defaultValue={String(subcategory.category_id)}
+              options={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+            />
+          </CategorySection>
+          <CategorySection title="Details">
+            <Input id="subcategory-edit-name" name="name" label="Name" type="text" required defaultValue={subcategory.name} />
+            <CategoryTextarea id="subcategory-edit-description" name="description" label="Description" defaultValue={subcategory.description || ""} />
+          </CategorySection>
+          <CategorySection title="Photo">
+            <CategoryPhotoField
+              id="subcategory-edit-photo"
+              preview={preview}
+              previewAlt={`${subcategory.name} photo`}
+              hint="Upload a new photo to replace the current one."
+              deleting={deletingPhoto}
+              canDelete={Boolean(subcategory.photo_url) && !file}
+              onDelete={handleDeletePhoto}
+              onFile={(next) => {
+                setFile(next);
+                readPreview(next, setPreview);
+              }}
+            />
+          </CategorySection>
+          <CategoryDialogActions onCancel={close} submitLabel="Save" saving={saving} disabled={deletingPhoto} />
         </form>
       ) : null}
     </Modal>

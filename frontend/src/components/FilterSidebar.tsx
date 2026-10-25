@@ -119,18 +119,6 @@ function FilterSidebar({
           onChange={(event) => onFilterChange("maxPrice", event.target.value)}
         />
       </div>
-      <Select
-        label="Sort by"
-        value={`${filters.sortBy}|${filters.sortOrder || "DESC"}`}
-        options={[
-          { value: "created_at|DESC", label: "Newest" },
-          { value: "price|ASC", label: "Price: low to high" },
-          { value: "price|DESC", label: "Price: high to low" },
-          { value: "name|ASC", label: "Name: A to Z" },
-          { value: "rating|DESC", label: "Highest rated" },
-        ]}
-        onChange={(event) => onFilterChange("sort", event.target.value)}
-      />
       <Button type="button" variant="outline" className="w-full" onClick={onClear}>
         Clear all filters
       </Button>

@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Button, Modal } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Input, Modal } from "../ui";
 import CategoryPhotoField from "./CategoryPhotoField";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 import { messageFrom } from "../../pages/admin/dashboardFormat";
 import { photoSrc, readPreview, type CategoryRecord } from "../../pages/admin/categoryTree";
 
@@ -82,34 +82,29 @@ export default function CategoryEditModal({ category, isOpen, onClose, onSave }:
   };
 
   return (
-    <Modal open={isOpen && Boolean(category)} title="Edit category" onClose={close}>
+    <Modal open={isOpen && Boolean(category)} title="Edit category" onClose={close} className="max-w-xl">
       {category ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="category-edit-name" className="mb-1 block text-sm font-medium text-ink">Name</label>
-            <input id="category-edit-name" name="name" type="text" required defaultValue={category.name} className={controlClass()} />
-          </div>
-          <div>
-            <label htmlFor="category-edit-description" className="mb-1 block text-sm font-medium text-ink">Description</label>
-            <textarea id="category-edit-description" name="description" rows={3} defaultValue={category.description || ""} className={controlClass()} />
-          </div>
-          <CategoryPhotoField
-            id="category-edit-photo"
-            preview={preview}
-            previewAlt={`${category.name} photo`}
-            hint="Upload a new photo to replace the current one."
-            deleting={deletingPhoto}
-            canDelete={Boolean(category.photo_url) && !file}
-            onDelete={handleDeletePhoto}
-            onFile={(next) => {
-              setFile(next);
-              readPreview(next, setPreview);
-            }}
-          />
-          <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-            <Button type="button" variant="outline" onClick={close} disabled={busy}>Cancel</Button>
-            <Button type="submit" loading={saving} disabled={deletingPhoto}>Save</Button>
-          </div>
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-4">
+          <CategorySection title="Details">
+            <Input id="category-edit-name" name="name" label="Name" type="text" required defaultValue={category.name} />
+            <CategoryTextarea id="category-edit-description" name="description" label="Description" defaultValue={category.description || ""} />
+          </CategorySection>
+          <CategorySection title="Photo">
+            <CategoryPhotoField
+              id="category-edit-photo"
+              preview={preview}
+              previewAlt={`${category.name} photo`}
+              hint="Upload a new photo to replace the current one."
+              deleting={deletingPhoto}
+              canDelete={Boolean(category.photo_url) && !file}
+              onDelete={handleDeletePhoto}
+              onFile={(next) => {
+                setFile(next);
+                readPreview(next, setPreview);
+              }}
+            />
+          </CategorySection>
+          <CategoryDialogActions onCancel={close} submitLabel="Save" saving={saving} disabled={deletingPhoto} />
         </form>
       ) : null}
     </Modal>

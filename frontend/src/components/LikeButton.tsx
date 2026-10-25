@@ -83,7 +83,7 @@ function LikeButton({ productId }: { productId: number }) {
   const countLabel = `${likeCount} ${likeCount === 1 ? "like" : "likes"}`;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex shrink-0 items-center gap-2 rounded-ui border border-line bg-canvas px-1">
       <Button
         type="button"
         variant="ghost"

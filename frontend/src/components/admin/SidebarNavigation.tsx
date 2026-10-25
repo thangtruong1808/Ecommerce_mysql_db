@@ -20,14 +20,12 @@ import {
   FaTimes,
   FaUsers,
   FaVideo,
-  FaBars,
 } from "react-icons/fa";
 import logoImage from "../../assets/images/Logo.png";
 import { useAuth } from "../../context/AuthContext";
 
 interface SidebarNavigationProps {
   isOpen: boolean;
-  onToggle: () => void;
   onClose: () => void;
 }
 
@@ -50,11 +48,11 @@ const items: { path: string; label: string; icon: IconType }[] = [
 ];
 
 const itemClass = (active: boolean) =>
-  `flex items-center gap-3 rounded-ui-sm px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
+  `flex items-center gap-3 rounded-ui-sm px-3 py-2 font-ui text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
     active ? "bg-primary text-on-primary" : "text-ink hover:bg-surface-muted"
   }`;
 
-export default function SidebarNavigation({ isOpen, onToggle, onClose }: SidebarNavigationProps) {
+export default function SidebarNavigation({ isOpen, onClose }: SidebarNavigationProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -84,33 +82,26 @@ export default function SidebarNavigation({ isOpen, onToggle, onClose }: Sidebar
 
   return (
     <>
-      {!isOpen ? (
-        <button
-          type="button"
-          onClick={onToggle}
-          className="fixed left-4 top-4 z-[100] inline-flex h-10 w-10 items-center justify-center rounded-ui-sm bg-primary text-on-primary shadow-ui hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-          aria-label="Open admin menu"
-        >
-          <FaBars aria-hidden="true" />
-        </button>
-      ) : null}
       <div
-        className={`${isOpen ? "translate-x-0" : "-translate-x-full"} fixed left-0 top-0 z-40 h-full w-64 border-r border-line bg-surface transition-transform duration-300 motion-reduce:transition-none`}
+        className={`${isOpen ? "translate-x-0" : "-translate-x-full"} fixed left-0 top-0 z-40 h-full w-64 border-r border-line bg-surface text-ink transition-transform duration-300 motion-reduce:transition-none`}
       >
         <div className="flex h-full flex-col p-4">
-          <div className="mb-4">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <img src={logoImage} alt="Badminton Stores" className="mx-auto h-12 w-auto object-contain" />
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-ui-sm text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                aria-label="Close admin menu"
-              >
-                <FaTimes aria-hidden="true" />
-              </button>
-            </div>
-            <p className="text-center text-sm text-muted">Manage the store from here.</p>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <Link
+              to="/admin/dashboard"
+              className="flex min-w-0 items-center gap-2 rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            >
+              <img src={logoImage} alt="" className="h-8 w-auto shrink-0 object-contain" />
+              <span className="truncate font-ui text-sm font-semibold text-ink">Badminton Stores</span>
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-ui-sm text-ink hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              aria-label="Close admin menu"
+            >
+              <FaTimes aria-hidden="true" />
+            </button>
           </div>
           <nav className="flex-1 space-y-1 overflow-y-auto" aria-label="Admin">
             {items.map((item) => {

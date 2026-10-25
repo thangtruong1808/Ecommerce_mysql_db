@@ -3,21 +3,18 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaVideo } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import { CategoryBulkBar, CategoryToolbar } from "../../components/admin/categoryListChrome";
+import { MediaPageBar } from "../../components/admin/mediaLibraryChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
 import VideoEditModal, { type VideoEditInput } from "../../components/admin/VideoEditModal";
 import VideoTableRow, { type AdminVideo } from "../../components/admin/VideoTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
+import { focusRing } from "../../components/ui/styles";
 import usePageTitle from "../../hooks/usePageTitle";
 import { useSelection } from "../../utils/useSelection";
 import { deleteVideo, setPrimaryVideo, updateVideo } from "../../utils/mediaApi";
 import { shouldSuppress401Toast } from "../../utils/authUtils";
 import { messageFrom } from "./dashboardFormat";
-
-const COLUMN_COUNT = 9;
 
 export default function VideoManagement() {
   usePageTitle("Video Management");
@@ -134,17 +131,20 @@ export default function VideoManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
-        <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaVideo className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Video Management</h1>
+      <div className="mx-auto min-w-0 max-w-full text-ink">
+        <div className="mb-4 flex min-w-0 items-center gap-2 border-b border-line pb-4">
+          <FaVideo className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Video Management</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="video-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          filterId="video-product-filter"
+          filterLabel="Product"
           filterValue={productFilter}
           onFilterChange={(value: string) => {
             setProductFilter(value);
@@ -158,50 +158,42 @@ export default function VideoManagement() {
           <EmptyState title="Videos could not be loaded" description={error} action={<Button id="videos-retry" loading={loading} onClick={() => setReloadKey((key) => key + 1)}>Try again</Button>} />
         ) : null}
         {!showLoadError && !(loading && videos.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-line">
-                <thead className="bg-surface-muted">
-                  <tr>
-                    <th className="px-6 py-3 text-left"><BulkSelectCheckbox isSelectAll totalItems={videos.length} selectedCount={selectedCount} onSelectAll={selectAll} /></th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Thumbnail</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Product</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Duration</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Primary</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line bg-surface">
-                  {videos.length === 0 && !loading ? (
-                    <tr>
-                      <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center text-lg font-medium text-muted">
-                        {searchTerm ? `No videos found matching "${searchTerm}"` : "No videos found"}
-                      </td>
-                    </tr>
-                  ) : (
-                    videos.map((video) => (
-                      <VideoTableRow
-                        key={video.id}
-                        video={video}
-                        isSelected={selected.has(video.id)}
-                        isPlaying={playingId === video.id}
-                        onToggle={toggle}
-                        onPlay={setPlayingId}
-                        onEdit={setEditVideo}
-                        onSetPrimary={(videoId) => { void handleSetPrimary(videoId); }}
-                        onDelete={(videoId) => setDeleteTarget(videos.find((item) => item.id === videoId) || null)}
-                      />
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+          <div aria-busy={loading || undefined}>
+            {videos.length === 0 && !loading ? (
+              <p className="rounded-ui-lg border border-line bg-surface px-6 py-12 text-center font-ui text-lg font-medium text-muted shadow-ui">
+                {searchTerm ? `No videos found matching "${searchTerm}"` : "No videos found"}
+              </p>
+            ) : (
+              <>
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    className={`rounded-ui-sm font-ui text-sm font-semibold text-primary hover:text-primary-hover ${focusRing}`}
+                    onClick={() => selectAll(selectedCount < videos.length)}
+                  >
+                    {videos.length > 0 && selectedCount === videos.length ? "Clear page selection" : "Select page"}
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {videos.map((video) => (
+                    <VideoTableRow
+                      key={video.id}
+                      video={video}
+                      isSelected={selected.has(video.id)}
+                      isPlaying={playingId === video.id}
+                      onToggle={toggle}
+                      onPlay={setPlayingId}
+                      onEdit={setEditVideo}
+                      onSetPrimary={(videoId) => { void handleSetPrimary(videoId); }}
+                      onDelete={(videoId) => setDeleteTarget(videos.find((item) => item.id === videoId) || null)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ) : null}
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        <MediaPageBar currentPage={page} totalPages={totalPages} label="Videos pagination" onPageChange={setPage} />
         <ConfirmDeleteModal
           entity={deleteTarget}
           entityType="video"
@@ -215,19 +207,17 @@ export default function VideoManagement() {
           }}
         />
         <VideoEditModal video={editVideo} isOpen={Boolean(editVideo)} onClose={() => setEditVideo(null)} onSave={handleVideoUpdate} />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

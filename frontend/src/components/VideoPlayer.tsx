@@ -31,8 +31,8 @@ function VideoPlayer({ videos = [] }: VideoPlayerProps) {
   }
 
   return (
-    <section aria-labelledby="product-video-heading" className="mt-8">
-      <h2 id="product-video-heading" className="mb-4 text-xl font-semibold text-ink">
+    <section aria-labelledby="product-video-heading" className="mt-10">
+      <h2 id="product-video-heading" className="mb-4 font-display text-3xl text-ink">
         Product video
       </h2>
       {playable.length > 1 ? (
@@ -42,7 +42,7 @@ function VideoPlayer({ videos = [] }: VideoPlayerProps) {
               key={video.id ?? video.video_url}
               type="button"
               aria-pressed={index === selectedIndex}
-              className={`rounded-ui-sm border px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              className={`rounded-ui border px-3 py-2 font-ui text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 index === selectedIndex
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-line bg-surface text-ink hover:bg-surface-muted"
@@ -54,7 +54,7 @@ function VideoPlayer({ videos = [] }: VideoPlayerProps) {
           ))}
         </div>
       ) : null}
-      <div className="overflow-hidden rounded-ui border border-line bg-surface-muted">
+      <div className="overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui">
         <video
           key={current.video_url}
           controls

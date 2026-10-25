@@ -66,15 +66,15 @@ function CommentForm({ productId, onCommentSubmitted }: CommentFormProps) {
 
   if (!isAuthenticated) {
     return (
-      <p className="rounded-ui border border-line bg-surface-muted px-4 py-4 text-center text-sm text-muted">
+      <p className="rounded-ui-lg border border-line bg-surface px-4 py-4 text-center text-sm text-muted shadow-ui">
         Please login to write a comment
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-ui border border-line bg-surface p-6" noValidate>
-      <h3 className="text-lg font-semibold text-ink">Write a comment</h3>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-ui-lg border border-line bg-surface p-5 shadow-ui sm:p-6" noValidate>
+      <h3 className="font-ui text-lg font-semibold text-ink">Write a comment</h3>
       <div>
         <label htmlFor="product-comment" className="mb-2 block text-sm font-medium text-ink">
           Your comment
@@ -82,7 +82,7 @@ function CommentForm({ productId, onCommentSubmitted }: CommentFormProps) {
         <textarea
           id="product-comment"
           rows={4}
-          className="w-full rounded-ui-sm border border-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="w-full rounded-ui border border-line bg-canvas px-3 py-2 text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           placeholder="Write your comment here..."
           {...register("comment", { required: "Comment is required" })}
         />

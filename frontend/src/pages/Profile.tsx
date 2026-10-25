@@ -224,10 +224,10 @@ function Profile() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full min-w-0 max-w-4xl space-y-6 px-4 py-10 sm:px-6 sm:py-14">
       <header>
-        <h1 className="text-3xl font-bold text-ink">My profile</h1>
-        <p className="mt-1 text-muted">Manage your account information and shipping addresses.</p>
+        <h1 className="font-display text-4xl text-ink">My profile</h1>
+        <p className="mt-2 font-ui text-sm text-muted">Manage your account information and shipping addresses.</p>
       </header>
 
       <Card
@@ -298,24 +298,24 @@ function Profile() {
             </div>
           </form>
         ) : (
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-sm text-muted">Full name</dt>
-              <dd className="text-lg text-ink">{shown?.name || "Not available"}</dd>
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-ui bg-canvas px-4 py-3">
+              <dt className="font-ui text-sm text-muted">Full name</dt>
+              <dd className="mt-1 font-ui text-lg text-ink">{shown?.name || "Not available"}</dd>
             </div>
-            <div>
-              <dt className="text-sm text-muted">Email address</dt>
-              <dd className="text-lg text-ink">{shown?.email || "Not available"}</dd>
+            <div className="rounded-ui bg-canvas px-4 py-3">
+              <dt className="font-ui text-sm text-muted">Email address</dt>
+              <dd className="mt-1 break-words font-ui text-lg text-ink">{shown?.email || "Not available"}</dd>
             </div>
-            <div>
-              <dt className="text-sm text-muted">Account role</dt>
+            <div className="rounded-ui bg-canvas px-4 py-3">
+              <dt className="font-ui text-sm text-muted">Account role</dt>
               <dd className="mt-1">
                 <Badge variant={role === "admin" ? "primary" : "neutral"}>{role}</Badge>
               </dd>
             </div>
-            <div>
-              <dt className="text-sm text-muted">Member since</dt>
-              <dd className="text-lg text-ink">{formatDate(profile?.created_at)}</dd>
+            <div className="rounded-ui bg-canvas px-4 py-3">
+              <dt className="font-ui text-sm text-muted">Member since</dt>
+              <dd className="mt-1 font-ui text-lg text-ink">{formatDate(profile?.created_at)}</dd>
             </div>
           </dl>
         )}
@@ -358,7 +358,7 @@ function Profile() {
               errors={addressForm.formState.errors}
               disabled={savingAddress}
             />
-            <label className="flex items-center gap-2 text-sm text-ink" htmlFor="address-default">
+            <label className="flex items-center gap-2 rounded-ui bg-canvas px-4 py-3 font-ui text-sm text-ink" htmlFor="address-default">
               <input
                 id="address-default"
                 type="checkbox"
@@ -398,17 +398,24 @@ function Profile() {
           />
         ) : (
           <ul className="space-y-3">
-            {addresses.map((address) => (
-              <li key={address.id} className="flex flex-col gap-3 rounded-ui border border-line p-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  {isDefaultAddress(address.is_default) ? <Badge variant="primary">Default</Badge> : null}
-                  <p className="mt-1 font-medium text-ink">{address.address}</p>
-                  <p className="text-sm text-muted">
+            {addresses.map((address) => {
+              const isDefault = isDefaultAddress(address.is_default);
+              return (
+              <li
+                key={address.id}
+                className={`flex min-w-0 flex-col gap-3 rounded-ui-lg border p-4 sm:flex-row sm:items-start sm:justify-between ${
+                  isDefault ? "border-primary bg-canvas" : "border-line bg-canvas"
+                }`}
+              >
+                <div className="min-w-0">
+                  {isDefault ? <Badge variant="primary">Default address</Badge> : null}
+                  <p className={`break-words font-ui font-semibold text-ink ${isDefault ? "mt-2" : ""}`}>{address.address}</p>
+                  <p className="break-words font-ui text-sm text-muted">
                     {address.city}, {address.postal_code}
                   </p>
-                  <p className="text-sm text-muted">{address.country}</p>
+                  <p className="break-words font-ui text-sm text-muted">{address.country}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2">
                   <Button type="button" size="sm" variant="outline" onClick={() => startEditAddress(address)}>
                     Edit
                   </Button>
@@ -417,7 +424,8 @@ function Profile() {
                   </Button>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </Card>
@@ -482,7 +490,7 @@ function Profile() {
             </div>
           </form>
         ) : (
-          <p className="text-sm text-muted">Your password stays hidden. Choose a new one when you want to change it.</p>
+          <p className="font-ui text-sm text-muted">Your password stays hidden. Choose a new one when you want to change it.</p>
         )}
       </Card>
 

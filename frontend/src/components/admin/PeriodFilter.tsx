@@ -17,10 +17,11 @@ interface PeriodFilterProps {
 
 export default function PeriodFilter({ period, onPeriodChange, disabled = false }: PeriodFilterProps) {
   return (
-    <div className="w-full sm:w-56">
+    <div className="w-full min-w-0 sm:w-56">
       <Select
         id="dashboard-period"
         label="Period"
+        className="font-ui"
         options={periods}
         value={period}
         disabled={disabled}
