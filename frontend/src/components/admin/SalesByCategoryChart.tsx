@@ -4,11 +4,11 @@ import { useTheme } from "../../theme/ThemeProvider";
 import { cssColor, money, prefersReducedMotion } from "../../pages/admin/dashboardFormat";
 
 const slices = [
-  { token: "--primary", fallback: "#1f6b4a" },
-  { token: "--secondary", fallback: "#c4a15a" },
-  { token: "--warning", fallback: "#926014" },
-  { token: "--info", fallback: "#245c54" },
-  { token: "--danger", fallback: "#9f2d2d" },
+  { token: "--chart-1", fallback: "#1f6b4a" },
+  { token: "--chart-2", fallback: "#c4a15a" },
+  { token: "--chart-3", fallback: "#c46c30" },
+  { token: "--chart-4", fallback: "#6e3e7a" },
+  { token: "--chart-5", fallback: "#9f2d2d" },
 ];
 
 interface SalesByCategoryChartProps {

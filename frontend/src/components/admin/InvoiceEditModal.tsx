@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Button, Modal, Select } from "../ui";
+import { Modal, Select } from "../ui";
+import { CategoryDialogActions, CategorySection } from "./categoryDialogChrome";
 import { isYes } from "../../pages/admin/dashboardFormat";
 import type { AdminInvoice } from "./InvoiceTableRow";
 
@@ -66,26 +67,25 @@ export default function InvoiceEditModal({ invoice, isOpen, onClose, onSave }: I
     : [{ value: currentStatus, label: currentStatus }, ...statusOptions];
 
   return (
-    <Modal open={isOpen} title="Edit Invoice" onClose={close}>
+    <Modal open={isOpen} title="Edit invoice" onClose={close}>
       <form key={invoice.id} onSubmit={handleSubmit} className="space-y-4">
-        <Select
-          id="invoice-edit-status"
-          name="payment_status"
-          label="Payment Status"
-          defaultValue={currentStatus}
-          options={options}
-        />
-        <Select
-          id="invoice-edit-email"
-          name="email_sent"
-          label="Email Sent"
-          defaultValue={isYes(invoice.email_sent) ? "true" : "false"}
-          options={emailOptions}
-        />
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Save</Button>
-        </div>
+        <CategorySection title="Payment">
+          <Select
+            id="invoice-edit-status"
+            name="payment_status"
+            label="Payment Status"
+            defaultValue={currentStatus}
+            options={options}
+          />
+          <Select
+            id="invoice-edit-email"
+            name="email_sent"
+            label="Email Sent"
+            defaultValue={isYes(invoice.email_sent) ? "true" : "false"}
+            options={emailOptions}
+          />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Save" saving={saving} />
       </form>
     </Modal>
   );

@@ -1,18 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
+import { Badge, type BadgeVariant } from "../ui";
 import { focusRing } from "../ui/styles";
 
-const statusClass: Record<string, string> = {
-  pending: "border-warning bg-warning/20 text-ink",
-  processing: "border-info bg-info/15 text-info",
-  paid: "border-success bg-success/15 text-success",
-  delivered: "border-primary bg-primary/10 text-primary",
-  cancelled: "border-danger bg-danger/15 text-danger",
-  active: "border-success bg-success/15 text-success",
-  inactive: "border-line bg-surface-muted text-ink",
-  approved: "border-success bg-success/15 text-success",
-  rejected: "border-danger bg-danger/15 text-danger",
-};
+export function statusVariant(status: string | null | undefined): BadgeVariant {
+  const value = (status || "").toLowerCase();
+  if (value === "paid" || value === "delivered" || value === "succeeded" || value === "completed" || value === "active" || value === "approved") {
+    return "success";
+  }
+  if (value === "processing") {
+    return "info";
+  }
+  if (value === "pending" || value === "unpaid") {
+    return "warning";
+  }
+  if (value === "cancelled" || value === "canceled" || value === "failed" || value === "rejected") {
+    return "danger";
+  }
+  if (value === "admin") {
+    return "primary";
+  }
+  if (value === "user") {
+    return "info";
+  }
+  return "neutral";
+}
 
 interface StatusBadgeProps {
   currentStatus: string;
@@ -67,33 +79,39 @@ export default function StatusBadge({
         disabled={loading}
         aria-busy={loading || undefined}
         aria-expanded={isOpen}
+        aria-haspopup="menu"
         aria-label={`Change ${entityType} status, currently ${currentStatus}`}
-        className={`inline-flex items-center rounded-ui-sm border px-3 py-1 text-xs font-semibold capitalize ${statusClass[currentStatus] || "border-line bg-surface-muted text-ink"} ${loading ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:opacity-80"} ${focusRing}`}
+        className={`inline-flex items-center gap-1 rounded-full ${loading ? "cursor-not-allowed opacity-60" : ""} ${focusRing}`}
       >
         {loading ? (
-          <svg className="mr-1 h-3 w-3 motion-safe:animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <svg className="h-3 w-3 motion-safe:animate-spin text-ink" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
         ) : null}
-        <span>{currentStatus}</span>
-        {canChoose ? <FaChevronDown className="ml-1 text-xs" aria-hidden="true" /> : null}
+        <Badge variant={statusVariant(currentStatus)} className="capitalize">
+          {currentStatus}
+        </Badge>
+        {canChoose ? <FaChevronDown className="text-xs text-muted" aria-hidden="true" /> : null}
       </button>
       {isOpen && canChoose ? (
-        <div className="absolute z-10 mt-1 min-w-[120px] rounded-ui-sm border border-line bg-surface shadow-ui">
+        <div className="absolute left-0 z-20 mt-1 min-w-[9rem] rounded-ui border border-line bg-surface p-1 shadow-ui" role="menu">
           {availableStatuses.map((status) => (
             <button
               key={status}
               type="button"
+              role="menuitem"
               onClick={() => {
                 if (status !== currentStatus) {
                   onStatusChange?.(status);
                 }
                 setIsOpen(false);
               }}
-              className={`w-full px-3 py-2 text-left text-sm capitalize text-ink first:rounded-t-ui-sm last:rounded-b-ui-sm hover:bg-surface-muted ${focusRing} ${status === currentStatus ? "bg-primary/10 font-semibold" : ""}`}
+              className={`flex w-full rounded-ui-sm px-2 py-1.5 text-left hover:bg-surface-muted ${focusRing} ${status === currentStatus ? "bg-surface-muted" : ""}`}
             >
-              {status}
+              <Badge variant={statusVariant(status)} className="capitalize">
+                {status}
+              </Badge>
             </button>
           ))}
         </div>

@@ -3,12 +3,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaComments } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import CommentTableRow, { type AdminComment } from "../../components/admin/CommentTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
 import usePageTitle from "../../hooks/usePageTitle";
@@ -174,17 +176,21 @@ export default function CommentModeration() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaComments className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Comment Moderation</h1>
+          <FaComments className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Comment Moderation</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="comment-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search comments by user, product, or comment text..."
+          filterId="comment-approval-filter"
+          filterLabel="Approval"
           filterValue={approvalFilter}
           onFilterChange={(value: string) => {
             setApprovalFilter(value);
@@ -195,10 +201,11 @@ export default function CommentModeration() {
             { value: "true", label: "Approved" },
             { value: "false", label: "Pending" },
           ]}
-          searchPlaceholder="Search comments by user, product, or comment text..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="comment-page-size"
+          paginationLabel="Comments pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -218,33 +225,37 @@ export default function CommentModeration() {
           />
         ) : null}
         {!showLoadError && !(loading && comments.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={comments.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={comments.length > 0 && selectedCount === comments.length}
+                        label="Select all comments on this page"
+                        onClick={() => selectAll(selectedCount < comments.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Comment" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Product" field="product_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Comment" field="comment" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Approved" field="is_approved" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Comment" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Product" field="product_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Comment" field="comment" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Approved" field="is_approved" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {comments.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No comments found matching "${searchTerm}"` : "No comments found"}
                         </p>
-                        {searchTerm ? <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all comments.</p> : null}
+                        {searchTerm ? <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all comments.</p> : null}
                       </td>
                     </tr>
                   ) : (
@@ -267,8 +278,10 @@ export default function CommentModeration() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="comment-page-size-bottom"
+          paginationLabel="Comments pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -291,19 +304,17 @@ export default function CommentModeration() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "approve", label: "Approve Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "approve") {
-                void handleBulkApprove();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "approve", label: "Approve Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "approve") {
+              void handleBulkApprove();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

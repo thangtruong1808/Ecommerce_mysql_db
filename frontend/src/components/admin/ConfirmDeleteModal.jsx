@@ -7,6 +7,7 @@
  */
 
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
+import { Button } from '../ui'
 
 /**
  * ConfirmDeleteModal component
@@ -42,64 +43,48 @@ const ConfirmDeleteModal = ({
 
   /* Confirm delete modal */
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        {/* Modal header */}
-        <div className="flex items-center justify-between p-6 border-b">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-ui-lg border border-line bg-surface text-ink shadow-ui-md">
+        <div className="flex items-center justify-between border-b border-line p-6">
           <div className="flex items-center">
-            <FaExclamationTriangle className="text-red-600 text-2xl mr-3" />
-            <h3 className="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+            <FaExclamationTriangle className="mr-3 text-2xl text-danger" />
+            <h3 className="font-ui text-lg font-semibold text-ink">Confirm Delete</h3>
           </div>
           <button
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="text-gray-400 hover:text-gray-600"
+            className="rounded-ui text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50"
             aria-label="Close"
           >
             <FaTimes />
           </button>
         </div>
 
-        {/* Modal body */}
         <div className="p-6">
-          <p className="text-gray-700 mb-4">
+          <p className="mb-4 text-ink">
             Are you sure you want to delete this {entityType}?
           </p>
           {entity && (
-            <div className="bg-gray-50 p-4 rounded mb-4">
-              <p className="font-semibold text-gray-900">{getEntityName()}</p>
+            <div className="mb-4 rounded-ui bg-surface-muted p-4">
+              <p className="font-ui font-semibold text-ink">{getEntityName()}</p>
               {entity.description && (
-                <p className="text-sm text-gray-600 mt-1">{entity.description}</p>
+                <p className="mt-1 text-sm text-muted">{entity.description}</p>
               )}
             </div>
           )}
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-danger">
             This action cannot be undone.
           </p>
         </div>
 
-        {/* Modal footer */}
-        <div className="flex justify-end gap-3 p-6 border-t">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
+        <div className="flex justify-end gap-3 border-t border-line p-6">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={loading}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center"
-          >
-            {loading ? (
-              <span className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent motion-safe:animate-spin" />
-            ) : null}
-            {loading ? 'Deleting...' : 'Delete'}
-          </button>
+          </Button>
+          <Button type="button" variant="danger" onClick={onConfirm} loading={loading}>
+            Delete
+          </Button>
         </div>
       </div>
     </div>

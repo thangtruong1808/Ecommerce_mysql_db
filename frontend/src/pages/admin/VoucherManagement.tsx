@@ -4,12 +4,14 @@ import { toast } from "react-toastify";
 import { FaPlus, FaTag } from "react-icons/fa";
 import type { Voucher } from "@shared/commerce";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import VoucherCreateModal from "../../components/admin/VoucherCreateModal";
 import VoucherEditModal from "../../components/admin/VoucherEditModal";
 import VoucherTableRow from "../../components/admin/VoucherTableRow";
@@ -170,23 +172,27 @@ export default function VoucherManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <FaTag className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">Voucher Management</h1>
+          <div className="flex min-w-0 items-center gap-2">
+            <FaTag className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="font-ui text-3xl font-semibold">Voucher Management</h1>
           </div>
           <Button id="create-voucher" onClick={() => crud.setCreateModal({ isOpen: true })}>
             <FaPlus aria-hidden="true" />
             Create voucher
           </Button>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="voucher-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search vouchers by code..."
+          filterId="voucher-status-filter"
+          filterLabel="Status"
           filterValue={statusFilter}
           onFilterChange={(value: string) => {
             setStatusFilter(value);
@@ -198,10 +204,11 @@ export default function VoucherManagement() {
             { value: "inactive", label: "Inactive" },
             { value: "expired", label: "Expired" },
           ]}
-          searchPlaceholder="Search vouchers by code..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="voucher-page-size"
+          paginationLabel="Vouchers pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -221,28 +228,32 @@ export default function VoucherManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && vouchers.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={visible.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={visible.length > 0 && selectedCount === visible.length}
+                        label="Select all vouchers on this page"
+                        onClick={() => selectAll(selectedCount < visible.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="Code" field="code" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Type" field="discount_type" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Value" field="discount_value" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Valid Period</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Usage</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="Code" field="code" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Type" field="discount_type" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Value" field="discount_value" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Valid Period</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Usage</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Status</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {visible.length === 0 && !loading ? (
                     <tr>
-                      <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center text-lg font-medium text-muted">
+                      <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center font-ui text-lg font-medium text-muted">
                         {searchTerm ? `No vouchers found matching "${searchTerm}"` : "No vouchers found"}
                       </td>
                     </tr>
@@ -264,8 +275,10 @@ export default function VoucherManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="voucher-page-size-bottom"
+          paginationLabel="Vouchers pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -299,25 +312,23 @@ export default function VoucherManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[
-              { type: "activate", label: "Activate Selected" },
-              { type: "deactivate", label: "Deactivate Selected" },
-            ]}
-            onAction={(actionType: string) => {
-              if (actionType === "activate") {
-                void handleBulkStatus(true);
-              }
-              if (actionType === "deactivate") {
-                void handleBulkStatus(false);
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[
+            { type: "activate", label: "Activate Selected" },
+            { type: "deactivate", label: "Deactivate Selected" },
+          ]}
+          onAction={(actionType: string) => {
+            if (actionType === "activate") {
+              void handleBulkStatus(true);
+            }
+            if (actionType === "deactivate") {
+              void handleBulkStatus(false);
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

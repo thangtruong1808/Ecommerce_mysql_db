@@ -7,6 +7,7 @@
  */
 
 import { FaTimes, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+import { Button } from './ui'
 
 /**
  * ContactUsModal component
@@ -32,52 +33,45 @@ const ContactUsModal = ({ isOpen, onClose }) => {
 
   /* Contact us modal */
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={handleOverlayClick}>
-      {/* Modal container */}
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Contact Us</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close modal">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={handleOverlayClick}>
+      <div className="w-full max-w-md rounded-ui-lg border border-line bg-surface p-6 text-ink shadow-ui">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-ui text-xl font-semibold text-ink">Contact Us</h2>
+          <button type="button" onClick={onClose} className="rounded-ui text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface" aria-label="Close modal">
             <FaTimes className="text-xl" />
           </button>
         </div>
-        {/* Content */}
         <div className="space-y-4">
-          <p className="text-gray-600">We're here to help! Reach out to us through any of the following channels:</p>
-          {/* Contact information */}
+          <p className="text-muted">We're here to help! Reach out to us through any of the following channels:</p>
           <div className="space-y-3">
             <div className="flex items-start space-x-3">
-              <FaEnvelope className="text-blue-600 mt-1 flex-shrink-0" />
+              <FaEnvelope className="mt-1 flex-shrink-0 text-primary" />
               <div>
-                <p className="font-semibold text-gray-900">Email</p>
-                <a href="mailto:thangtruong1808@gmail.com" className="text-blue-600 hover:underline">thangtruong1808@gmail.com</a>
+                <p className="font-ui font-semibold text-ink">Email</p>
+                <a href="mailto:thangtruong1808@gmail.com" className="font-ui text-primary hover:text-primary-hover hover:underline">thangtruong1808@gmail.com</a>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <FaPhone className="text-blue-600 mt-1 flex-shrink-0" />
+              <FaPhone className="mt-1 flex-shrink-0 text-primary" />
               <div>
-                <p className="font-semibold text-gray-900">Phone</p>
-                <a href="tel:0466828649" className="text-blue-600 hover:underline">0466828649</a>
+                <p className="font-ui font-semibold text-ink">Phone</p>
+                <a href="tel:0466828649" className="font-ui text-primary hover:text-primary-hover hover:underline">0466828649</a>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <FaMapMarkerAlt className="text-blue-600 mt-1 flex-shrink-0" />
+              <FaMapMarkerAlt className="mt-1 flex-shrink-0 text-primary" />
               <div>
-                <p className="font-semibold text-gray-900">Address</p>
-                <p className="text-gray-600">123 Main Street<br />Melbourne Victoria 3000<br />Australia</p>
+                <p className="font-ui font-semibold text-ink">Address</p>
+                <p className="text-muted">123 Main Street<br />Melbourne Victoria 3000<br />Australia</p>
               </div>
             </div>
           </div>
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-500">We typically respond within 24 hours during business days.</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm text-muted">We typically respond within 24 hours during business days.</p>
           </div>
         </div>
-        {/* Close button */}
         <div className="mt-6 flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-            Close
-          </button>
+          <Button type="button" variant="outline" onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>

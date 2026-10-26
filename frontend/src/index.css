@@ -27,6 +27,11 @@
   --danger-hover: 127 36 36;
   --on-danger: 247 244 238;
   --info: 36 92 84;
+  --chart-1: 31 107 74;
+  --chart-2: 196 161 90;
+  --chart-3: 196 108 48;
+  --chart-4: 110 62 122;
+  --chart-5: 159 45 45;
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1.25rem;
@@ -60,6 +65,11 @@
   --danger-hover: 245 196 196;
   --on-danger: 28 25 21;
   --info: 147 197 184;
+  --chart-1: 125 206 160;
+  --chart-2: 228 194 122;
+  --chart-3: 214 120 64;
+  --chart-4: 196 150 214;
+  --chart-5: 240 163 163;
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
   --shadow-md: 0 12px 32px rgb(0 0 0 / 0.5);
 }

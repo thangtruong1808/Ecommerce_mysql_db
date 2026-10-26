@@ -149,17 +149,18 @@ interface CategorySortHeaderProps {
   currentSort: string;
   sortOrder: string;
   onSort: (field: string, order: string) => void;
+  align?: "left" | "right";
 }
 
-export function CategorySortHeader({ label, field, currentSort, sortOrder, onSort }: CategorySortHeaderProps) {
+export function CategorySortHeader({ label, field, currentSort, sortOrder, onSort, align = "left" }: CategorySortHeaderProps) {
   const active = currentSort === field;
   const nextOrder = active && sortOrder === "asc" ? "desc" : "asc";
   return (
-    <th className="px-3 py-3 text-left">
+    <th className={`px-3 py-3 ${align === "right" ? "text-right" : "text-left"}`}>
       <button
         type="button"
         onClick={() => onSort(field, nextOrder)}
-        className={`inline-flex items-center font-ui text-xs font-semibold uppercase tracking-wide text-muted hover:text-ink ${focusRing}`}
+        className={`inline-flex items-center font-ui text-xs font-semibold uppercase tracking-wide text-muted hover:text-ink ${align === "right" ? "w-full justify-end" : ""} ${focusRing}`}
       >
         {label}
         {active && sortOrder === "asc" ? (

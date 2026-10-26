@@ -2,7 +2,8 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import type { User } from "@shared/auth";
 import type { UserRole } from "@shared/common";
-import { Button, Input, Modal, Select } from "../ui";
+import { Input, Modal, Select } from "../ui";
+import { CategoryDialogActions, CategorySection } from "./categoryDialogChrome";
 
 export interface UserEditInput {
   name: string;
@@ -57,13 +58,12 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
   return (
     <Modal open={isOpen} title="Edit user" onClose={close}>
       <form key={user.id} onSubmit={handleSubmit} className="space-y-4">
-        <Input id="user-edit-name" name="name" label="Name" defaultValue={user.name} required autoComplete="name" />
-        <Input id="user-edit-email" name="email" type="email" label="Email" defaultValue={user.email} required autoComplete="off" />
-        <Select id="user-edit-role" name="role" label="Role" defaultValue={user.role} options={roles} />
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Save</Button>
-        </div>
+        <CategorySection title="Account">
+          <Input id="user-edit-name" name="name" label="Name" defaultValue={user.name} required autoComplete="name" />
+          <Input id="user-edit-email" name="email" type="email" label="Email" defaultValue={user.email} required autoComplete="off" />
+          <Select id="user-edit-role" name="role" label="Role" defaultValue={user.role} options={roles} />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Save" saving={saving} />
       </form>
     </Modal>
   );

@@ -3,12 +3,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaEye } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import ProductViewTableRow, { type AdminProductView } from "../../components/admin/ProductViewTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
 import usePageTitle from "../../hooks/usePageTitle";
@@ -156,17 +158,21 @@ export default function ProductViewManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaEye className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Product View Management</h1>
+          <FaEye className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Product View Management</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="product-view-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search by product, user, or session..."
+          filterId="product-view-user-filter"
+          filterLabel="User type"
           filterValue={userTypeFilter}
           onFilterChange={(value: string) => {
             setUserTypeFilter(value);
@@ -177,10 +183,11 @@ export default function ProductViewManagement() {
             { value: "authenticated", label: "Authenticated" },
             { value: "guest", label: "Guest" },
           ]}
-          searchPlaceholder="Search by product, user, or session..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="product-view-page-size"
+          paginationLabel="Product views pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -200,32 +207,36 @@ export default function ProductViewManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && views.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={views.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={views.length > 0 && selectedCount === views.length}
+                        label="Select all product views on this page"
+                        onClick={() => selectAll(selectedCount < views.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Product" field="product_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User Type" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User/Session" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Viewed At" field="viewed_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Product" field="product_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User Type" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User/Session" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Viewed At" field="viewed_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {views.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No product views found matching "${searchTerm}"` : "No product views found"}
                         </p>
                         {searchTerm ? (
-                          <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all product views.</p>
+                          <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all product views.</p>
                         ) : null}
                       </td>
                     </tr>
@@ -247,8 +258,10 @@ export default function ProductViewManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="product-view-page-size-bottom"
+          paginationLabel="Product views pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -271,19 +284,17 @@ export default function ProductViewManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

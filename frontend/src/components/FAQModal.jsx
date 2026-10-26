@@ -7,6 +7,7 @@
  */
 
 import { FaTimes, FaQuestionCircle } from 'react-icons/fa'
+import { Button } from './ui'
 
 /**
  * FAQModal component
@@ -56,40 +57,33 @@ const FAQModal = ({ isOpen, onClose }) => {
 
   /* FAQ modal */
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={handleOverlayClick}>
-      {/* Modal container */}
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center">
-            <FaQuestionCircle className="mr-2 text-blue-600" />
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={handleOverlayClick}>
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-ui-lg border border-line bg-surface p-6 text-ink shadow-ui">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center font-ui text-xl font-semibold text-ink">
+            <FaQuestionCircle className="mr-2 text-primary" />
             Frequently Asked Questions
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close modal">
+          <button type="button" onClick={onClose} className="rounded-ui text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface" aria-label="Close modal">
             <FaTimes className="text-xl" />
           </button>
         </div>
-        {/* Content */}
         <div className="space-y-4">
-          <p className="text-gray-600">Find answers to common questions about shopping with us:</p>
-          {/* FAQ list */}
+          <p className="text-muted">Find answers to common questions about shopping with us:</p>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div key={index} className="border-b border-gray-200 pb-4 last:border-0">
-                <h3 className="font-semibold text-gray-900 mb-2">{faq.question}</h3>
-                <p className="text-gray-600 text-sm">{faq.answer}</p>
+              <div key={index} className="border-b border-line pb-4 last:border-0">
+                <h3 className="mb-2 font-ui font-semibold text-ink">{faq.question}</h3>
+                <p className="text-sm text-muted">{faq.answer}</p>
               </div>
             ))}
           </div>
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-500">Still have questions? Feel free to contact our customer service team for assistance.</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm text-muted">Still have questions? Feel free to contact our customer service team for assistance.</p>
           </div>
         </div>
-        {/* Close button */}
         <div className="mt-6 flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-            Close
-          </button>
+          <Button type="button" variant="outline" onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>

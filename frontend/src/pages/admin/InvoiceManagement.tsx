@@ -3,12 +3,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaFileInvoice } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import InvoiceEditModal, { type InvoiceEditInput } from "../../components/admin/InvoiceEditModal";
 import InvoiceTableRow, { type AdminInvoice } from "../../components/admin/InvoiceTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
@@ -194,17 +196,21 @@ export default function InvoiceManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaFileInvoice className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Invoice Management</h1>
+          <FaFileInvoice className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Invoice Management</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="invoice-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search by invoice number, order number, user name, or email..."
+          filterId="invoice-status-filter"
+          filterLabel="Payment status"
           filterValue={statusFilter}
           onFilterChange={(value: string) => {
             setStatusFilter(value);
@@ -218,10 +224,11 @@ export default function InvoiceManagement() {
             { value: "pending", label: "Pending" },
             { value: "failed", label: "Failed" },
           ]}
-          searchPlaceholder="Search by invoice number, order number, user name, or email..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="invoice-page-size"
+          paginationLabel="Invoices pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -241,42 +248,46 @@ export default function InvoiceManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && invoices.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={invoices.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={invoices.length > 0 && selectedCount === invoices.length}
+                        label="Select all invoices on this page"
+                        onClick={() => selectAll(selectedCount < invoices.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Invoice" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Invoice Number" field="invoice_number" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Order ID" field="order_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Order Number" field="order_number" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Subtotal" field="subtotal" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Tax" field="tax_amount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Shipping" field="shipping_amount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Total" field="total_amount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Payment Method" field="payment_method" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Payment Status" field="payment_status" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Email Sent" field="email_sent" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Email Sent At" field="email_sent_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Invoice" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Invoice Number" field="invoice_number" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Order ID" field="order_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Order Number" field="order_number" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Subtotal" field="subtotal" align="right" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Tax" field="tax_amount" align="right" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Shipping" field="shipping_amount" align="right" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Total" field="total_amount" align="right" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Payment Method" field="payment_method" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Payment Status" field="payment_status" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Email Sent" field="email_sent" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Email Sent At" field="email_sent_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {invoices.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No invoices found matching "${searchTerm}"` : "No invoices found"}
                         </p>
                         {searchTerm ? (
-                          <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all invoices.</p>
+                          <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all invoices.</p>
                         ) : null}
                       </td>
                     </tr>
@@ -301,8 +312,10 @@ export default function InvoiceManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="invoice-page-size-bottom"
+          paginationLabel="Invoices pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -331,19 +344,17 @@ export default function InvoiceManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

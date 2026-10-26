@@ -79,7 +79,7 @@ export function voucherStatus(voucher: Pick<Voucher, "is_active" | "start_date" 
     return { text: "Not Started", variant: "warning" };
   }
   if (now > end) {
-    return { text: "Expired", variant: "danger" };
+    return { text: "Expired", variant: "neutral" };
   }
   return { text: "Active", variant: "success" };
 }

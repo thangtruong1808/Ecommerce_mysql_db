@@ -3,12 +3,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaShoppingCart } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import CartViewModal from "../../components/admin/CartViewModal";
 import CartTableRow, { type AdminCart } from "../../components/admin/CartTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
@@ -172,12 +174,13 @@ export default function CartManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaShoppingCart className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Cart Management</h1>
+          <FaShoppingCart className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Cart Management</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="cart-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
@@ -185,8 +188,10 @@ export default function CartManagement() {
           }}
           searchPlaceholder="Search by cart ID, user ID, name, or email..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="cart-page-size"
+          paginationLabel="Carts pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -206,34 +211,38 @@ export default function CartManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && carts.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={carts.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={carts.length > 0 && selectedCount === carts.length}
+                        label="Select all carts on this page"
+                        onClick={() => selectAll(selectedCount < carts.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Cart" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Items" field="item_count" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Total Value" field="total_value" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Cart" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Items" field="item_count" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Total Value" field="total_value" align="right" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {carts.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No carts found matching "${searchTerm}"` : "No carts found"}
                         </p>
                         {searchTerm ? (
-                          <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all carts.</p>
+                          <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all carts.</p>
                         ) : null}
                       </td>
                     </tr>
@@ -257,8 +266,10 @@ export default function CartManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="cart-page-size-bottom"
+          paginationLabel="Carts pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -282,19 +293,17 @@ export default function CartManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

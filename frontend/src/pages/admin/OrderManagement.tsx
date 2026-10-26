@@ -3,12 +3,13 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaShoppingBag } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import OrderTableRow, { type AdminOrder } from "../../components/admin/OrderTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
 import usePageTitle from "../../hooks/usePageTitle";
@@ -168,17 +169,21 @@ export default function OrderManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaShoppingBag className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Order Management</h1>
+          <FaShoppingBag className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Order Management</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="order-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search orders..."
+          filterId="order-status-filter"
+          filterLabel="Status"
           filterValue={statusFilter}
           onFilterChange={(value: string) => {
             setStatusFilter(value);
@@ -190,10 +195,11 @@ export default function OrderManagement() {
             { value: "paid", label: "Paid" },
             { value: "delivered", label: "Delivered" },
           ]}
-          searchPlaceholder="Search orders..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="order-page-size"
+          paginationLabel="Orders pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -213,43 +219,47 @@ export default function OrderManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && orders.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={orders.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={orders.length > 0 && selectedCount === orders.length}
+                        label="Select all orders on this page"
+                        onClick={() => selectAll(selectedCount < orders.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Order" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Order Number" field="order_number" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Voucher ID" field="voucher_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Voucher Discount" field="voucher_discount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Payment Method" field="payment_method" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Payment Status" field="payment_status" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Tax" field="tax_price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Shipping" field="shipping_price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Total" field="total_price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Paid" field="is_paid" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Paid At" field="paid_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Delivered" field="is_delivered" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Delivered At" field="delivered_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Order" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Order Number" field="order_number" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Voucher ID" field="voucher_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Voucher Discount" field="voucher_discount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Payment Method" field="payment_method" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Payment Status" field="payment_status" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Tax" field="tax_price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Shipping" field="shipping_price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Total" field="total_price" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Paid" field="is_paid" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Paid At" field="paid_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Delivered" field="is_delivered" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Delivered At" field="delivered_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {orders.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No orders found matching "${searchTerm}"` : "No orders found"}
                         </p>
-                        {searchTerm ? <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all orders.</p> : null}
+                        {searchTerm ? <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all orders.</p> : null}
                       </td>
                     </tr>
                   ) : (
@@ -271,8 +281,10 @@ export default function OrderManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="order-page-size-bottom"
+          paginationLabel="Orders pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -295,20 +307,59 @@ export default function OrderManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[
-              { type: "update-status", label: "Mark as Paid", data: { status: "paid" } },
-              { type: "update-status", label: "Mark as Delivered", data: { status: "delivered" } },
-              { type: "delete", label: "Delete Selected" },
-            ]}
-            onAction={(actionType: string, data?: { status?: string }) => { void handleBulkAction(actionType, data); }}
-            onCancel={clear}
-          />
-        ) : null}
+        <OrderBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          onAction={(actionType, data) => { void handleBulkAction(actionType, data); }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
+  );
+}
+
+const orderBulkActions = [
+  { type: "update-status", label: "Mark as Paid", data: { status: "paid" } },
+  { type: "update-status", label: "Mark as Delivered", data: { status: "delivered" } },
+  { type: "delete", label: "Delete Selected" },
+];
+
+function OrderBulkBar({
+  selectedCount,
+  busy,
+  onAction,
+  onCancel,
+}: {
+  selectedCount: number;
+  busy: boolean;
+  onAction: (actionType: string, data?: { status?: string }) => void;
+  onCancel: () => void;
+}) {
+  if (selectedCount === 0) {
+    return null;
+  }
+  return (
+    <div className="fixed bottom-4 left-1/2 z-40 flex w-[min(100%-1.5rem,42rem)] -translate-x-1/2 flex-col gap-3 rounded-ui-lg border border-line bg-surface px-4 py-3 text-ink shadow-ui-md sm:flex-row sm:items-center">
+      <p className="font-ui text-sm font-semibold">
+        {selectedCount} item{selectedCount === 1 ? "" : "s"} selected
+      </p>
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+        {orderBulkActions.map((action) => (
+          <Button
+            key={action.label}
+            type="button"
+            size="sm"
+            variant={action.type === "delete" ? "danger" : "outline"}
+            loading={busy}
+            onClick={() => onAction(action.type, action.data)}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+      <Button type="button" size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+        Cancel
+      </Button>
+    </div>
   );
 }

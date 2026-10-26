@@ -3,8 +3,8 @@ import { FaTrash } from "react-icons/fa";
 import type { Order } from "@shared/commerce";
 import { Badge, Button } from "../ui";
 import { focusRing } from "../ui/styles";
-import BulkSelectCheckbox from "./BulkSelectCheckbox";
-import StatusBadge from "./StatusBadge";
+import { CategorySelectBox } from "./categoryListChrome";
+import StatusBadge, { statusVariant } from "./StatusBadge";
 import { formatDate } from "../../utils/dateUtils";
 import { isYes, money, orderNumber } from "../../pages/admin/dashboardFormat";
 
@@ -49,34 +49,37 @@ export default function OrderTableRow({
   onDelete,
 }: OrderTableRowProps) {
   const label = orderNumber(order);
+  const cell = "whitespace-nowrap px-3 py-3 font-ui text-sm text-muted";
   return (
     <tr className="hover:bg-surface-muted">
-      <td className="px-6 py-4">
-        <BulkSelectCheckbox itemId={order.id} isSelected={isSelected} onToggle={onToggle} />
+      <td className="px-3 py-3">
+        <CategorySelectBox pressed={isSelected} label={`Select order ${label}`} onClick={() => onToggle(order.id)} />
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{rowNumber}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{order.id}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+      <td className={`${cell} text-ink`}>{rowNumber}</td>
+      <td className={`${cell} text-ink`}>{order.id}</td>
+      <td className="whitespace-nowrap px-3 py-3 font-ui text-sm font-semibold">
         <Link to={`/orders/${order.id}`} className={`text-primary hover:text-primary-hover ${focusRing}`}>
           {label}
         </Link>
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{order.user_id}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{order.user_name || "N/A"}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{order.voucher_id || "N/A"}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{money(order.voucher_discount)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{order.payment_method || "N/A"}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{order.payment_status || "N/A"}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{money(order.tax_price)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{money(order.shipping_price)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">{money(order.total_price)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm"><YesNo value={isYes(order.is_paid)} /></td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(order.paid_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm"><YesNo value={isYes(order.is_delivered)} /></td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(order.delivered_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(order.created_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(order.updated_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
+      <td className={cell}>{order.user_id}</td>
+      <td className={`${cell} text-ink`}>{order.user_name || "N/A"}</td>
+      <td className={cell}>{order.voucher_id || "N/A"}</td>
+      <td className={cell}>{money(order.voucher_discount)}</td>
+      <td className={cell}>{order.payment_method || "N/A"}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm">
+        {order.payment_status ? <Badge variant={statusVariant(order.payment_status)} className="capitalize">{order.payment_status}</Badge> : <span className="font-ui text-muted">N/A</span>}
+      </td>
+      <td className={cell}>{money(order.tax_price)}</td>
+      <td className={cell}>{money(order.shipping_price)}</td>
+      <td className="whitespace-nowrap px-3 py-3 font-ui text-sm font-semibold text-ink">{money(order.total_price)}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm"><YesNo value={isYes(order.is_paid)} /></td>
+      <td className={cell}>{formatDate(order.paid_at || "")}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm"><YesNo value={isYes(order.is_delivered)} /></td>
+      <td className={cell}>{formatDate(order.delivered_at || "")}</td>
+      <td className={cell}>{formatDate(order.created_at || "")}</td>
+      <td className={cell}>{formatDate(order.updated_at || "")}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm">
         <div className="flex items-center gap-2">
           <StatusBadge
             currentStatus={orderStatus(order)}

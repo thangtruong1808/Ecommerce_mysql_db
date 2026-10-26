@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Review } from "@shared/engagement";
-import { Button, Modal, Select } from "../ui";
-import { controlClass } from "../ui/styles";
+import { Modal, Select } from "../ui";
+import { CategoryDialogActions, CategorySection, CategoryTextarea } from "./categoryDialogChrome";
 
 export interface ReviewEditInput {
   rating: number;
@@ -60,15 +60,11 @@ export default function ReviewEditModal({ review, isOpen, onClose, onSave }: Rev
   return (
     <Modal open={isOpen} title="Edit review" onClose={close}>
       <form key={review.id} onSubmit={handleSubmit} className="space-y-4">
-        <Select id="review-edit-rating" name="rating" label="Rating" defaultValue={String(review.rating)} options={ratings} />
-        <div>
-          <label htmlFor="review-edit-comment" className="mb-1 block text-sm font-medium text-ink">Comment</label>
-          <textarea id="review-edit-comment" name="comment" rows={4} required defaultValue={review.comment} className={controlClass()} />
-        </div>
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Save</Button>
-        </div>
+        <CategorySection title="Review">
+          <Select id="review-edit-rating" name="rating" label="Rating" defaultValue={String(review.rating)} options={ratings} />
+          <CategoryTextarea id="review-edit-comment" name="comment" label="Comment" rows={4} required defaultValue={review.comment} />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Save" saving={saving} />
       </form>
     </Modal>
   );

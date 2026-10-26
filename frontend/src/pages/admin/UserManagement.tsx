@@ -4,12 +4,13 @@ import { toast } from "react-toastify";
 import { FaPlus, FaUsers } from "react-icons/fa";
 import type { User } from "@shared/auth";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import UserCreateModal, { type UserCreateInput } from "../../components/admin/UserCreateModal";
 import UserEditModal, { type UserEditInput } from "../../components/admin/UserEditModal";
 import UserTableRow from "../../components/admin/UserTableRow";
@@ -195,23 +196,27 @@ export default function UserManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <FaUsers className="text-2xl text-primary" aria-hidden="true" />
-            <h1 className="text-3xl font-bold">User Management</h1>
+          <div className="flex min-w-0 items-center gap-2">
+            <FaUsers className="shrink-0 text-2xl text-primary" aria-hidden="true" />
+            <h1 className="font-ui text-3xl font-semibold">User Management</h1>
           </div>
           <Button id="add-user" onClick={() => setCreateOpen(true)}>
             <FaPlus aria-hidden="true" />
             Add user
           </Button>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="user-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search users..."
+          filterId="user-role-filter"
+          filterLabel="Role"
           filterValue={roleFilter}
           onFilterChange={(value: string) => {
             setRoleFilter(value);
@@ -222,10 +227,11 @@ export default function UserManagement() {
             { value: "user", label: "User" },
             { value: "admin", label: "Admin" },
           ]}
-          searchPlaceholder="Search users..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="user-page-size"
+          paginationLabel="Users pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -245,32 +251,36 @@ export default function UserManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && users.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={users.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={users.length > 0 && selectedCount === users.length}
+                        label="Select all users on this page"
+                        onClick={() => selectAll(selectedCount < users.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID User" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Email" field="email" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Role" field="role" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID User" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Name" field="name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Email" field="email" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Role" field="role" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {users.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No users found matching "${searchTerm}"` : "No users found"}
                         </p>
-                        {searchTerm ? <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all users.</p> : null}
+                        {searchTerm ? <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all users.</p> : null}
                       </td>
                     </tr>
                   ) : (
@@ -293,8 +303,10 @@ export default function UserManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="user-page-size-bottom"
+          paginationLabel="Users pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -319,19 +331,58 @@ export default function UserManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[
-              { type: "update-role", label: "Make admin", data: { role: "admin" } },
-              { type: "delete", label: "Delete Selected" },
-            ]}
-            onAction={(actionType: string, data?: { role?: string }) => { void handleBulkAction(actionType, data); }}
-            onCancel={clear}
-          />
-        ) : null}
+        <UserBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          onAction={(actionType, data) => { void handleBulkAction(actionType, data); }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
+  );
+}
+
+const userBulkActions = [
+  { type: "update-role", label: "Make admin", data: { role: "admin" } },
+  { type: "delete", label: "Delete Selected" },
+];
+
+function UserBulkBar({
+  selectedCount,
+  busy,
+  onAction,
+  onCancel,
+}: {
+  selectedCount: number;
+  busy: boolean;
+  onAction: (actionType: string, data?: { role?: string }) => void;
+  onCancel: () => void;
+}) {
+  if (selectedCount === 0) {
+    return null;
+  }
+  return (
+    <div className="fixed bottom-4 left-1/2 z-40 flex w-[min(100%-1.5rem,42rem)] -translate-x-1/2 flex-col gap-3 rounded-ui-lg border border-line bg-surface px-4 py-3 text-ink shadow-ui-md sm:flex-row sm:items-center">
+      <p className="font-ui text-sm font-semibold">
+        {selectedCount} item{selectedCount === 1 ? "" : "s"} selected
+      </p>
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+        {userBulkActions.map((action) => (
+          <Button
+            key={action.label}
+            type="button"
+            size="sm"
+            variant={action.type === "delete" ? "danger" : "outline"}
+            loading={busy}
+            onClick={() => onAction(action.type, action.data)}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+      <Button type="button" size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+        Cancel
+      </Button>
+    </div>
   );
 }

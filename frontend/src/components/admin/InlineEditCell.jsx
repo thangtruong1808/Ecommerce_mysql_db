@@ -115,7 +115,7 @@ const InlineEditCell = ({
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="rounded-ui-sm border border-line bg-surface px-2 py-1 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           {options.map((option) => (
             <option key={option.value} value={option.value}>
@@ -131,7 +131,7 @@ const InlineEditCell = ({
           onChange={(e) => setEditValue(type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 w-24"
+          className="w-24 rounded-ui-sm border border-line bg-surface px-2 py-1 text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         />
       )}
     </div>

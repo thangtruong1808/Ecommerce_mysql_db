@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { FaEdit, FaEnvelope, FaTrash } from "react-icons/fa";
 import type { Invoice } from "@shared/commerce";
-import { Badge, Button, type BadgeVariant } from "../ui";
-import BulkSelectCheckbox from "./BulkSelectCheckbox";
+import { Badge, Button } from "../ui";
+import { focusRing } from "../ui/styles";
+import { CategorySelectBox } from "./categoryListChrome";
+import { statusVariant } from "./StatusBadge";
 import { formatDate } from "../../utils/dateUtils";
 import { isYes, money } from "../../pages/admin/dashboardFormat";
 
@@ -26,19 +28,6 @@ interface InvoiceTableRowProps {
   onDelete: () => void;
 }
 
-function statusVariant(status: string | null | undefined): BadgeVariant {
-  if (status === "paid" || status === "succeeded" || status === "completed") {
-    return "success";
-  }
-  if (status === "failed" || status === "canceled") {
-    return "danger";
-  }
-  if (status === "pending" || status === "processing" || !status) {
-    return "warning";
-  }
-  return "neutral";
-}
-
 export default function InvoiceTableRow({
   invoice,
   rowNumber,
@@ -52,40 +41,43 @@ export default function InvoiceTableRow({
 }: InvoiceTableRowProps) {
   const sent = isYes(invoice.email_sent);
   const userLabel = invoice.user_name || invoice.user_email || `User #${invoice.user_id}`;
+  const paymentStatus = invoice.payment_status || "pending";
+  const cell = "whitespace-nowrap px-3 py-3 font-ui text-sm text-muted";
+  const moneyCell = "whitespace-nowrap px-3 py-3 text-right font-ui text-sm tabular-nums text-ink";
   return (
     <tr className="hover:bg-surface-muted">
-      <td className="px-6 py-4">
-        <BulkSelectCheckbox itemId={invoice.id} isSelected={isSelected} onToggle={onToggle} />
+      <td className="px-3 py-3">
+        <CategorySelectBox pressed={isSelected} label={`Select invoice ${invoice.id}`} onClick={() => onToggle(invoice.id)} />
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{rowNumber}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{invoice.id}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-        <Link to={`/invoices/${invoice.id}`} className="text-primary hover:underline">
+      <td className={`${cell} text-ink`}>{rowNumber}</td>
+      <td className={`${cell} text-ink`}>{invoice.id}</td>
+      <td className="whitespace-nowrap px-3 py-3 font-ui text-sm font-semibold">
+        <Link to={`/invoices/${invoice.id}`} className={`text-primary hover:text-primary-hover ${focusRing}`}>
           {invoice.invoice_number}
         </Link>
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{invoice.order_id}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
-        <Link to="/admin/orders" className="text-primary hover:underline">
+      <td className={cell}>{invoice.order_id}</td>
+      <td className="whitespace-nowrap px-3 py-3 font-ui text-sm">
+        <Link to="/admin/orders" className={`font-semibold text-primary hover:text-primary-hover ${focusRing}`}>
           {invoice.order_number || `Order #${invoice.order_id}`}
         </Link>
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{invoice.user_id}</td>
-      <td className="px-6 py-4 text-sm text-muted">{userLabel}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{money(invoice.subtotal)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{money(invoice.tax_amount)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{money(invoice.shipping_amount)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">{money(invoice.total_amount)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{invoice.payment_method || "N/A"}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
-        <Badge variant={statusVariant(invoice.payment_status)}>{invoice.payment_status || "pending"}</Badge>
+      <td className={cell}>{invoice.user_id}</td>
+      <td className="px-3 py-3 font-ui text-sm text-muted">{userLabel}</td>
+      <td className={moneyCell}>{money(invoice.subtotal)}</td>
+      <td className={moneyCell}>{money(invoice.tax_amount)}</td>
+      <td className={moneyCell}>{money(invoice.shipping_amount)}</td>
+      <td className={`${moneyCell} font-semibold`}>{money(invoice.total_amount)}</td>
+      <td className={cell}>{invoice.payment_method || "N/A"}</td>
+      <td className="whitespace-nowrap px-3 py-3">
+        <Badge variant={statusVariant(paymentStatus)}>{paymentStatus}</Badge>
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
+      <td className="whitespace-nowrap px-3 py-3">
         <Badge variant={sent ? "success" : "neutral"}>{sent ? "Yes" : "No"}</Badge>
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(invoice.email_sent_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(invoice.created_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
+      <td className={cell}>{formatDate(invoice.email_sent_at || "")}</td>
+      <td className={cell}>{formatDate(invoice.created_at || "")}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"

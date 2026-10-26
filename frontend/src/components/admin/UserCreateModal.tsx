@@ -1,7 +1,8 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import type { UserRole } from "@shared/common";
-import { Button, Input, Modal, Select } from "../ui";
+import { Input, Modal, Select } from "../ui";
+import { CategoryDialogActions, CategorySection } from "./categoryDialogChrome";
 
 export interface UserCreateInput {
   name: string;
@@ -53,14 +54,13 @@ export default function UserCreateModal({ isOpen, onClose, onSave }: UserCreateM
   return (
     <Modal open={isOpen} title="Add user" onClose={close}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input id="user-create-name" name="name" label="Name" required autoComplete="name" />
-        <Input id="user-create-email" name="email" type="email" label="Email" required autoComplete="off" />
-        <Input id="user-create-password" name="password" type="password" label="Password" hint="At least 6 characters." required minLength={6} autoComplete="new-password" />
-        <Select id="user-create-role" name="role" label="Role" defaultValue="user" options={roles} />
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Add user</Button>
-        </div>
+        <CategorySection title="Account">
+          <Input id="user-create-name" name="name" label="Name" required autoComplete="name" />
+          <Input id="user-create-email" name="email" type="email" label="Email" required autoComplete="off" />
+          <Input id="user-create-password" name="password" type="password" label="Password" hint="At least 6 characters." required minLength={6} autoComplete="new-password" />
+          <Select id="user-create-role" name="role" label="Role" defaultValue="user" options={roles} />
+        </CategorySection>
+        <CategoryDialogActions onCancel={close} submitLabel="Add user" saving={saving} />
       </form>
     </Modal>
   );

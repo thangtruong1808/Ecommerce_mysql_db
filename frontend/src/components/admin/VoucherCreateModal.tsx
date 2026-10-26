@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Button, Modal } from "../ui";
+import { Modal } from "../ui";
+import { CategoryDialogActions } from "./categoryDialogChrome";
 import VoucherFormFields from "./VoucherFormFields";
 import { readVoucherForm, type VoucherInput } from "../../pages/admin/voucherForm";
 
@@ -35,10 +36,7 @@ export default function VoucherCreateModal({ isOpen, onClose, onSave }: VoucherC
     <Modal open={isOpen} title="Create voucher" onClose={close} className="max-w-2xl">
       <form onSubmit={handleSubmit} className="space-y-4">
         <VoucherFormFields idPrefix="voucher-create" />
-        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancel</Button>
-          <Button type="submit" loading={saving}>Create voucher</Button>
-        </div>
+        <CategoryDialogActions onCancel={close} submitLabel="Create voucher" saving={saving} />
       </form>
     </Modal>
   );

@@ -1,7 +1,7 @@
 import { FaCheck, FaTimes, FaTrash } from "react-icons/fa";
 import type { Comment } from "@shared/engagement";
 import { Badge, Button } from "../ui";
-import BulkSelectCheckbox from "./BulkSelectCheckbox";
+import { CategorySelectBox } from "./categoryListChrome";
 import { formatDate } from "../../utils/dateUtils";
 import { isYes } from "../../pages/admin/dashboardFormat";
 
@@ -32,27 +32,28 @@ export default function CommentTableRow({
   onDelete,
 }: CommentTableRowProps) {
   const approved = isYes(comment.is_approved);
+  const cell = "whitespace-nowrap px-3 py-3 font-ui text-sm text-muted";
   return (
     <tr className="hover:bg-surface-muted">
-      <td className="px-6 py-4">
-        <BulkSelectCheckbox itemId={comment.id} isSelected={isSelected} onToggle={onToggle} />
+      <td className="px-3 py-3">
+        <CategorySelectBox pressed={isSelected} label={`Select comment ${comment.id}`} onClick={() => onToggle(comment.id)} />
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{rowNumber}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{comment.id}</td>
-      <td className="px-6 py-4 text-sm">{comment.product_name || `Product #${comment.product_id}`}</td>
-      <td className="px-6 py-4 text-sm">
-        <div className="font-medium">{comment.user_name || `User #${comment.user_id}`}</div>
+      <td className={`${cell} text-ink`}>{rowNumber}</td>
+      <td className={`${cell} text-ink`}>{comment.id}</td>
+      <td className="px-3 py-3 font-ui text-sm font-semibold text-ink">{comment.product_name || `Product #${comment.product_id}`}</td>
+      <td className="px-3 py-3 font-ui text-sm">
+        <div className="font-semibold text-ink">{comment.user_name || `User #${comment.user_id}`}</div>
         {comment.user_email ? <div className="text-xs text-muted">{comment.user_email}</div> : null}
       </td>
-      <td className="max-w-xs px-6 py-4 text-sm text-muted">
+      <td className="max-w-xs px-3 py-3 font-ui text-sm text-muted">
         <p className="line-clamp-2" title={comment.comment}>{comment.comment}</p>
       </td>
-      <td className="whitespace-nowrap px-6 py-4">
+      <td className="whitespace-nowrap px-3 py-3">
         <Badge variant={approved ? "success" : "warning"}>{approved ? "Approved" : "Pending"}</Badge>
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(comment.created_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(comment.updated_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
+      <td className={cell}>{formatDate(comment.created_at || "")}</td>
+      <td className={cell}>{formatDate(comment.updated_at || "")}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm">
         <div className="flex items-center gap-2">
           {approved ? (
             <Button variant="secondary" size="sm" loading={busy} onClick={onReject} aria-label={`Reject comment ${comment.id}`}>

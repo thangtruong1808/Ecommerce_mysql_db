@@ -3,12 +3,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaStar } from "react-icons/fa";
 import AdminLayout from "../../components/admin/AdminLayout";
-import SearchFilterBar from "../../components/admin/SearchFilterBar";
-import Pagination from "../../components/admin/Pagination";
-import BulkSelectCheckbox from "../../components/admin/BulkSelectCheckbox";
-import BulkActionBar from "../../components/admin/BulkActionBar";
+import {
+  CategoryBulkBar,
+  CategoryPageBar,
+  CategorySelectBox,
+  CategorySortHeader,
+  CategoryToolbar,
+} from "../../components/admin/categoryListChrome";
 import ConfirmDeleteModal from "../../components/admin/ConfirmDeleteModal";
-import SortableTableHeader from "../../components/admin/SortableTableHeader";
 import ReviewEditModal, { type ReviewEditInput } from "../../components/admin/ReviewEditModal";
 import ReviewTableRow, { type AdminReview } from "../../components/admin/ReviewTableRow";
 import { Button, EmptyState, Skeleton } from "../../components/ui";
@@ -176,17 +178,21 @@ export default function ReviewManagement() {
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-full text-ink">
+      <div className="mx-auto min-w-0 max-w-full text-ink">
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-4">
-          <FaStar className="text-2xl text-primary" aria-hidden="true" />
-          <h1 className="text-3xl font-bold">Review Management</h1>
+          <FaStar className="shrink-0 text-2xl text-secondary" aria-hidden="true" />
+          <h1 className="font-ui text-3xl font-semibold">Review Management</h1>
         </div>
-        <SearchFilterBar
+        <CategoryToolbar
+          searchId="review-search"
           searchTerm={searchTerm}
           onSearchChange={(value: string) => {
             setSearchTerm(value);
             setPage(1);
           }}
+          searchPlaceholder="Search by user, product, or comment..."
+          filterId="review-rating-filter"
+          filterLabel="Rating"
           filterValue={ratingFilter}
           onFilterChange={(value: string) => {
             setRatingFilter(value);
@@ -200,10 +206,11 @@ export default function ReviewManagement() {
             { value: "2", label: "2 Stars" },
             { value: "1", label: "1 Star" },
           ]}
-          searchPlaceholder="Search by user, product, or comment..."
         />
-        <Pagination
+        <CategoryPageBar
           position="top"
+          pageSizeId="review-page-size"
+          paginationLabel="Reviews pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -223,35 +230,39 @@ export default function ReviewManagement() {
           />
         ) : null}
         {!showLoadError && !(loading && reviews.length === 0) ? (
-          <div className="overflow-hidden rounded-ui border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
-            <div className="overflow-x-auto">
+          <div className="min-w-0 overflow-hidden rounded-ui-lg border border-line bg-surface shadow-ui" aria-busy={loading || undefined}>
+            <div className="max-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-surface-muted">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <BulkSelectCheckbox isSelectAll totalItems={reviews.length} selectedCount={selectedCount} onSelectAll={selectAll} />
+                    <th className="px-3 py-3 text-left">
+                      <CategorySelectBox
+                        pressed={reviews.length > 0 && selectedCount === reviews.length}
+                        label="Select all reviews on this page"
+                        onClick={() => selectAll(selectedCount < reviews.length)}
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">#</th>
-                    <SortableTableHeader label="ID Review" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Product" field="product_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Product ID" field="product_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Rating" field="rating" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Comment" field="comment" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <SortableTableHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">#</th>
+                    <CategorySortHeader label="ID Review" field="id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Product" field="product_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Product ID" field="product_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User" field="user_name" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="User ID" field="user_id" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Rating" field="rating" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Comment" field="comment" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Created" field="created_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <CategorySortHeader label="Updated" field="updated_at" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                    <th className="px-3 py-3 text-left font-ui text-xs font-semibold uppercase text-muted">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line bg-surface">
                   {reviews.length === 0 && !loading ? (
                     <tr>
                       <td colSpan={COLUMN_COUNT} className="px-6 py-12 text-center">
-                        <p className="text-lg font-medium text-muted">
+                        <p className="font-ui text-lg font-medium text-muted">
                           {searchTerm ? `No reviews found matching "${searchTerm}"` : "No reviews found"}
                         </p>
-                        {searchTerm ? <p className="mt-2 text-sm text-muted">Try adjusting your search terms or clear the search to see all reviews.</p> : null}
+                        {searchTerm ? <p className="mt-2 font-ui text-sm text-muted">Try adjusting your search terms or clear the search to see all reviews.</p> : null}
                       </td>
                     </tr>
                   ) : (
@@ -272,8 +283,10 @@ export default function ReviewManagement() {
             </div>
           </div>
         ) : null}
-        <Pagination
+        <CategoryPageBar
           position="bottom"
+          pageSizeId="review-page-size-bottom"
+          paginationLabel="Reviews pagination"
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalItems}
@@ -297,19 +310,17 @@ export default function ReviewManagement() {
             }
           }}
         />
-        {selectedCount > 0 ? (
-          <BulkActionBar
-            selectedCount={selectedCount}
-            busy={bulkBusy}
-            actions={[{ type: "delete", label: "Delete Selected" }]}
-            onAction={(actionType: string) => {
-              if (actionType === "delete") {
-                void handleBulkDelete();
-              }
-            }}
-            onCancel={clear}
-          />
-        ) : null}
+        <CategoryBulkBar
+          selectedCount={selectedCount}
+          busy={bulkBusy}
+          actions={[{ type: "delete", label: "Delete Selected" }]}
+          onAction={(actionType: string) => {
+            if (actionType === "delete") {
+              void handleBulkDelete();
+            }
+          }}
+          onCancel={clear}
+        />
       </div>
     </AdminLayout>
   );

@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { FaEye, FaTrash } from "react-icons/fa";
 import type { Cart } from "@shared/commerce";
-import { Button } from "../ui";
-import BulkSelectCheckbox from "./BulkSelectCheckbox";
+import { Badge, Button } from "../ui";
+import { focusRing } from "../ui/styles";
+import { CategorySelectBox } from "./categoryListChrome";
 import { formatDate } from "../../utils/dateUtils";
 import { money } from "../../pages/admin/dashboardFormat";
 
@@ -43,31 +44,33 @@ export default function CartTableRow({
   onView,
   onDelete,
 }: CartTableRowProps) {
+  const guest = !cart.user_id;
   const userLabel = cart.user_name || cart.user_email || `User #${cart.user_id}`;
+  const cell = "whitespace-nowrap px-3 py-3 font-ui text-sm text-muted";
   return (
     <tr className="hover:bg-surface-muted">
-      <td className="px-6 py-4">
-        <BulkSelectCheckbox itemId={cart.id} isSelected={isSelected} onToggle={onToggle} />
+      <td className="px-3 py-3">
+        <CategorySelectBox pressed={isSelected} label={`Select cart ${cart.id}`} onClick={() => onToggle(cart.id)} />
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{rowNumber}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{cart.id}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">
-        {cart.user_id || <span>Guest</span>}
+      <td className={`${cell} text-ink`}>{rowNumber}</td>
+      <td className={`${cell} text-ink`}>{cart.id}</td>
+      <td className="whitespace-nowrap px-3 py-3">
+        {guest ? <Badge variant="neutral">Guest</Badge> : <span className="font-ui text-sm text-ink">{cart.user_id}</span>}
       </td>
-      <td className="px-6 py-4 text-sm">
-        {cart.user_id ? (
-          <Link to="/admin/users" className="text-primary hover:underline">
+      <td className="px-3 py-3 font-ui text-sm">
+        {guest ? (
+          <Badge variant="neutral">Guest</Badge>
+        ) : (
+          <Link to="/admin/users" className={`font-semibold text-primary hover:text-primary-hover ${focusRing}`}>
             {userLabel}
           </Link>
-        ) : (
-          <span className="text-muted">Guest</span>
         )}
       </td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{Number(cart.item_count) || 0}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">{money(cart.total_value)}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(cart.created_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm text-muted">{formatDate(cart.updated_at || "")}</td>
-      <td className="whitespace-nowrap px-6 py-4 text-sm">
+      <td className={`${cell} text-ink`}>{Number(cart.item_count) || 0}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-right font-ui text-sm font-semibold tabular-nums text-ink">{money(cart.total_value)}</td>
+      <td className={cell}>{formatDate(cart.created_at || "")}</td>
+      <td className={cell}>{formatDate(cart.updated_at || "")}</td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm">
         <div className="flex items-center gap-2">
           <Button
             variant="primary"
