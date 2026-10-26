@@ -8,6 +8,7 @@ export type BadgeVariant =
   | "success"
   | "warning"
   | "danger"
+  | "promo"
   | "info";
 
 interface BadgeProps {
@@ -23,6 +24,7 @@ const variants: Record<BadgeVariant, string> = {
   success: "bg-success/15 text-success",
   warning: "bg-warning/20 text-ink",
   danger: "bg-danger/15 text-danger",
+  promo: "border-transparent bg-danger text-on-danger",
   info: "bg-info/15 text-info",
 };
 

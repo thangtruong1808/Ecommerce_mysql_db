@@ -83,7 +83,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
       <div className="relative">
         {onSale ? (
           <div className="absolute right-3 top-3 z-10">
-            <Badge variant="danger" className="gap-1 px-2 py-0.5">
+            <Badge variant="promo" className="gap-1 px-2 py-0.5">
               <FaTag aria-hidden="true" />
               {product.discount_type === "percentage"
                 ? `${Math.round(Number.parseFloat(String(product.discount_value)))}% off`

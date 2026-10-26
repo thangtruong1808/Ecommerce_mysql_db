@@ -250,7 +250,7 @@ function ProductDetail() {
               <div className="flex flex-wrap items-center gap-3">
                 <p className="font-ui text-4xl font-semibold text-secondary">{money(product.discounted_price)}</p>
                 <p className="text-lg text-muted line-through">{money(product.price)}</p>
-                <Badge variant="danger" className="gap-1 px-2 py-0.5">
+                <Badge variant="promo" className="gap-1 px-2 py-0.5">
                   <FaTag aria-hidden="true" />
                   {product.discount_type === "percentage"
                     ? `${Math.round(Number.parseFloat(String(product.discount_value)))}% off`
