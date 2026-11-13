@@ -8,9 +8,10 @@ import type {
   SessionCheckResponse,
   User,
 } from "@shared/auth";
-import { apiGet, apiPost, apiPut } from "./client";
+import { apiPost, apiPut } from "./client";
 
-export const sessionCheck = () => apiGet<SessionCheckResponse>("/api/auth/session-check");
+export const sessionCheck = () =>
+  apiPost<SessionCheckResponse>("/api/auth/session-check", {});
 
 export const login = (body: LoginRequest) =>
   apiPost<LoginResponse, LoginRequest>("/api/auth/login", body);

@@ -1,3 +1,9 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://badmintonecommerce.store/$1",
+      "permanent": false
+    }
+  ]
 }

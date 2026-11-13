@@ -121,7 +121,7 @@ Cookies are sent with `credentials`. Access is one of:
 | POST | `/api/auth/login` | Public | Set access and refresh cookies |
 | POST | `/api/auth/logout` | Customer | Clear the session |
 | POST | `/api/auth/refresh` | Public | Rotate the access cookie |
-| GET | `/api/auth/session-check` | Customer | Read the current session |
+| POST | `/api/auth/session-check` | Customer | Read the current session. POST avoids a cached logged-out response. GET remains for older clients. |
 | GET | `/api/auth/me` | Optional | Current user, if signed in |
 | GET | `/api/auth/profile` | Customer | Profile |
 | PUT | `/api/auth/profile` | Customer | Update profile |

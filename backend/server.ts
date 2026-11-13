@@ -80,6 +80,7 @@ const allowedOrigins = [
     ),
     "https://ecommerce-mysql-db-2839.vercel.app",
     "https://badmintonecommerce.store",
+    "https://www.badmintonecommerce.store",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://[::1]:3000",
@@ -123,6 +124,12 @@ const corsOptions = {
 // Middleware: CORS before Helmet so preflight and responses always get ACAO headers
 app.use(cors(corsOptions));
 app.use(helmet());
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    res.set("Cache-Control", "private, no-store");
+  }
+  next();
+});
 app.use(limiter);
 app.use(cookieParser()); // Parse cookies
 app.use("/api/payments", paymentRoutes); // Stripe webhook route (raw body)
