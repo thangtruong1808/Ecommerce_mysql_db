@@ -124,6 +124,12 @@ const corsOptions = {
 // Middleware: CORS before Helmet so preflight and responses always get ACAO headers
 app.use(cors(corsOptions));
 app.use(helmet());
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    res.set("Cache-Control", "private, no-store");
+  }
+  next();
+});
 app.use(limiter);
 app.use(cookieParser()); // Parse cookies
 app.use("/api/payments", paymentRoutes); // Stripe webhook route (raw body)

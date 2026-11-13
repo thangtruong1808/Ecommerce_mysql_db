@@ -34,15 +34,20 @@ import jwt from "jsonwebtoken";
 const router = express.Router();
 
 /**
- * GET /api/auth/session-check
+ * GET and POST /api/auth/session-check
  * Validates user session on initial app load using a dedicated middleware.
+ * The app calls POST so browsers and Cloudflare do not reuse a logged-out GET.
  * This single endpoint handles AT validation, RT refresh, and returns the final session state.
  * @author Thang Truong
  * @date 2025-12-28
  */
-router.get("/session-check", validateSession, (req: Request, res: Response) => {
+const sendSession = (req: Request, res: Response) => {
+  res.set("Cache-Control", "private, no-store");
   res.json(req.sessionData);
-});
+};
+
+router.get("/session-check", validateSession, sendSession);
+router.post("/session-check", validateSession, sendSession);
 
 /**
  * POST /api/auth/register
