@@ -80,6 +80,7 @@ const allowedOrigins = [
     ),
     "https://ecommerce-mysql-db-2839.vercel.app",
     "https://badmintonecommerce.store",
+    "https://www.badmintonecommerce.store",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://[::1]:3000",

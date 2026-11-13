@@ -1,25 +1,27 @@
+name: badminton-store
+
 services:
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: ecommerce_backend
+    container_name: badminton-store-api
     env_file:
       - ./backend/.env
     environment:
       - NODE_ENV=production
       - PORT=5000
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     restart: unless-stopped
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-    container_name: ecommerce_frontend
+    container_name: badminton-store-web
     ports:
-      - "3000:80"
+      - "127.0.0.1:3010:80"
     depends_on:
       - backend
     restart: unless-stopped

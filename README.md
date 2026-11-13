@@ -65,11 +65,37 @@ TypeScript is checked by `npm run typecheck`, not by that lint command.
 
 ## Docker
 
-`docker compose up -d --build` builds both images. The shop is published on port 3000 and the API on port 5000. Compose reads `backend/.env`. The frontend image reads `frontend/.env` at build time, so `VITE_` values are baked into that build.
+`docker compose up -d --build` builds both images from the repository root. The shop container publishes `127.0.0.1:3010` only. The API listens on port 5000 inside the Docker network and is not published on the host. Nginx inside the shop image serves the site and proxies `/api/` to the API. Compose reads `backend/.env`. The frontend image reads `frontend/.env` at build time, so `VITE_` values are baked into that build.
 
 ```bash
-docker compose down
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail 100
+docker compose stop
 ```
+
+`docker compose stop` stops this shop. Run these commands in this repository's directory.
+
+## Branches and the VPS
+
+`dev` and `main` are where code is written. `prod` is the branch the Contabo VPS runs.
+
+Publish by merging both branches into `prod`, then pushing `prod`:
+
+```bash
+git checkout prod
+git merge main
+git merge dev
+git push origin prod
+```
+
+That push starts the "Deploy production" GitHub Action. The action copies this repository to `/opt/projects/ecommerce_mysql_db` and runs `docker compose up -d --build` there. It does not change other projects on the VPS.
+
+`backend/.env` and `frontend/.env` stay on the server. They are not in git, and a deploy does not replace them. Leave `VITE_API_URL` empty so the browser calls `/api` on the same host. Set `VITE_SHOWCASE_HOURS_ENABLED=false` for a normal production build.
+
+The public shop is https://badmintonecommerce.store. `https://www.badmintonecommerce.store` is allowed by CORS. Host Nginx on the VPS proxies that domain to `127.0.0.1:3010`.
+
+The action reads `VPS_HOST`, `VPS_USER`, and `VPS_SSH_KEY` from the repository's GitHub Actions secrets. Those values are not stored in this file.
 
 ## S3 media
 
